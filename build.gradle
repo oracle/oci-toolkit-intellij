@@ -1,0 +1,46 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        maven {
+            url 'http://dl.bintray.com/jetbrains/intellij-plugin-service'
+        }
+
+    }
+    dependencies {
+        classpath "gradle.plugin.org.jetbrains.intellij.plugins:gradle-intellij-plugin:0.4.15"
+    }
+}
+
+plugins {
+    id "org.jetbrains.intellij" version "0.4.15"
+}
+
+group 'com.oracle'
+version '1.0.0'
+
+apply plugin: 'idea'
+apply plugin: 'org.jetbrains.intellij'
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compileOnly fileTree(include: ['*.jar'], dir: '/Applications/IntelliJ IDEA.app/Contents/plugins/DatabaseTools/lib/')
+    compile files('lib/sdk/oci-java-sdk-full-1.9.4.jar')
+    compile fileTree(dir:  'lib/thirdparty', include: "*.jar")
+}
+
+
+intellij {
+    version '192.7142.36'
+    type 'IU'
+    pluginName 'OCI Toolkit'
+    sandboxDirectory = project.rootDir.canonicalPath + "/.sandbox"
+}
