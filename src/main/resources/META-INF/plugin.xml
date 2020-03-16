@@ -1,0 +1,34 @@
+<idea-plugin>
+    <id>com.oracle.ocidbtest</id>
+    <name>OCI Toolkit</name>
+    <vendor email="support@oracle.com" url="http://www.oracle.com">Oracle</vendor>
+
+    <description><![CDATA[ Oracle Cloud Plugin]]></description>
+
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable instance="com.oracle.oci.intellij.ui.account.OCISettingsPanel" groupId="tools"
+                             groupWeight="130" displayName="Oracle Cloud Infrastructure"/>
+        <toolWindow id="Oracle Cloud Infrastructure Explorer" secondary="true"  anchor="bottom"
+                    factoryClass="com.oracle.oci.intellij.ui.explorer.OCIExplorerFactory"
+                    icon="/icons/toolbar-login.png"  />
+    </extensions>
+
+
+    <depends optional="true">com.intellij.database</depends>
+    <depends optional="true">com.intellij.modules.ultimate</depends>
+    <depends optional="true">com.intellij.modules.database</depends>
+
+    <actions>
+        <group id="com.oracle.oci.intellij.ui.account.OCIExplorerActionGroup" class="com.intellij.openapi.actionSystem.DefaultActionGroup"
+               text="OCI Settings" description="OCI Settings">
+            <action class="com.oracle.oci.intellij.ui.account.OCISettingsAction"
+                    id="com.oracle.oci.intellij.ui.account.OCISettingsAction" text="OCISettings" description="Configure OCI Settings"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="MainToolBarSettings" anchor="last"/>
+        </group>
+    </actions>
+
+
+
+</idea-plugin>
