@@ -7,8 +7,6 @@
 
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectConfigurable instance="com.oracle.oci.intellij.ui.account.OCISettingsPanel" groupId="tools"
-                             groupWeight="130" displayName="Oracle Cloud Infrastructure"/>
         <toolWindow id="Oracle Cloud Infrastructure Explorer" secondary="true"  anchor="bottom"
                     factoryClass="com.oracle.oci.intellij.ui.explorer.OCIExplorerFactory"
                     icon="/icons/toolbar-login.png"  />
@@ -28,7 +26,4 @@
             <add-to-group group-id="MainToolBarSettings" anchor="last"/>
         </group>
     </actions>
-
-
-
 </idea-plugin>

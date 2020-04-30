@@ -7,6 +7,7 @@ import com.oracle.bmc.identity.model.Compartment.LifecycleState;
 import com.oracle.oci.intellij.account.AuthProvider;
 import com.oracle.oci.intellij.account.GlobalEventHandler;
 import com.oracle.oci.intellij.account.IdentClient;
+import com.oracle.oci.intellij.account.PreferencesWrapper;
 import com.oracle.oci.intellij.ui.common.CompartmentSelection;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,9 +36,7 @@ public class CompartmentSelectionAction extends AnAction {
           .equals(AuthProvider.getInstance().getCompartmentId())) {
         IdentClient.getInstance().
             setCurrentCompartmentName(selectedCompartment.getName());
-        AuthProvider.getInstance()
-            .setCompartmentId(selectedCompartment.getId());
-
+        PreferencesWrapper.setCompartment(selectedCompartment.getId());
       }
     }
 

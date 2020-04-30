@@ -8,6 +8,9 @@ import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseCloneDetails;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails;
+import com.oracle.bmc.identity.model.Compartment;
+import com.oracle.oci.intellij.account.IdentClient;
+import com.oracle.oci.intellij.account.PreferencesWrapper;
 import com.oracle.oci.intellij.ui.common.CompartmentSelection;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.ADBConstants;
@@ -16,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseCloneDetails.CloneType;
 
 import javax.swing.*;
+import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -37,7 +41,7 @@ public class CloneWizard extends DialogWrapper {
   private JRadioButton metadataCloneRadioButton;
   private JTextField orginDBName;
   private JTextField displayNameTxt;
-  private TextFieldWithBrowseButton compartmentCmb;
+  private JTextField compartmentCmb;
   private JTextField dbNameTxt;
   private JCheckBox alwayFreeChk;
   private JSpinner cpuCountSpnr;
@@ -49,6 +53,8 @@ public class CloneWizard extends DialogWrapper {
   private JRadioButton byolRBtn;
   private JRadioButton licenseIncldBtn;
   private JPanel licenseTypePanel;
+  private JLabel pwdInstrLbl;
+  private JButton compartmentBtn;
   private ButtonGroup cloneTypeGroup;
 
   private ButtonGroup licenseTypeGrp;
@@ -56,7 +62,7 @@ public class CloneWizard extends DialogWrapper {
   private Map<String, String> compartmentMap = new LinkedHashMap<String, String>();
 
   private final AutonomousDatabaseSummary autonomousDatabaseSummary;
-  private CompartmentSelection compartmentSelection;
+  private Compartment selectedCompartment;
 
   protected CloneWizard(AutonomousDatabaseSummary autonomousDatabaseSummary) {
     super(true);
@@ -69,7 +75,6 @@ public class CloneWizard extends DialogWrapper {
     licenseTypeGrp.add(licenseIncldBtn);
     cloneTypeGroup.add(fullCloneRadioButton);
     cloneTypeGroup.add(metadataCloneRadioButton);
-
     init();
     fullCloneRadioButton.setSelected(true);
     final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat(
@@ -77,6 +82,7 @@ public class CloneWizard extends DialogWrapper {
     final String defaultDBName = "DB" + DATE_TIME_FORMAT.format(new Date());
     dbNameTxt.setText(defaultDBName);
     orginDBName.setText(autonomousDatabaseSummary.getDbName());
+    orginDBName.setEditable(false);
     displayNameTxt.setText("Clone of " + autonomousDatabaseSummary.getDbName());
     cpuCountSpnr.setModel(new SpinnerNumberModel(
         autonomousDatabaseSummary.getCpuCoreCount().intValue(),
@@ -86,7 +92,10 @@ public class CloneWizard extends DialogWrapper {
         autonomousDatabaseSummary.getDataStorageSizeInTBs().intValue(),
         ADBConstants.STORAGE_IN_TB_MIN, ADBConstants.STORAGE_IN_TB_MAX,
         ADBConstants.STORAGE_IN_TB_INCREMENT));
-
+    pwdInstrLbl.setText("<html>Password must be 12 to 30 characters and contain at least one "
+        + "uppercase letter, one lowercase letter, and one number. "
+        + "The password cannot contain the double quote (\") character or the "
+        + "username \"admin\"</html>");
     userNameTxt.setText(DEFAULT_USERNAME);
     userNameTxt.setEditable(false);
     passwordTxt.setToolTipText(PASSWORD_TOOlTIP);
@@ -98,12 +107,29 @@ public class CloneWizard extends DialogWrapper {
       licenseIncldBtn.setSelected(true);
 
     compartmentCmb.setEditable(false);
-    compartmentSelection = new CompartmentSelection();
-    compartmentCmb.addActionListener((e) -> {
-      compartmentSelection.showAndGet();
-      compartmentCmb
-          .setText(compartmentSelection.getSelectedCompartment().getName());
 
+    selectedCompartment = IdentClient.getInstance().getRootCompartment();
+    if(selectedCompartment != null)
+      compartmentCmb.setText(selectedCompartment.getName());
+    else
+      compartmentCmb.setText("Select Compartment");
+
+
+    compartmentBtn.addActionListener((e) -> {
+      compartmentBtn.setEnabled(false);
+      try {
+        CompartmentSelection compartmentSelection = new CompartmentSelection();
+        compartmentSelection.showAndGet();
+        if(compartmentSelection.isOK()) {
+          selectedCompartment = compartmentSelection.getSelectedCompartment();
+          if(selectedCompartment != null)
+            compartmentCmb.setText(selectedCompartment.getName());
+        }
+      }
+      catch(Exception ex) {
+        Messages.showErrorDialog("Unable to load compartment details.", "Select Compartment");
+      }
+      compartmentBtn.setEnabled(true);
     });
 
     alwayFreeChk.addChangeListener((e) -> {
@@ -131,11 +157,15 @@ public class CloneWizard extends DialogWrapper {
   }
 
   public void doOKAction() {
+    if(selectedCompartment == null) {
+      Messages.showErrorDialog("Invalid Compartment value", "Error");
+      return;
+    }
+
     if (!isValidPassword())
       return;
 
-    final String compartmentId = compartmentSelection.getSelectedCompartment()
-        .getCompartmentId();
+    final String compartmentId = selectedCompartment.getId();
     final CreateAutonomousDatabaseDetails.DbWorkload workloadType;
     if (autonomousDatabaseSummary.getDbWorkload()
         == AutonomousDatabaseSummary.DbWorkload.Dw) {
@@ -168,12 +198,14 @@ public class CloneWizard extends DialogWrapper {
     final Runnable nonblockingUpdate = () -> {
       try {
         ADBInstanceClient.getInstance().createClone(cloneRequest);
-        ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireSuccessNotification("ADB Instance cloned successfully."));
+        ApplicationManager.getApplication().invokeLater(() -> {
+          UIUtil.fireSuccessNotification("ADB Instance cloned successfully.");
+          PreferencesWrapper.fireADBInstanceUpdateEvent("Clone");
+        });
       }
       catch (Exception e) {
         ApplicationManager.getApplication().invokeLater(
-            () -> UIUtil.fireErrorNotification("ADB Instance clone failed."));
+            () -> UIUtil.fireErrorNotification("Failed to clone ADB Instance : " + e.getMessage()));
       }
     };
 
@@ -209,18 +241,22 @@ public class CloneWizard extends DialogWrapper {
     if (adminPassword == null || adminPassword.trim().equals("")) {
       Messages.showErrorDialog("Admin password cannot be empty.", "Error");
       return false;
-
     }
     else if (!adminPassword.equals(confirmAdminPassword)) {
-      Messages
-          .showErrorDialog("Confirm Admin password must match Admin password",
-              "Error");
+      Messages.showErrorDialog("Confirm Admin password must match Admin password", "Error");
       return false;
     }
     return true;
   }
 
-  @Nullable @Override protected JComponent createCenterPanel() {
+  @Nullable
+  @Override
+  protected JComponent createCenterPanel() {
+    mainPanel.setPreferredSize(new Dimension(475,500));
     return mainPanel;
+  }
+
+  private void createUIComponents() {
+    // TODO: place custom component creation code here
   }
 }

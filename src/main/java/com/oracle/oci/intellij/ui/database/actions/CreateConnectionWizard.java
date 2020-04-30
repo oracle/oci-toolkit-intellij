@@ -7,8 +7,6 @@ import com.intellij.database.editor.DatabaseEditorHelper;
 import com.intellij.database.psi.DataSourceManager;
 import com.intellij.database.psi.DbPsiFacade;
 import com.intellij.database.psi.DefaultDbPsiManager;
-import com.intellij.ide.DataManager;
-import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
@@ -17,7 +15,7 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.util.containers.ContainerUtil;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
-import com.oracle.oci.intellij.ErrorHandler;
+import com.oracle.oci.intellij.LogHandler;
 import com.oracle.oci.intellij.account.AuthProvider;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import org.jetbrains.annotations.Nullable;
@@ -58,7 +56,6 @@ public class CreateConnectionWizard extends DialogWrapper {
 
   private void onConfigFileChange() {
     final String configFileName = walletLocationTxt.getText();
-    // Messages.showInfoMessage("Config File : " + configFileName, "Config");
     File f = new File(configFileName);
     if (f.length() > 50000) {
       Messages.showErrorDialog("File is too large", "Error");
@@ -93,7 +90,8 @@ public class CreateConnectionWizard extends DialogWrapper {
       }
     }
     catch (Exception e) {
-        ErrorHandler.logErrorStack("Error occured while reading tnsnames.ora file for database: " + dbName, e);
+      UIUtil.fireErrorNotification("Error reading tnsnames.ora : " + e.getMessage());
+      LogHandler.error("Error occured while reading tnsnames.ora file for database: " + dbName, e);
     }
     return tnsEntries;
   }
@@ -172,17 +170,8 @@ public class CreateConnectionWizard extends DialogWrapper {
 
   private LocalDataSource getDataSource(final DefaultDbPsiManager psiManager,
       final String profileName) {
-        /*
-        return psiManager.getDataSources()
-                .stream()
-                .filter((ld) -> ld.getName().equals(profileName))
-                .findFirst()
-                .orElse(null);
-        */
-    List<LocalDataSource> dataSources = psiManager.getDataSources();
-    //System.out.println("Number of data sources found : " + dataSources.size());
+    final List<LocalDataSource> dataSources = psiManager.getDataSources();
     for (LocalDataSource lds : dataSources) {
-      //System.out.println("Name  : " + lds.getName());
       if (lds.getName().equals(profileName))
         return lds;
     }
@@ -215,11 +204,12 @@ public class CreateConnectionWizard extends DialogWrapper {
           "Alias name required error");
       return false;
     }
-
     return true;
   }
 
-  @Nullable @Override protected JComponent createCenterPanel() {
+  @Nullable
+  @Override
+  protected JComponent createCenterPanel() {
     return mainPanel;
   }
 }

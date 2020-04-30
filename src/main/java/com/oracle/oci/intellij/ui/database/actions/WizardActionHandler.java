@@ -3,7 +3,7 @@ package com.oracle.oci.intellij.ui.database.actions;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase;
-import com.oracle.oci.intellij.ErrorHandler;
+import com.oracle.oci.intellij.LogHandler;
 import com.oracle.oci.intellij.ui.database.ADBInstanceClient;
 import com.oracle.oci.intellij.ui.database.ADBInstanceWrapper;
 
@@ -43,7 +43,7 @@ public class WizardActionHandler extends AbstractAction {
     if(wizard != null)
       wizard.showAndGet();
     else
-      ErrorHandler.logError("Unable to create wizard for the type : " + action.toString());
+      LogHandler.error("Unable to create wizard for the type : " + action.toString());
   }
 
   private DialogWrapper createWizard(Action action) {

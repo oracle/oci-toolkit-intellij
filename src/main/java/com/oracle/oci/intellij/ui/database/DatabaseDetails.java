@@ -1,10 +1,9 @@
 package com.oracle.oci.intellij.ui.database;
 
-import com.intellij.openapi.wm.WindowManager;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase;
-import com.oracle.oci.intellij.ErrorHandler;
+import com.oracle.oci.intellij.LogHandler;
 import com.oracle.oci.intellij.account.AuthProvider;
 import com.oracle.oci.intellij.account.GlobalEventHandler;
 import com.oracle.oci.intellij.account.IdentClient;
@@ -41,23 +40,46 @@ public class DatabaseDetails implements PropertyChangeListener {
   private JLabel compartmentValueLbl;
   private JLabel regionValueLbl;
   private JPanel tablePanel;
-
-  List<AutonomousDatabaseSummary> instances;
+  private List<AutonomousDatabaseSummary> instances;
 
   public DatabaseDetails() {
-    initializeTable();
-    initializeWorkLoadTypeFilter();
     initializeActions();
-    profileValueLbl.setText(PreferencesWrapper.getProfile());
-    // TODO: This will always set the root compartment when initialized and might require change
-    compartmentValueLbl.setText(IdentClient.getInstance().getCurrentCompartmentName());
-    regionValueLbl.setText(AuthProvider.getInstance().getRegion().toString());
+    initializeWorkLoadTypeFilter();
+    initializeTableStructure();
+    initializeLabels();
+    populateTableData();
     refreshADBListButton.setAction(refreshAction);
-    GlobalEventHandler.getInstance().addPropertyChangeListener(this);
   }
 
   private void initializeActions() {
     refreshAction = new RefreshAction(this, "Refresh List");
+  }
+
+  private void initializeLabels() {
+
+    try{
+      profileValueLbl.setText(PreferencesWrapper.getProfile());
+    }
+    catch(Exception e) {
+      profileValueLbl.setText("");
+    }
+
+
+    try{
+      // TODO: This will always set the root compartment when initialized and might require change
+      compartmentValueLbl.setText(IdentClient.getInstance().getCurrentCompartmentName());
+    }
+    catch(Exception e) {
+      compartmentValueLbl.setText("");
+    }
+
+    try{
+      regionValueLbl.setText(AuthProvider.getInstance().getRegion().toString());
+    }
+    catch(Exception e) {
+      regionValueLbl.setText("");
+    }
+
   }
 
   private void initializeWorkLoadTypeFilter() {
@@ -83,7 +105,7 @@ public class DatabaseDetails implements PropertyChangeListener {
     }
   }
 
-  private void initializeTable() {
+  private void initializeTableStructure() {
 
     try {
       adbTable.setModel(new DefaultTableModel(ADB_COLUMN_NAMES, 0) {
@@ -137,11 +159,10 @@ public class DatabaseDetails implements PropertyChangeListener {
           }
         }
       });
-      populateTableData();
     }
     catch (Exception e) {
-      ErrorHandler
-          .logError("Unable to list Autonomous Databases: " + e.getMessage());
+      LogHandler
+          .error("Unable to list Autonomous Databases: " + e.getMessage());
     }
   }
 
@@ -214,7 +235,9 @@ public class DatabaseDetails implements PropertyChangeListener {
     final DefaultTableModel model = ((DefaultTableModel) adbTable.getModel());
     model.setRowCount(0);
     UIUtil.setStatus("Refreshing database instances..");
-    Runnable fetchData = () -> {
+    refreshADBListButton.setEnabled(false);
+    workloadCmb.setEnabled(false);
+    final Runnable fetchData = () -> {
       String selectedType = (String) workloadCmb.getSelectedItem();
       AutonomousDatabaseSummary.DbWorkload workLoadType = selectedType == null ?
           AutonomousDatabaseSummary.DbWorkload.UnknownEnumValue :
@@ -223,32 +246,39 @@ public class DatabaseDetails implements PropertyChangeListener {
         instances = ADBInstanceClient.getInstance().getInstances(workLoadType);
       }
       catch (Exception e) {
-        ErrorHandler
-            .logErrorStack("Unable to fetch the db instance details", e);
+        UIUtil.fireErrorNotification("Unable to fetch the db instance details : " + e.getMessage());
+        LogHandler.error("Unable to fetch the db instance details", e);
       }
     };
 
-    Runnable updateUI = () -> {
-      UIUtil.setStatus( (instances==null ? 0 : instances.size() ) + " database instances found.");
-      for (AutonomousDatabaseSummary s : instances) {
-        final Object[] rowData = new Object[ADB_COLUMN_NAMES.length];
-        final boolean isFreeTier =
-            s.getIsFreeTier() != null && s.getIsFreeTier();
-        rowData[0] = s.getDisplayName();
-        rowData[1] = s.getDbName();
-        rowData[2] = s;
-        rowData[3] = isFreeTier ? "Yes" : "No";
-        rowData[4] = (s.getIsDedicated() != null && s.getIsDedicated()) ?
-            "Yes" :
-            "No";
-        rowData[5] = String.valueOf(s.getCpuCoreCount());
-        rowData[6] = isFreeTier ?
-            ADBConstants.ALWAYS_FREE_STORAGE_TB :
-            String.valueOf(s.getDataStorageSizeInTBs());
-        rowData[7] = s.getDbWorkload().getValue();
-        rowData[8] = s.getTimeCreated().toGMTString();
-        model.addRow(rowData);
+    final Runnable updateUI = () -> {
+      if(instances == null) {
+        UIUtil.fireErrorNotification("Unable to get the database instance details. Please check the OCI settings");
       }
+      else {
+        UIUtil.setStatus( (instances.size() ) + " database instances found.");
+        for (AutonomousDatabaseSummary s : instances) {
+          final Object[] rowData = new Object[ADB_COLUMN_NAMES.length];
+          final boolean isFreeTier =
+              s.getIsFreeTier() != null && s.getIsFreeTier();
+          rowData[0] = s.getDisplayName();
+          rowData[1] = s.getDbName();
+          rowData[2] = s;
+          rowData[3] = isFreeTier ? "Yes" : "No";
+          rowData[4] = (s.getIsDedicated() != null && s.getIsDedicated()) ?
+              "Yes" :
+              "No";
+          rowData[5] = String.valueOf(s.getCpuCoreCount());
+          rowData[6] = isFreeTier ?
+              ADBConstants.ALWAYS_FREE_STORAGE_TB :
+              String.valueOf(s.getDataStorageSizeInTBs());
+          rowData[7] = s.getDbWorkload().getValue();
+          rowData[8] = s.getTimeCreated().toGMTString();
+          model.addRow(rowData);
+        }
+      }
+      workloadCmb.setEnabled(true);
+      refreshADBListButton.setEnabled(true);
     };
 
     UIUtil.fetchAndUpdateUI(fetchData, updateUI);
@@ -273,20 +303,27 @@ public class DatabaseDetails implements PropertyChangeListener {
   }
 
   @Override
-  public void propertyChange(final PropertyChangeEvent evt) {
-    System.out.println("@@@handling the proeprty changes in evetn dd");
-    profileValueLbl.setText(PreferencesWrapper.getProfile());
-    if ("RegionID".equals(evt.getPropertyName())) {
-      regionValueLbl.setText(evt.getNewValue().toString());
-    }
-    else if ("CompartmentID".equals(evt.getPropertyName())) {
-      compartmentValueLbl
-          .setText(IdentClient.getInstance().getCurrentCompartmentName());
+  public void propertyChange(PropertyChangeEvent evt) {
+    LogHandler.info("DatabaseDetails: Handling the Event Update : " + evt.toString());
+    switch (evt.getPropertyName()) {
+    case PreferencesWrapper.EVENT_COMPARTMENT_UPDATE:
+      compartmentValueLbl.setText(IdentClient.getInstance().getCurrentCompartmentName());
+      break;
+
+    case PreferencesWrapper.EVENT_REGION_UPDATE:
+      regionValueLbl.setText(PreferencesWrapper.getRegion());
+      break;
+
+    case PreferencesWrapper.EVENT_SETTINGS_UPDATE:
+    case PreferencesWrapper.EVENT_ADBINSTANCE_UPDATE:
+      regionValueLbl.setText(PreferencesWrapper.getRegion());
+      compartmentValueLbl.setText(IdentClient.getInstance().getCurrentCompartmentName());
+      break;
     }
     populateTableData();
   }
 
-  class RefreshAction extends AbstractAction {
+  private class RefreshAction extends AbstractAction {
 
     private final DatabaseDetails adbDetails;
 

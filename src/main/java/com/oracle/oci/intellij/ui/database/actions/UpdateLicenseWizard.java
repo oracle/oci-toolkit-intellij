@@ -50,11 +50,11 @@ public class UpdateLicenseWizard extends DialogWrapper {
         ADBInstanceClient.getInstance()
             .updateLicenseType(autonomousDatabaseSummary, licenseModel);
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireSuccessNotification("License Model Successfully Updated."));
+            .fireSuccessNotification("License model successfully updated."));
       }
       catch (Exception e) {
         ApplicationManager.getApplication().invokeLater(
-            () -> UIUtil.fireErrorNotification("License Model Update failed."));
+            () -> UIUtil.fireErrorNotification("Failed to update the license model : " + e.getMessage()));
       }
     };
 

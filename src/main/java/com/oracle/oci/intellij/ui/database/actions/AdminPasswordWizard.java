@@ -27,8 +27,8 @@ public class AdminPasswordWizard extends DialogWrapper {
     init();
     setTitle("ADB Admin Password Change");
     setOKButtonText("Update");
-    ADBInstanceWrapper adbInstanceWrapper = ADBInstanceClient.getInstance()
-        .getInstanceDetails(autonomousDatabaseSummary.getId());
+    ADBInstanceWrapper adbInstanceWrapper = ADBInstanceClient
+        .getInstance().getInstanceDetails(autonomousDatabaseSummary.getId());
     userNameTxt.setText("ADMIN");
     userNameTxt.setEditable(false);
   }
@@ -47,13 +47,12 @@ public class AdminPasswordWizard extends DialogWrapper {
       }
       catch (Exception e) {
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireErrorNotification("Admin Password Update failed."));
+            .fireErrorNotification("Admin Password Update failed : " + e.getMessage()));
       }
     };
 
     // Do this in background
     UIUtil.fetchAndUpdateUI(nonblockingUpdate, null);
-
     close(DialogWrapper.OK_EXIT_CODE);
   }
 
@@ -61,21 +60,24 @@ public class AdminPasswordWizard extends DialogWrapper {
     final String adminPassword = new String(pwdTxt.getPassword());
     final String confirmAdminPassword = new String(confirmPwdTxt.getPassword());
 
-    if (adminPassword == null || adminPassword.trim().equals("")) {
-      Messages.showErrorDialog("Admin password required error",
-          "Admin password cannot be empty");
+    if (!UIUtil.isValidAdminPassword(adminPassword)) {
+      Messages.showErrorDialog("Admin password entered is not valid.",
+          "Invalid Password");
       return false;
-
     }
-    else if (!adminPassword.equals(confirmAdminPassword)) {
+
+    if (!adminPassword.equals(confirmAdminPassword)) {
       Messages.showErrorDialog("Admin password mismatch error",
           "Confirm Admin password must match Admin password");
       return false;
     }
+
     return true;
   }
 
-  @Nullable @Override protected JComponent createCenterPanel() {
+  @Nullable
+  @Override
+  protected JComponent createCenterPanel() {
     return mainPanel;
   }
 }

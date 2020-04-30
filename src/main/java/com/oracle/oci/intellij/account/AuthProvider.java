@@ -8,75 +8,74 @@ import com.oracle.bmc.ClientRuntime;
 import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
-import com.oracle.oci.intellij.ErrorHandler;
+import com.oracle.oci.intellij.LogHandler;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
+import java.io.File;
 
 public class AuthProvider implements PropertyChangeListener {
 
-  private static AuthProvider single_instance = null;
+  private static final AuthProvider single_instance = new AuthProvider();
+  private AuthenticationDetailsProvider provider;
+  private String currentProfileName;
+  private String currentConfigFileName;
+  private String currentRegionName;
+  private volatile String currentCompartmentId = null;
 
-  private static AuthenticationDetailsProvider provider;
-  private String currentProfileName = PreferencesWrapper.getProfile();
-  private String currentConfigFileName = PreferencesWrapper.getConfigFileName();
-  private String currentRegionName = PreferencesWrapper.getRegion();
-  private String currentCompartmentId;
-
-  public static AuthProvider getInstance() {
-    if (single_instance == null) {
-      single_instance = new AuthProvider();
+  public final static AuthProvider getInstance() {
+    if(single_instance.provider == null) {
+      single_instance.createProvider();
     }
     return single_instance;
   }
 
-  private AuthProvider() {
-    GlobalEventHandler.getInstance().addPropertyChangeListener(this);
+  public final static boolean isInitialized() {
+    return (single_instance.provider != null);
   }
 
-  private AuthenticationDetailsProvider createProvider() {
+  private void createProvider() {
     try {
+      final File configFile = new File(PreferencesWrapper.getConfigFileName());
+      if(!configFile.exists())
+        throw new RuntimeException("Unable to find the config file : " + PreferencesWrapper.getConfigFileName());
       provider = new ConfigFileAuthenticationDetailsProvider(
-          currentConfigFileName, currentProfileName);
+          PreferencesWrapper.getConfigFileName(), PreferencesWrapper.getProfile());
+      currentConfigFileName = PreferencesWrapper.getConfigFileName();
+      currentProfileName = PreferencesWrapper.getProfile();
+      currentRegionName = PreferencesWrapper.getRegion();
+      currentCompartmentId = provider.getTenantId();
+      setClientUserAgent();
+    }
+    catch (RuntimeException re) {
+      LogHandler.error(re.getMessage(), re);
+      throw re;
     }
     catch (Exception e) {
-      ErrorHandler.logErrorStack(e.getMessage(), e);
+      LogHandler.error(e.getMessage(), e);
+      throw new RuntimeException(e);
     }
-    currentCompartmentId = provider.getTenantId();
-    setClientUserAgent();
-    return provider;
+
   }
 
   public AuthenticationDetailsProvider getProvider() {
     if (provider == null) {
-      provider = createProvider();
+      createProvider();
     }
     else {
-      String newProfile = PreferencesWrapper.getProfile();
-      String newConfigFileName = PreferencesWrapper.getConfigFileName();
-      currentRegionName = PreferencesWrapper.getRegion();
-
+      // Check if Preference is changed, if yes then create the AuthProvider with
+      // new preferences.
+      final String newProfile = PreferencesWrapper.getProfile();
+      final String newConfigFileName = PreferencesWrapper.getConfigFileName();
       if ((!newProfile.equals(currentProfileName)) || (!newConfigFileName
-          .endsWith(currentConfigFileName))) {
-        currentConfigFileName = newConfigFileName;
-        currentProfileName = newProfile;
-        try {
-          provider = new ConfigFileAuthenticationDetailsProvider(
-              currentConfigFileName, currentProfileName);
-          ErrorHandler.logInfo(
-              currentProfileName + " " + currentConfigFileName + " "
-                  + currentRegionName + " " + currentCompartmentId);
-        }
-        catch (Exception e) {
-          ErrorHandler.logInfo(
-              "Error connecting to: " + currentProfileName + " " + e
-                  .getMessage());
-        }
+          .endsWith(currentConfigFileName))){
+        createProvider();
       }
     }
     return provider;
   }
 
+  /*
   public void setCompartmentId(String compartmentId) {
     final String oldValue = currentCompartmentId;
     currentCompartmentId = compartmentId;
@@ -84,7 +83,7 @@ public class AuthProvider implements PropertyChangeListener {
         .firePropertyChange(GlobalEventHandler.PROPERTY_COMPARTMENT_ID,
             oldValue, compartmentId);
   }
-
+*/
   public String getCompartmentId() {
     return currentCompartmentId;
   }
@@ -95,15 +94,33 @@ public class AuthProvider implements PropertyChangeListener {
 
   // set the plug-in version into the SDK.
   private void setClientUserAgent() {
-    ErrorHandler.logInfo(
-        "Setting SDK ClientUserAgent to: " + PreferencesWrapper.getUserAgent());
     ClientRuntime.setClientUserAgent(PreferencesWrapper.getUserAgent());
   }
 
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
-    if ("CompartmentID".equals(evt.getPropertyName())) {
-     currentCompartmentId = evt.getNewValue().toString();
+    LogHandler.info("AuthProvider: Handling the Event Update : " + evt.toString());
+    switch (evt.getPropertyName()) {
+      case PreferencesWrapper.EVENT_COMPARTMENT_UPDATE:
+        currentCompartmentId = evt.getNewValue().toString();
+        break;
+      case PreferencesWrapper.EVENT_REGION_UPDATE:
+        // Nothing to update here.
+        break;
+      case PreferencesWrapper.EVENT_SETTINGS_UPDATE:
+        // reset the state.
+        reset();
+        break;
+
     }
+  }
+
+  private void reset() {
+    provider = null;
+    currentConfigFileName = null;
+    currentProfileName = null;
+    currentRegionName = null;
+    currentCompartmentId = null;
+    //createProvider();
   }
 }

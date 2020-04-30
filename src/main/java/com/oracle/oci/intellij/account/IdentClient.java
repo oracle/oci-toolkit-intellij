@@ -3,9 +3,7 @@ package com.oracle.oci.intellij.account;
 import com.oracle.bmc.identity.IdentityClient;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
-import com.oracle.bmc.identity.IdentityClient;
 import com.oracle.bmc.identity.model.AvailabilityDomain;
-import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.Compartment.LifecycleState;
 import com.oracle.bmc.identity.model.RegionSubscription;
 import com.oracle.bmc.identity.requests.ListAvailabilityDomainsRequest;
@@ -14,6 +12,7 @@ import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
 import com.oracle.bmc.identity.responses.ListAvailabilityDomainsResponse;
 import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
 import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
+import com.oracle.oci.intellij.LogHandler;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -21,64 +20,58 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IdentClient implements PropertyChangeListener {
-  private static IdentClient single_instance = null;
-  private static IdentityClient identityClient;
+  private static final IdentClient single_instance = new IdentClient();
+  private IdentityClient identityClient;
   private List<Compartment> compartmentList = new ArrayList<Compartment>();
-  private final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
-  private String currentCompartmentName = "[Root Compartment]";
+  static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
+  private String currentCompartmentName = ROOT_COMPARTMENT_NAME;
 
-  private IdentClient() {
-    if (identityClient == null) {
-      identityClient = createIdentityClient();
-    }
-  }
-
-  public static IdentClient getInstance() {
-    if (single_instance == null) {
-      single_instance = new IdentClient();
+  public final static IdentClient getInstance() {
+    if (single_instance.identityClient == null) {
+      single_instance.createIdentityClient();
     }
     return single_instance;
   }
 
-  @Override public void propertyChange(PropertyChangeEvent evt) {
-    if ("RegionID".equals(evt.getPropertyName())) {
-      identityClient.setRegion(evt.getNewValue().toString());
+  @Override
+  public void propertyChange(PropertyChangeEvent evt) {
+    LogHandler.info("IdentClient: Handling the Event Update : " + evt.toString());
+    switch (evt.getPropertyName()) {
+    case PreferencesWrapper.EVENT_COMPARTMENT_UPDATE:
+      // No update here.
+      break;
+    case PreferencesWrapper.EVENT_REGION_UPDATE:
+      if(identityClient != null)
+        identityClient.setRegion(evt.getNewValue().toString());
+      break;
+    case PreferencesWrapper.EVENT_SETTINGS_UPDATE:
+      reset();
+      currentCompartmentName = getRootCompartment().getName();
+      break;
+
     }
   }
 
-  /*
-      @Override
-      public void updateClient() {
-          close();
-          createIdentityClient();
-      }
-
-      @Override
-      public void close() {
-          try {
-              if (identityClient != null) {
-                  identityClient.close();
-              }
-          } catch (Exception e) {
-              ErrorHandler.logErrorStack(e.getMessage(), e);
-          }
-      }
-  */
-  private IdentityClient createIdentityClient() {
-    identityClient = new IdentityClient(
-        AuthProvider.getInstance().getProvider());
-    identityClient.setRegion(AuthProvider.getInstance().getRegion());
-    return identityClient;
+  private void reset() {
+    if(identityClient != null)
+      identityClient.close();
+    identityClient = null;
+    currentCompartmentName = "[Root Compartment]";
+    compartmentList.clear();
   }
 
-  @Override public void finalize() throws Throwable {
+  private void createIdentityClient() {
+    identityClient = new IdentityClient(AuthProvider.getInstance().getProvider());
+    identityClient.setRegion(AuthProvider.getInstance().getRegion());
+  }
+
+  @Override
+  public void finalize() throws Throwable {
     identityClient.close();
-    single_instance = null;
   }
 
   public Compartment getRootCompartment() {
-    String compartmentId = AuthProvider.getInstance().getProvider()
-        .getTenantId();
+    String compartmentId = AuthProvider.getInstance().getProvider().getTenantId();
     Compartment rootComp = Compartment.builder().compartmentId(compartmentId)
         .id(compartmentId).name(ROOT_COMPARTMENT_NAME)
         .lifecycleState(LifecycleState.Active).build();
@@ -149,18 +142,6 @@ public class IdentClient implements PropertyChangeListener {
 
   public String getCurrentCompartmentName() {
     return currentCompartmentName;
-        /*
-        getCompartmentList();
-        for(Compartment compartment : compartmentList) {
-            System.out.println("Current Compartment ID  : " + compartment.getId());
-            System.out.println("AuthPro Compartment ID  : " + AuthProvider.getInstance().getCompartmentId());
-            if (compartment.getId().equals(AuthProvider.getInstance().getCompartmentId())) {
-                return compartment.getName();
-            }
-        }
-        System.out.println("Unable to get the compartment id , returning the root compartment name.");
-        return ROOT_COMPARTMENT_NAME;
-         */
   }
 
   public List<RegionSubscription> getRegionsList() {

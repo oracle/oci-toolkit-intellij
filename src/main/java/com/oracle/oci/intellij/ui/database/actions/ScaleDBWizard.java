@@ -4,6 +4,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
+import com.oracle.oci.intellij.account.PreferencesWrapper;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.ADBConstants;
 import com.oracle.oci.intellij.ui.database.ADBInstanceClient;
@@ -48,12 +49,14 @@ public class ScaleDBWizard extends DialogWrapper {
             .scaleUpDownInstance(autonomousDatabaseSummary,
                 (int) cpuCountSpnr.getValue(), (int) storageSpnr.getValue(),
                 autoScalingChkBox.isSelected());
-        ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireSuccessNotification("Scaling completed successfully."));
+        ApplicationManager.getApplication().invokeLater(() -> {
+          UIUtil.fireSuccessNotification("Scaleup or Scaledown completed successfully.");
+          PreferencesWrapper.fireADBInstanceUpdateEvent("Scale");
+        });
       }
       catch (Exception e) {
         ApplicationManager.getApplication()
-            .invokeLater(() -> UIUtil.fireErrorNotification("Scaling failed."));
+            .invokeLater(() -> UIUtil.fireErrorNotification("Scaleup or Scaledown failed : " + e.getMessage()));
       }
     };
 

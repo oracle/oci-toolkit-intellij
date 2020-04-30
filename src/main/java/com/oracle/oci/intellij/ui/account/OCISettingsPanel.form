@@ -206,7 +206,7 @@
               </component>
             </children>
           </grid>
-          <component id="22877" class="javax.swing.JLabel">
+          <component id="22877" class="javax.swing.JLabel" binding="ociConfigInstrcutionLbl">
             <constraints>
               <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -215,7 +215,7 @@
               <text value="&lt;html&gt; Click &lt;a href=&quot;https://docs.cloud.oracle.com/iaas/Content/API/Concepts/sdkconfig.htm&quot;&gt;here&lt;/a&gt; to see the instructions to create OCI configuration file.&lt;/html"/>
             </properties>
           </component>
-          <component id="6c088" class="javax.swing.JLabel">
+          <component id="6c088" class="javax.swing.JLabel" binding="ociFreeTrialLbl">
             <constraints>
               <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>

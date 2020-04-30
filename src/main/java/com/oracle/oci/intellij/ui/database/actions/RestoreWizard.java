@@ -25,19 +25,18 @@ public class RestoreWizard extends DialogWrapper {
   private JSpinner spinner1;
   private JSpinner spinner2;
   private JButton refreshButton;
-
+  private SpinnerDateModel dateModel1;
+  private SpinnerDateModel dateModel2;
   private final AutonomousDatabaseSummary autonomousDatabaseSummary;
   private List<AutonomousDatabaseBackupSummary> backupList;
 
-  protected RestoreWizard(
-      final AutonomousDatabaseSummary autonomousDatabaseSummary) {
+  protected RestoreWizard(final AutonomousDatabaseSummary autonomousDatabaseSummary) {
     super(true);
     this.autonomousDatabaseSummary = autonomousDatabaseSummary;
-    init();
     setTitle("Restore from backup");
     setOKButtonText("Restore");
-    SpinnerDateModel dateModel1 = new SpinnerDateModel();
-    SpinnerDateModel dateModel2 = new SpinnerDateModel();
+    dateModel1 = new SpinnerDateModel();
+    dateModel2 = new SpinnerDateModel();
     spinner1.setModel(dateModel1);
     spinner2.setModel(dateModel2);
     spinner1.setEditor(new JSpinner.DateEditor(spinner1, "dd/MMM/yyyy"));
@@ -49,7 +48,7 @@ public class RestoreWizard extends DialogWrapper {
     dateModel1.setValue(DateUtils.addDays(today, -7));
     dateModel2.setValue(today);
     refreshButton.addActionListener((e) -> filterList());
-    fetchRestoreList();
+    init();
   }
 
   @Override
@@ -65,11 +64,11 @@ public class RestoreWizard extends DialogWrapper {
         ADBInstanceClient.getInstance()
             .restore(autonomousDatabaseSummary.getId(), restoreTimestamp);
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireSuccessNotification("ADB Instance Successfully Restored.."));
+            .fireSuccessNotification("ADB Instance successfully restored."));
       }
       catch (Exception e) {
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireErrorNotification("Restore Failed : " + e.getMessage()));
+            .fireErrorNotification("Failed to restore : " + e.getMessage()));
       }
     };
 
@@ -90,53 +89,69 @@ public class RestoreWizard extends DialogWrapper {
   }
 
   private void fetchRestoreList() {
-    System.out.println("Fetching the restore list : " + Thread.currentThread().getName());
-    final DefaultTableModel model = (DefaultTableModel) backupListTable
-        .getModel();
+    // TODO : Need to convert it to asyc model. Currently leaving it as it is.
+    // Coverting to async model using UIUtil.fetchAndUpdateUI is not working for some unknown reason
+    // have to debug it later.
+    final DefaultTableModel model = (DefaultTableModel) backupListTable.getModel();
     model.setRowCount(0);
-    model.addRow(new Object[] { "Loading data. Please wait..", "", "" });
-    final Runnable fetch = () -> {
-      try {
-        backupList = ADBInstanceClient.getInstance()
-            .getBackupList(autonomousDatabaseSummary);
-        filterList();
-        System.out.println("Fetch completed. Backup Size : " + backupList.size());
-      }
-      catch(Exception e) {
-        e.printStackTrace();
-      }
-    };
-
-    UIUtil.fetchAndUpdateUI(fetch, null);
+    updateActionState(false);
+    UIUtil.setStatus("Loading the restore data. Please wait..");
+    try {
+      backupList = ADBInstanceClient.getInstance().getBackupList(autonomousDatabaseSummary);
+      filterList();
+    }
+    catch(Exception e) {
+      e.printStackTrace();
+      ApplicationManager.getApplication().invokeLater( () ->
+          UIUtil.fireErrorNotification("Unable to get the restore list : " + e.getMessage()));
+    }
   }
 
   private void filterList() {
-    System.out.println("Updating the UI " + backupList);
-    final DefaultTableModel model = (DefaultTableModel) backupListTable
-        .getModel();
-    model.setRowCount(0);
-    if(backupList != null && backupList.size() > 0) {
-      final Date fromDate = (Date) spinner1.getValue();
-      final Date toDate = (Date) spinner2.getValue();
-
-      for (AutonomousDatabaseBackupSummary backup : backupList) {
-        if (backup.getTimeEnded().compareTo(fromDate) >= 0
-            && backup.getTimeEnded().compareTo(toDate) <= 0) {
-          model.addRow(new Object[] { backup.getDisplayName(),
-              backup.getLifecycleState().getValue(),
-              backup.getType().getValue() });
+    try {
+      final DefaultTableModel model = (DefaultTableModel) backupListTable
+          .getModel();
+      model.setRowCount(0);
+      if(backupList != null && backupList.size() > 0) {
+        //UIUtil.setStatus("Found " + backupList.size() +" restore " + (backupList.size() == 1 ? "point." : "points."));
+        final Date fromDate = (Date) dateModel1.getDate();
+        final Date toDate = (Date) dateModel2.getDate();
+        int hiddingCount = 0;
+        for (AutonomousDatabaseBackupSummary backup : backupList) {
+          if (backup.getTimeEnded().compareTo(fromDate) >= 0
+              && backup.getTimeEnded().compareTo(toDate) <= 0) {
+            model.addRow(new Object[] { backup.getDisplayName(),
+                backup.getLifecycleState().getValue(),
+                backup.getType().getValue() });
+          }
+          else {
+            hiddingCount++;
+          }
         }
+        UIUtil.setStatus("Found " + backupList.size() +" restore " + (backupList.size() == 1 ? "point." : "points.")
+            + " Shown : " + (backupList.size() - hiddingCount) + " Hidden : " + hiddingCount);
+      }
+      else {
+        UIUtil.setStatus("No restore data found.");
       }
     }
-    else {
-      model.addRow(new Object[] { "No Data Found.", "", "" });
+    catch(Exception ex) {
+      ex.printStackTrace();
+      UIUtil.fireErrorNotification("Filter List: Unable to get the restore list : " + ex.getMessage());
     }
-    System.out.println("Updating the UI");
+    updateActionState(true);
+  }
+
+  private void updateActionState(final boolean enabled) {
+    refreshButton.setEnabled(enabled);
+    spinner1.setEnabled(enabled);
+    spinner2.setEnabled(enabled);
   }
 
   @Nullable
   @Override
   protected JComponent createCenterPanel() {
+    fetchRestoreList();
     return mainPanel;
   }
 }

@@ -1,18 +1,19 @@
 package com.oracle.oci.intellij.ui.account;
 
-import com.intellij.openapi.options.Configurable;
+import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.oracle.bmc.Region;
-import com.oracle.oci.intellij.ErrorHandler;
+import com.oracle.oci.intellij.LogHandler;
 import com.oracle.oci.intellij.account.ConfigFileOperations;
 import com.oracle.oci.intellij.account.ConfigFileOperations.ConfigFile;
 import com.oracle.oci.intellij.account.PreferencesWrapper;
-import org.jetbrains.annotations.Nls;
+import com.oracle.oci.intellij.ui.common.UIUtil;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,8 +24,7 @@ import java.util.regex.Pattern;
 
 import static com.oracle.bmc.util.internal.FileUtils.expandUserHome;
 
-public class OCISettingsPanel
-    implements Configurable, Configurable.VariableProjectAppLevel {
+public class OCISettingsPanel extends DialogWrapper {
 
   private static final String ADD_PROFILE = "Add Profile";
   private static Pattern pv = Pattern.compile("\\$\\{(\\w+)\\}");
@@ -47,6 +47,8 @@ public class OCISettingsPanel
   private JButton saveProfileButton;
   private JTextField profileNameTxt;
   private JLabel profileNameLbl;
+  private JLabel ociConfigInstrcutionLbl;
+  private JLabel ociFreeTrialLbl;
   private final JFileChooser fileChooser = new JFileChooser();
   private final JFileChooser pemFileChooser = new JFileChooser();
 
@@ -54,14 +56,25 @@ public class OCISettingsPanel
   private int defaultRegionIndex;
 
   public OCISettingsPanel() {
+    super(true);
+    init();
+    setTitle("OCI Settings");
+    setOKButtonText("Apply");
     configFileTxt.setEditable(false);
+
     configFileTxt.addActionListener(event -> {
       fileChooser
           .setSelectedFile(new File(PreferencesWrapper.getConfigFileName()));
+      fileChooser.setFileHidingEnabled(false);
       int i = fileChooser.showDialog(mainPanel, "Select Config File");
       if (i == JFileChooser.APPROVE_OPTION) {
-        configFileTxt.setText(fileChooser.getSelectedFile().getAbsolutePath());
-        onConfigFileChange();
+        final File selectedFile = new File(fileChooser.getSelectedFile().getAbsolutePath());
+        if(selectedFile.exists()) {
+          onConfigFileChange(fileChooser.getSelectedFile().getAbsolutePath(), "DEFAULT");
+        }
+        else {
+          UIUtil.fireErrorNotification("Config file not exist.");
+        }
       }
     });
 
@@ -69,6 +82,7 @@ public class OCISettingsPanel
     final FileNameExtensionFilter filter = new FileNameExtensionFilter(
         "PrivateKey File", "pem");
     pemFileChooser.addChoosableFileFilter(filter);
+    pemFileChooser.setFileHidingEnabled(false);
     privateKeyFileTxt.addActionListener(event -> {
       int i = pemFileChooser.showDialog(mainPanel, "Select PrivateKey File");
       if (i == JFileChooser.APPROVE_OPTION) {
@@ -96,33 +110,74 @@ public class OCISettingsPanel
 
     saveProfileButton.addActionListener(e -> saveProfile());
 
-    configFileTxt.setText(PreferencesWrapper.getConfigFileName());
-    onConfigFileChange();
+    UIUtil.makeWebLink(ociConfigInstrcutionLbl,
+        "https://docs.cloud.oracle.com/iaas/Content/API/Concepts/sdkconfig.htm");
+    UIUtil.makeWebLink(ociFreeTrialLbl, "https://www.oracle.com/cloud/free/");
+    onConfigFileChange(PreferencesWrapper.getConfigFileName(), PreferencesWrapper.getProfile());
   }
 
-  private void onConfigFileChange() {
+  @Override
+  public void doOKAction() {
+    final String profileName = getSelectedProfile();
+    final String configFile = getConfigFile();
+    final String region = getSelectedRegion();
+    if(configFile == null || configFile.trim().isEmpty()) {
+      Messages.showErrorDialog("Invalid Config File", "Error");
+    }
+    else if(profileName == null || profileName.trim().isEmpty()) {
+      Messages.showErrorDialog("Invalid Profile Name", "Error");
+    }
+    else if(region == null || region.trim().isEmpty()) {
+      Messages.showErrorDialog("Invalid Region", "Error");
+    }
+    else {
+      PreferencesWrapper.updateConfig(configFile, profileName, region);
+      UIUtil.fireSuccessNotification("<html>OCI configuration updated.<br>Config file Path : " + configFile +
+          "<br>Profile : " + profileName +
+          "<br>Region : " + region +"</html>");
+      close(DialogWrapper.OK_EXIT_CODE);
+    }
+  }
+
+  @Nullable
+  @Override
+  protected JComponent createCenterPanel() {
+    final JPanel panel = (JPanel)createPanel();
+    panel.setPreferredSize(new Dimension(800, 500));
+    return panel;
+  }
+
+
+  private void onConfigFileChange(final String newConfigFile, final String profile) {
     final String configFileName = configFileTxt.getText();
-    // Messages.showInfoMessage("Config File : " + configFileName, "Config");
-    final File f = new File(configFileName);
+    final File f = new File(newConfigFile);
     if (f.length() > 50000) {
       Messages.showErrorDialog("File is too large", "Error");
       return;
     }
     try {
-      config = ConfigFileOperations
-          .parse(configFileName, PreferencesWrapper.getProfile());
-      Set<String> profileNames = config.getProfileNames();
+      config = ConfigFileOperations.parse(newConfigFile, profile);
+      final Set<String> profileNames = config.getProfileNames();
       profileCmb.removeAllItems();
+      configFileTxt.setText(newConfigFile);
       profileCmb.addItem(ADD_PROFILE);
-      profileNames.forEach(e -> profileCmb.addItem(e));
-      if (profileNames.size() > 0) {
-        profileCmb.setSelectedIndex(1);
+      int index = 1;
+      int selectedIndex = profileNames.size() > 0 ? 1 : 0;
+      for(String e: profileNames) {
+        profileCmb.addItem(e);
+        if(e.equals(profile))
+          selectedIndex = index;
+        index++;
+      }
+      profileCmb.setSelectedIndex(selectedIndex);
+      if (profileCmb.getSelectedIndex() > 1) {
         onProfileChange();
       }
-
     }
     catch (IOException e) {
-      ErrorHandler.logErrorStack("Error", e);
+      UIUtil.fireErrorNotification("<html>Unable to parse the config file.<br>File : "
+          + newConfigFile + "<br>Error : " + e.getMessage() + "</html>");
+      LogHandler.error("Error", e);
     }
 
   }
@@ -159,6 +214,7 @@ public class OCISettingsPanel
     profileNameLbl.setVisible(true);
     profileNameTxt.setVisible(true);
     saveProfileButton.setEnabled(true);
+    myOKAction.setEnabled(false);
   }
 
   private void populateProfileParams(String profile) {
@@ -202,6 +258,7 @@ public class OCISettingsPanel
     profileNameTxt.setVisible(false);
     profileNameTxt.setEditable(true);
     saveProfileButton.setEnabled(false);
+    myOKAction.setEnabled(true);
   }
 
   /*
@@ -227,40 +284,10 @@ public class OCISettingsPanel
         result = result.replace("${" + var + "}", value);
     }
     return result;
-  }//expandvars
+  }
 
   public JComponent createPanel() {
     return mainPanel;
-  }
-
-  @Nullable @Override public JComponent createComponent() {
-    return mainPanel;
-  }
-
-  @Override public boolean isProjectLevel() {
-    return false;
-  }
-
-  // TODO : Implement
-  public boolean isModified() {
-    System.out.println("Is Modified??");
-    return false;
-  }
-
-  // TODO : Implement
-  public void apply() {
-    System.out.println("Setting Applied.");
-  }
-
-  // TODO : Implement
-  public void reset() {
-    System.out.println("Settings Reset.");
-  }
-
-  @Nls(capitalization = Nls.Capitalization.Title)
-  @Override
-  public String getDisplayName() {
-    return "OCI Settings";
   }
 
   private void saveProfile() {
@@ -301,15 +328,16 @@ public class OCISettingsPanel
         config.update("DEFAULT", newProfileParams);
         ConfigFileOperations.save(configFileTxt.getText(), config, "DEFAULT");
       }
-
-      config.update(profileNameTxt.getText(), newProfileParams);
-      ConfigFileOperations
-          .save(configFileTxt.getText(), config, profileNameTxt.getText());
+      else {
+        config.update(profileNameTxt.getText(), newProfileParams);
+        ConfigFileOperations
+            .save(configFileTxt.getText(), config, profileNameTxt.getText());
+      }
       Messages.showInfoMessage("Saved Successfully", "Success");
-      onConfigFileChange();
+      onConfigFileChange(configFileTxt.getText(), "DEFAULT");
     }
     catch (IOException e) {
-      ErrorHandler.logErrorStack("Error", e);
+      LogHandler.error("Error", e);
     }
   }
 

@@ -21,8 +21,6 @@ public class ADBInfoWizard extends DialogWrapper {
         init();
         final DefaultTableModel model = new DefaultTableModel(new String[]{"Key", "Value"},0);
         table1.setModel(model);
-        //table1.setPreferredSize(new Dimension(500,500));
-
         model.addRow(new String[]{"Display Name", info.getDisplayName()});
         model.addRow(new String[]{"Database Name", info.getDatabaseName()});
         model.addRow(new String[]{"Lifecycle State", info.getLifeCycleState()});

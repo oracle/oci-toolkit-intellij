@@ -5,6 +5,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.oracle.bmc.Region;
 import com.oracle.bmc.identity.model.RegionSubscription;
+import com.oracle.oci.intellij.LogHandler;
 import com.oracle.oci.intellij.account.IdentClient;
 import com.oracle.oci.intellij.account.PreferencesWrapper;
 import com.oracle.oci.intellij.ui.common.Icons;
@@ -44,38 +45,44 @@ public class RegionSelectionAction extends AnAction {
   @Override
   // TODO: See if non-blocking UI calls required here.
   public void actionPerformed(@NotNull AnActionEvent e) {
-    if (e.getInputEvent() instanceof MouseEvent) {
-      final MouseEvent mouseEvent = ((MouseEvent) e.getInputEvent());
-      final List<RegionSubscription> regionList = IdentClient.getInstance()
-          .getRegionsList();
-      final JPopupMenu popupMenu = new JPopupMenu();
-      final ButtonGroup menuGroup = new ButtonGroup();
-      final String currentRegion = PreferencesWrapper.getRegion();
-      for (RegionSubscription r : regionList) {
-        final JMenuItem regionMenu = new JRadioButtonMenuItem();
-        final Region selectedRegion = Region.fromRegionCode(r.getRegionKey());
-        if (Pattern.matches("\\w{2}-\\w+-\\d+", r.getRegionName())) {
-          regionMenu.setText(getFormattedRegion(r.getRegionName()));
+    try {
+      if (e.getInputEvent() instanceof MouseEvent) {
+        final MouseEvent mouseEvent = ((MouseEvent) e.getInputEvent());
+        final List<RegionSubscription> regionList = IdentClient.getInstance()
+            .getRegionsList();
+        final JPopupMenu popupMenu = new JPopupMenu();
+        final ButtonGroup menuGroup = new ButtonGroup();
+        final String currentRegion = PreferencesWrapper.getRegion();
+        for (RegionSubscription r : regionList) {
+          final JMenuItem regionMenu = new JRadioButtonMenuItem();
+          final Region selectedRegion = Region.fromRegionCode(r.getRegionKey());
+          if (Pattern.matches("\\w{2}-\\w+-\\d+", r.getRegionName())) {
+            regionMenu.setText(getFormattedRegion(r.getRegionName()));
+          }
+          else {
+            regionMenu.setText(r.getRegionName());
+          }
+          if (iconMap.get(r.getRegionName()) != null) {
+            URL url = getClass().getResource(iconMap.get(r.getRegionName()));
+            if (url != null)
+              regionMenu.setIcon(new ImageIcon(url));
+          }
+          regionMenu.addActionListener((e1) -> {
+            PreferencesWrapper.setRegion(selectedRegion.getRegionId());
+          });
+          if (currentRegion.equals(selectedRegion.getRegionId()))
+            regionMenu.setSelected(true);
+          menuGroup.add(regionMenu);
+          popupMenu.add(regionMenu);
         }
-        else {
-          regionMenu.setText(r.getRegionName());
-        }
-        if (iconMap.get(r.getRegionName()) != null) {
-          URL url = getClass().getResource(iconMap.get(r.getRegionName()));
-          if (url != null)
-            regionMenu.setIcon(new ImageIcon(url));
-        }
-        regionMenu.addActionListener((e1) -> {
-          PreferencesWrapper.setRegion(selectedRegion.getRegionId());
-        });
-        if (currentRegion.equals(selectedRegion.getRegionId()))
-          regionMenu.setSelected(true);
-        menuGroup.add(regionMenu);
-        popupMenu.add(regionMenu);
+        popupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(),
+            mouseEvent.getY());
       }
-      popupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(),
-          mouseEvent.getY());
     }
+    catch(Exception ex) {
+      LogHandler.error(ex.getMessage(), ex);
+    }
+
 
   }
 

@@ -4,43 +4,64 @@
  */
 package com.oracle.oci.intellij.account;
 
+import com.oracle.oci.intellij.LogHandler;
+import com.oracle.oci.intellij.ui.database.ADBInstanceClient;
+
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.prefs.Preferences;
 
-public class PreferencesWrapper implements PropertyChangeListener {
+public class PreferencesWrapper {
 
   private final static String PREFERENCES_LOCATION = "oci-intelli-prefs";
-  private static Preferences systemPrefs = Preferences.userRoot()
-      .node(PREFERENCES_LOCATION);
   private final static String VERSION = "1.1.0";
 
-  public static void setRegion(String regionId) {
+  // Events
+  public static final String EVENT_REGION_UPDATE = "Event-Region";
+  public static final String EVENT_COMPARTMENT_UPDATE = "Event-Compartment";
+  public static final String EVENT_SETTINGS_UPDATE = "Event-Settings";
+  public static final String EVENT_ADBINSTANCE_UPDATE = "Event-ADBInstanceUpdate";
+
+  private final static Preferences systemPrefs = Preferences.userRoot().node(PREFERENCES_LOCATION);
+  private final static PropertyChangeSupport pcs = new PropertyChangeSupport(new PreferencesWrapper());
+
+  public static void addPropertyChangeListener(PropertyChangeListener pcl) {
+    pcs.addPropertyChangeListener(pcl);
+  }
+
+  public static void updateConfig(final String configFileName,
+      final String profile, final String region) {
+    systemPrefs.put("profile", profile);
+    systemPrefs.put("region", region);
+    systemPrefs.put("configfile", configFileName);
+    // Always fire the event when updating the settings.
+    pcs.firePropertyChange(EVENT_SETTINGS_UPDATE, "",
+            configFileName);
+  }
+
+  public static void setRegion(final String regionId) {
     final String oldValue = getRegion();
     systemPrefs.put("region", regionId);
-    GlobalEventHandler.getInstance()
-        .firePropertyChange(GlobalEventHandler.PROPERTY_REGION_ID, oldValue,
+    pcs.firePropertyChange(EVENT_REGION_UPDATE, oldValue,
             regionId);
-
-    //ErrorHandler.logInfo("Setting the region to: "+ regionId);
+    LogHandler.info("Updating the region to: "+ regionId);
   }
 
-  public static void setProfile(String profileName) {
-    final String oldValue = getProfile();
-    systemPrefs.put("profile", profileName);
-    GlobalEventHandler.getInstance()
-        .firePropertyChange(GlobalEventHandler.PROPERTY_PROFILE, oldValue,
-            profileName);
-    //ErrorHandler.logInfo("Setting the profile to: "+ profileName);
+  public static void setCompartment(final String compartmentId) {
+    final String oldValue = getCompartment();
+    systemPrefs.put("compartment", compartmentId);
+    pcs.firePropertyChange(EVENT_COMPARTMENT_UPDATE, oldValue,
+            compartmentId);
+    LogHandler.info("Updating the compartment to: "+ compartmentId);
   }
 
-  public static void setConfigFileName(String configFileName) {
-    final String oldValue = getConfigFileName();
-    systemPrefs.put("configfile", configFileName);
-    GlobalEventHandler.getInstance()
-        .firePropertyChange(GlobalEventHandler.PROPERTY_CONFIG_FILE, oldValue,
-            configFileName);
-    //ErrorHandler.logInfo("Setting the config file to: "+ configFileName);
+  public static void fireADBInstanceUpdateEvent(final String updatedType) {
+    pcs.firePropertyChange(EVENT_ADBINSTANCE_UPDATE, "", updatedType);
+  }
+
+  public static String getCompartment() {
+    return systemPrefs.get("compartment", "");
   }
 
   public static String getRegion() {
@@ -52,18 +73,10 @@ public class PreferencesWrapper implements PropertyChangeListener {
   }
 
   public static String getConfigFileName() {
-    return systemPrefs
-        .get("configfile", ConfigFileOperations.getConfigFilePath());
+    return systemPrefs.get("configfile", ConfigFileOperations.getConfigFilePath());
   }
 
   public static String getUserAgent() {
     return String.format("Oracle-IntelliJToolkit/%s", VERSION);
-  }
-
-  @Override
-  public void propertyChange(PropertyChangeEvent evt) {
-    if ("RegionID".equals(evt.getPropertyName())) {
-      setRegion(evt.getNewValue().toString());
-    }
   }
 }
