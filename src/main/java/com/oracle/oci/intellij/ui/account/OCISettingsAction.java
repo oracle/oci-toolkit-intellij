@@ -18,7 +18,7 @@ import java.awt.*;
 public class OCISettingsAction extends AnAction {
 
   public OCISettingsAction() {
-    super("OCI Settings", "OCI Explorer Settings",
+    super("Oracle Cloud Infrastructure", "OCI Explorer Settings",
         new ImageIcon(OCISettingsAction
             .class.getResource("/icons/toolbar-login.png")));
   }

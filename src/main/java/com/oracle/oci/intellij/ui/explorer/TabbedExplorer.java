@@ -25,7 +25,7 @@ public class TabbedExplorer extends DialogWrapper {
   }
 
   public JComponent getContent() {
-    tabbedPane1.add("ADB Instances", databaseDetails.createCenterPanel());
+    tabbedPane1.add("Autonomous Database Instances", databaseDetails.createCenterPanel());
     return mainPanel;
   }
 

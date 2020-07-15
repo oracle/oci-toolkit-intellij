@@ -24,7 +24,7 @@
 
     <actions>
         <group id="com.oracle.oci.intellij.ui.account.OCIExplorerActionGroup" class="com.intellij.openapi.actionSystem.DefaultActionGroup"
-               text="OCI Settings" description="OCI Settings">
+               text="Oracle Cloud Infrastructure" description="Oracle Cloud Infrastructure Settings">
             <action class="com.oracle.oci.intellij.ui.account.OCISettingsAction"
                     id="com.oracle.oci.intellij.ui.account.OCISettingsAction" text="OCISettings" description="Configure OCI Settings"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
