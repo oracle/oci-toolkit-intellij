@@ -805,8 +805,11 @@ exception to your version of the library, but you are not obligated to
 do so.  If you do not wish to do so, delete this exception statement
 from your version.
 
+Oracle licenses the following module to you solely under the license(s) set forth below.
 Jersey 2.27
 COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.1
+Except as noted below, this software is dual-licensed to you by Oracle under the Universal Permissive License (UPL) 1.0 
+or Apache License 2.0. See below for license terms. You may choose either license.
 
 1. Definitions.
 
