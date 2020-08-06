@@ -17,6 +17,12 @@ plugins {
     id "org.jetbrains.intellij" version "0.4.15"
 }
 
+jar {
+    from{
+        ["LICENSE.txt", "THIRD_PARTY_LICENSES.txt"]
+    }
+}
+
 group 'com.oracle'
 version '1.0.0'
 
