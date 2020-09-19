@@ -228,6 +228,21 @@ public class ADBInstanceClient implements PropertyChangeListener {
     }
   }
 
+  public void changeWorkloadTypeToOLTP(final String instanceId) {
+    UpdateAutonomousDatabaseDetails updateRequest = UpdateAutonomousDatabaseDetails.builder()
+        .dbWorkload(UpdateAutonomousDatabaseDetails.DbWorkload.Oltp).build();
+    LogHandler.info("Change workload type for ADB Instance : " + instanceId);
+    try {
+      databaseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
+          .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(instanceId).build());
+    }
+    catch(Exception ex) {
+      LogHandler.error("Failed to change the workload type for the ADB Instance : " + instanceId, ex);
+      throw ex;
+    }
+
+  }
+
   public void createClone(CreateAutonomousDatabaseCloneDetails cloneRequest) {
     LogHandler.info("Creating clone source ID : " + cloneRequest.getSourceId());
     try {

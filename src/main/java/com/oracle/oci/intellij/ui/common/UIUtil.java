@@ -50,14 +50,14 @@ public class UIUtil {
 
   public static void fireSuccessNotification(@NotNull final String msg) {
     //fireNotification(msg, Messages.getInformationIcon(), JBColor.PanelBackground);
-    final Notification notification = NOTIFICATION_GROUP.createNotification("OCI","",
+    final Notification notification = NOTIFICATION_GROUP.createNotification("Oracle Cloud Infrastructure","",
         msg, NotificationType.INFORMATION);
     notification.notify(currentProject);
   }
 
   public static void fireErrorNotification(@NotNull final String msg) {
     //fireNotification(msg, Messages.getErrorIcon(), JBColor.PanelBackground);
-    final Notification notification = NOTIFICATION_GROUP.createNotification("OCI","",
+    final Notification notification = NOTIFICATION_GROUP.createNotification("Oracle Cloud Infrastructure","",
         msg, NotificationType.ERROR);
     notification.notify(currentProject);
   }

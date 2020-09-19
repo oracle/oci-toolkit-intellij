@@ -33,6 +33,7 @@ public class DatabaseDetails implements PropertyChangeListener {
 
   private static final String WORKLOAD_DW = "Data Warehouse";
   private static final String WORKLOAD_OLTP = "Transaction Processing";
+  private static final String WORKLOAD_AJD = "JSON Database";
   private static final String WORKLOAD_ALL = "All";
 
   private RefreshAction refreshAction;
@@ -90,6 +91,7 @@ public class DatabaseDetails implements PropertyChangeListener {
   private void initializeWorkLoadTypeFilter() {
     workloadCmb.addItem(WORKLOAD_ALL);
     workloadCmb.addItem(WORKLOAD_OLTP);
+    workloadCmb.addItem(WORKLOAD_AJD);
     workloadCmb.addItem(WORKLOAD_DW);
     workloadCmb.setSelectedIndex(0);
     workloadCmb.addItemListener((ItemEvent e) -> {
@@ -105,6 +107,8 @@ public class DatabaseDetails implements PropertyChangeListener {
       return AutonomousDatabaseSummary.DbWorkload.Oltp;
     case WORKLOAD_DW:
       return AutonomousDatabaseSummary.DbWorkload.Dw;
+    case WORKLOAD_AJD:
+      return AutonomousDatabaseSummary.DbWorkload.Ajd;
     default:
       return AutonomousDatabaseSummary.DbWorkload.UnknownEnumValue;
     }
@@ -184,11 +188,22 @@ public class DatabaseDetails implements PropertyChangeListener {
         WizardActionHandler.Action.CREATE_ADB,
         CreateAutonomousDatabaseBase.DbWorkload.Oltp,
         "Create ATP Instance")));
+    popupMenu.add(new JMenuItem(new WizardActionHandler(
+        WizardActionHandler.Action.CREATE_ADB,
+        CreateAutonomousDatabaseBase.DbWorkload.Ajd,
+        "Create AJD Instance")));
     if (selectedSummary != null) {
       popupMenu.addSeparator();
       popupMenu.add(new JMenuItem(
           new WizardActionHandler(WizardActionHandler.Action.ADMIN_PWD_CHANGE,
               selectedSummary, "Admin Password")));
+
+      if(selectedSummary.getDbWorkload().equals(
+          AutonomousDatabaseSummary.DbWorkload.Ajd)) {
+        popupMenu.add(
+            new JMenuItem(new SimpleActionHandler(
+                selectedSummary, SimpleActionHandler.ActionType.CHANGE_WORKLOAD_TYPE)));
+      }
       popupMenu
           .add(new JMenuItem(new WizardActionHandler(
               WizardActionHandler.Action.CLONE_DB,
@@ -207,6 +222,9 @@ public class DatabaseDetails implements PropertyChangeListener {
       popupMenu.add(
           new JMenuItem(new WizardActionHandler(WizardActionHandler.Action.SCALE_ADB,
               selectedSummary, "Scale Up/Down")));
+      popupMenu.add(
+          new JMenuItem(new SimpleActionHandler(
+              selectedSummary, SimpleActionHandler.ActionType.SERVICE_CONSOLE)));
 
       if (selectedSummary.getLifecycleState() == LifecycleState.Stopped)
         popupMenu.add(new JMenuItem(new SimpleActionHandler(selectedSummary,
@@ -225,12 +243,6 @@ public class DatabaseDetails implements PropertyChangeListener {
           WizardActionHandler.Action.ADB_INFO,
           selectedSummary,
           "Autonomous Database Information")));
-
-      /*
-      popupMenu.addSeparator();
-      popupMenu.add(new JMenuItem(
-          new RegisterDriverAction(this, "Register Database Driver")));
-       */
     }
     return popupMenu;
   }

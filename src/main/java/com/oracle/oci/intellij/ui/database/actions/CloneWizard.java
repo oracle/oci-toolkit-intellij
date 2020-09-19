@@ -71,6 +71,8 @@ public class CloneWizard extends DialogWrapper {
 
   protected CloneWizard(AutonomousDatabaseSummary autonomousDatabaseSummary) {
     super(true);
+    if(autonomousDatabaseSummary == null)
+      throw new RuntimeException("ADB instance is NULL");
     this.autonomousDatabaseSummary = autonomousDatabaseSummary;
     setTitle("Create ADB Instance");
     setOKButtonText("Clone");
@@ -159,6 +161,17 @@ public class CloneWizard extends DialogWrapper {
 
       }
     });
+
+    if(autonomousDatabaseSummary.getDbWorkload()
+        == AutonomousDatabaseSummary.DbWorkload.Ajd) {
+      licenseIncldBtn.setSelected(true);
+      licenseTypePanel.setEnabled(false);
+      alwayFreeChk.setEnabled(false);
+      alwayFreeChk.setSelected(false);
+      licenseIncldBtn.setSelected(true);
+      licenseIncldBtn.setEnabled(false);
+      byolRBtn.setEnabled(false);
+    }
   }
 
   public void doOKAction() {
@@ -175,6 +188,10 @@ public class CloneWizard extends DialogWrapper {
     if (autonomousDatabaseSummary.getDbWorkload()
         == AutonomousDatabaseSummary.DbWorkload.Dw) {
       workloadType = CreateAutonomousDatabaseDetails.DbWorkload.Dw;
+    }
+    else if (autonomousDatabaseSummary.getDbWorkload()
+        == AutonomousDatabaseSummary.DbWorkload.Ajd) {
+      workloadType = CreateAutonomousDatabaseDetails.DbWorkload.Ajd;
     }
     else {
       workloadType = CreateAutonomousDatabaseDetails.DbWorkload.Oltp;

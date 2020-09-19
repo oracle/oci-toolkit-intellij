@@ -206,7 +206,7 @@ public class CreateADBInstanceWizard extends DialogWrapper {
     });
 
     // Hide all the OLTP specific controls if open in ADW mode.
-    if (workloadType.equals(DbWorkload.Dw)) {
+    if (!workloadType.equals(DbWorkload.Oltp)) {
       deploymentTypePanel.setVisible(false);
       deploymentLabel.setVisible(false);
       adcCompartmentBtn.setVisible(false);
@@ -214,6 +214,16 @@ public class CreateADBInstanceWizard extends DialogWrapper {
       adcCompartmentLabel.setVisible(false);
       dbContainerLabel.setVisible(false);
       databaseContainerCmb.setVisible(false);
+    }
+
+    if(workloadType.equals(DbWorkload.Ajd)) {
+      licenseIncldBtn.setSelected(true);
+      licenseTypePanel.setEnabled(false);
+      alwayFreeChk.setEnabled(false);
+      alwayFreeChk.setSelected(false);
+      licenseIncldBtn.setSelected(true);
+      licenseIncldBtn.setEnabled(false);
+      byolRBtn.setEnabled(false);
     }
 
   }
