@@ -38,7 +38,7 @@ public class AuthProvider implements PropertyChangeListener {
     try {
       final File configFile = new File(PreferencesWrapper.getConfigFileName());
       if(!configFile.exists())
-        throw new RuntimeException("Unable to find the config file : " + PreferencesWrapper.getConfigFileName());
+        LogHandler.error("Unable to find the config file : " + PreferencesWrapper.getConfigFileName());
       provider = new ConfigFileAuthenticationDetailsProvider(
           PreferencesWrapper.getConfigFileName(), PreferencesWrapper.getProfile());
       currentConfigFileName = PreferencesWrapper.getConfigFileName();
@@ -49,11 +49,11 @@ public class AuthProvider implements PropertyChangeListener {
     }
     catch (RuntimeException re) {
       LogHandler.error(re.getMessage(), re);
-      throw re;
+      //throw re;
     }
     catch (Exception e) {
       LogHandler.error(e.getMessage(), e);
-      throw new RuntimeException(e);
+      //throw new RuntimeException(e);
     }
 
   }

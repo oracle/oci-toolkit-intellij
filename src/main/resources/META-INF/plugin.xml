@@ -21,6 +21,7 @@
     <depends optional="true">com.intellij.database</depends>
     <depends optional="true">com.intellij.modules.ultimate</depends>
     <depends optional="true">com.intellij.modules.database</depends>
+    <depends optional="true">com.intellij.modules.lang</depends>
 
     <actions>
         <group id="com.oracle.oci.intellij.ui.account.OCIExplorerActionGroup" class="com.intellij.openapi.actionSystem.DefaultActionGroup"

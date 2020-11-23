@@ -46,6 +46,7 @@ public class DatabaseDetails implements PropertyChangeListener {
   private JLabel compartmentValueLbl;
   private JLabel regionValueLbl;
   private JPanel tablePanel;
+  private JButton createButton;
   private List<AutonomousDatabaseSummary> instances;
 
   public DatabaseDetails() {
@@ -55,6 +56,11 @@ public class DatabaseDetails implements PropertyChangeListener {
     initializeLabels();
     populateTableData();
     refreshADBListButton.setAction(refreshAction);
+    createButton.addMouseListener(new MouseAdapter() {
+      public void mousePressed(MouseEvent e) {
+        getADBActionMenu(null, false).show(e.getComponent(), e.getX(), e.getY());
+      }
+    });;
   }
 
   private void initializeActions() {
@@ -163,7 +169,7 @@ public class DatabaseDetails implements PropertyChangeListener {
                     .getModel().getValueAt(adbTable.getSelectedRow(), 2);
               }
             }
-            popupMenu = getADBActionMenu(selectedSummary);
+            popupMenu = getADBActionMenu(selectedSummary, true);
             popupMenu.show(e.getComponent(), e.getX(), e.getY());
           }
         }
@@ -176,10 +182,12 @@ public class DatabaseDetails implements PropertyChangeListener {
   }
 
   private JPopupMenu getADBActionMenu(
-      AutonomousDatabaseSummary selectedSummary) {
+      AutonomousDatabaseSummary selectedSummary, boolean showRefreshMenu) {
     JPopupMenu popupMenu = new JPopupMenu();
-    popupMenu.add(new JMenuItem(new RefreshAction(this, "Refresh List")));
-    popupMenu.addSeparator();
+    if(showRefreshMenu) {
+      popupMenu.add(new JMenuItem(new RefreshAction(this, "Refresh List")));
+      popupMenu.addSeparator();
+    }
     popupMenu.add(new JMenuItem(
         new WizardActionHandler(WizardActionHandler.Action.CREATE_ADB,
             CreateAutonomousDatabaseBase.DbWorkload.Dw,
