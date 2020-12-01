@@ -9,7 +9,7 @@ It also supports switching between multiple accounts and regions.
 
 ## Home page 
 
-The project documentation is [here](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/intellijtoolkit.htm).
+For more details, see the [IntelliJ Toolkit Documentation](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/intellijtoolkit.htm).
 
 ## Download and Installation
 
@@ -19,7 +19,7 @@ For basic set up and configuration, see [Getting Started](https://docs.cloud.ora
 
 ## Using the Toolkit
 
-For use instructions, see [here](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/intellijusing.htm).
+For more details on how to use the toolkit, see the [Instructions](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/intellijusing.htm).
 
 ## Help
 
