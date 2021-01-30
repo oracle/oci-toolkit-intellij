@@ -103,7 +103,7 @@ public class CreateConnectionWizard extends DialogWrapper {
 
   public void doOKAction() {
     final String user = userNameTxt.getText();
-    final String password = new String(passwordTxt.getPassword());
+    final char[] password = passwordTxt.getPassword();
     final String aliasName = (String) tnsAliasCmb.getSelectedItem();
     final String walletLocation = walletLocationTxt.getText()
         .replace('\\', '/');
@@ -118,9 +118,10 @@ public class CreateConnectionWizard extends DialogWrapper {
         "jdbc:oracle:thin:@" + aliasName + "?TNS_ADMIN=" + walletLocation;
     // Creates a DataSource using the configurations
     final LocalDataSource ds = new LocalDataSource(profileName, "oracle", url,
-        user, password);
+        user, null);
     ds.setDriverClass("oracle.jdbc.OracleDriver");
     addDataSourceToDatabaseTool(ds);
+    Arrays.fill(password, ' ');
     close(DialogWrapper.OK_EXIT_CODE);
   }
 
@@ -183,7 +184,7 @@ public class CreateConnectionWizard extends DialogWrapper {
     return null;
   }
 
-  private boolean validateInput(final String user, final String password,
+  private boolean validateInput(final String user, final char[] password,
       final String walletLocation, final String aliasName) {
     if (user == null || user.trim().equals("")) {
       Messages.showErrorDialog("Database user name cannot be empty",
@@ -191,7 +192,7 @@ public class CreateConnectionWizard extends DialogWrapper {
       return false;
     }
 
-    if (password == null || password.trim().equals("")) {
+    if (password == null || password.length == 0) {
       Messages.showErrorDialog("User's password cannot be empty",
           "Password required error");
       return false;

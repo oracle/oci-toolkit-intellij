@@ -106,7 +106,7 @@ public class OCISettingsPanel extends DialogWrapper {
     for (Region region : Region.values()) {
       String regionId = region.getRegionId();
       regionCmb.addItem(regionId);
-      if (regionId == DEFAULT_REGION)
+      if (regionId.equals(DEFAULT_REGION))
         defaultRegionIndex = index;
       index++;
     }
@@ -238,11 +238,8 @@ public class OCISettingsPanel extends DialogWrapper {
     fingerPrintTxt.setText(profileParams.get("fingerprint"));
     fingerPrintTxt.setEditable(false);
 
-    String passphrase = profileParams.get("pass_phrase");
-    if (passphrase == null)
-      passPhraseTxt.setText("");
-    else
-      passPhraseTxt.setText(passphrase);
+
+    passPhraseTxt.setText(""); // Passphrase should not be shown in UI
     passPhraseTxt.setEditable(false);
 
     String regProfile = profileParams.get("region");

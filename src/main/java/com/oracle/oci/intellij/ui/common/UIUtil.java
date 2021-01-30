@@ -5,6 +5,7 @@
 
 package com.oracle.oci.intellij.ui.common;
 
+import com.google.common.primitives.Chars;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
@@ -23,6 +24,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URI;
+import java.util.Arrays;
 
 public class UIUtil {
 
@@ -30,6 +32,8 @@ public class UIUtil {
   private static final NotificationGroup NOTIFICATION_GROUP =
       new NotificationGroup("Oracle Cloud Infrastructure",
           NotificationDisplayType.BALLOON, true);
+
+  private static final char[] ADMIN_CHARS = "admin".toCharArray();
 
   public static void setCurrentProject(@NotNull Project project) {
     currentProject = project;
@@ -100,14 +104,21 @@ public class UIUtil {
     return currentProject;
   }
 
-  public static boolean isValidAdminPassword(String pwd) {
-    if(pwd == null)
+  public static boolean isValidAdminPassword(char[] pwd) {
+    if(pwd == null || pwd.length == 0)
       return false;
-    pwd = pwd.trim();
-    return !(  pwd.isEmpty()
-            || pwd.equalsIgnoreCase("admin")
-            || pwd.indexOf('\"') != -1
-            || pwd.length() < 12
-            || pwd.length() > 30);
+
+    if(pwd.length < 12 || pwd.length > 30)
+      return false;
+
+    final char[] pwdLowerCase = new char[pwd.length];
+    for(int i = 0; i < pwd.length; i++)
+      pwdLowerCase[i]  = Character.toLowerCase(pwd[i]);
+
+    final boolean result = (!Arrays.equals(pwdLowerCase, ADMIN_CHARS))
+        && (Arrays.binarySearch(pwd, '\"') == -1);
+    Arrays.fill(pwdLowerCase,' ');
+
+    return result;
   }
 }

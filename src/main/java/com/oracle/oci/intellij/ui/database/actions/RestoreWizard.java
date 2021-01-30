@@ -106,7 +106,6 @@ public class RestoreWizard extends DialogWrapper {
       filterList();
     }
     catch(Exception e) {
-      e.printStackTrace();
       ApplicationManager.getApplication().invokeLater( () ->
           UIUtil.fireErrorNotification("Unable to get the restore list : " + e.getMessage()));
     }
@@ -141,7 +140,6 @@ public class RestoreWizard extends DialogWrapper {
       }
     }
     catch(Exception ex) {
-      ex.printStackTrace();
       UIUtil.fireErrorNotification("Filter List: Unable to get the restore list : " + ex.getMessage());
     }
     updateActionState(true);

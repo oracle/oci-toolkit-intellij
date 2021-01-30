@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 public class RegionSelectionAction extends AnAction {
 
-  public static HashMap<String, String> iconMap = new HashMap<String, String>() {
+  public static final HashMap<String, String> iconMap = new HashMap<String, String>() {
     {
       put("us-ashburn-1", Icons.REGION_US.getPath());
       put("us-phoenix-1", Icons.REGION_US.getPath());

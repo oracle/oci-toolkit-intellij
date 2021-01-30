@@ -46,7 +46,9 @@ dependencies {
 
 intellij {
     type 'IU'
+    version '2020.1'
     updateSinceUntilBuild false
+    instrumentCode true
     pluginName 'OCI Toolkit'
     sandboxDirectory = project.rootDir.canonicalPath + "/.sandbox"
 }

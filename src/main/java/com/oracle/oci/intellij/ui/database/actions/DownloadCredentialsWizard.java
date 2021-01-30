@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 
 public class DownloadCredentialsWizard extends DialogWrapper {
@@ -175,8 +176,7 @@ public class DownloadCredentialsWizard extends DialogWrapper {
     if (!isValidWalletDir(dirPath))
       return;
 
-    final String adminPassword = new String(
-        passwordPasswordField.getPassword());
+    final char[] adminPassword = passwordPasswordField.getPassword();
     final String selectedWalletType = (String) walletTypeCmb.getSelectedItem();
     final String walletDirectory =
         dirPath + File.separator + "Wallet_" + autonomousDatabaseSummary
@@ -186,7 +186,8 @@ public class DownloadCredentialsWizard extends DialogWrapper {
       try {
         ADBInstanceClient.getInstance()
             .downloadWallet(autonomousDatabaseSummary, selectedWalletType,
-                adminPassword, walletDirectory);
+                new String(adminPassword), walletDirectory);
+        Arrays.fill(adminPassword, ' ');
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
             .fireSuccessNotification(
                 "<html>Wallet downloaded successfully." + "<br>Path : "
@@ -205,18 +206,19 @@ public class DownloadCredentialsWizard extends DialogWrapper {
   }
 
   private boolean isValidPassword() {
-    final String password = new String(passwordPasswordField.getPassword());
-    final String confirmPassword = new String(
-        confirmPasswordPasswordField.getPassword());
+    final char[] password = passwordPasswordField.getPassword();
+    final char[] confirmPassword = confirmPasswordPasswordField.getPassword();
 
-    if (password == null || password.trim().equals("")) {
+    if (password == null || password.length == 0) {
       Messages.showErrorDialog("Wallet password cannot be empty", " Error");
       return false;
     }
-    else if (!password.equals(confirmPassword)) {
+    else if (!Arrays.equals(password, confirmPassword)) {
       Messages.showErrorDialog("Confirm wallet password must match wallet password", "Error");
       return false;
     }
+    Arrays.fill(password,' ');
+    Arrays.fill(confirmPassword, ' ');
     return true;
   }
 

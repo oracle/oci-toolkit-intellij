@@ -26,10 +26,7 @@ import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails.Builder;
 import javax.swing.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class CreateADBInstanceWizard extends DialogWrapper {
 
@@ -255,15 +252,16 @@ public class CreateADBInstanceWizard extends DialogWrapper {
     final String storage = alwayFreeChk.isSelected() ?
         ADBConstants.ALWAYS_FREE_STORAGE_TB_DUMMY :
         storageSpnr.getValue().toString();
+    final char[] pwd = passwordTxt.getPassword();
     final Builder createADBRequestBuilder = CreateAutonomousDatabaseDetails
         .builder().compartmentId(compartmentId)
         .cpuCoreCount(Integer.valueOf(cpuCountSpnr.getValue().toString()))
         .dataStorageSizeInTBs(Integer.parseInt(storage))
         .displayName(displayNameTxt.getText().trim())
-        .adminPassword(new String(passwordTxt.getPassword()))
+        .adminPassword(new String(pwd))
         .dbName(dbNameTxt.getText().trim()).dbWorkload(workloadType)
         .licenseModel(getLicenseModel());
-
+    Arrays.fill(pwd, ' ');
     final CreateAutonomousDatabaseDetails createADBRequest;
 
     if (isDedicated) {
@@ -324,23 +322,23 @@ public class CreateADBInstanceWizard extends DialogWrapper {
   }
 */
   private boolean isValidPassword() {
-    final String adminPassword = new String(passwordTxt.getPassword());
-    final String confirmAdminPassword = new String(
-        confirmPasswordTxt.getPassword());
+    final char[] adminPwd = passwordTxt.getPassword();
+    final char[] confirmPwd = confirmPasswordTxt.getPassword();
 
-    if (!UIUtil.isValidAdminPassword(adminPassword)) {
-      Messages.showErrorDialog("Admin password entered is not valid.",
-          "Invalid Password");
-      return false;
-
-    }
-
-    if (!adminPassword.equals(confirmAdminPassword)) {
+    if (!Arrays.equals(adminPwd, confirmPwd)) {
       Messages.showErrorDialog("Confirm Admin password must match Admin password.",
           "Password mismatch error");
       return false;
     }
 
+    if (!UIUtil.isValidAdminPassword(adminPwd)) {
+      Messages.showErrorDialog("Admin password entered is not valid.",
+          "Invalid Password");
+      return false;
+    }
+
+    Arrays.fill(adminPwd, ' ');
+    Arrays.fill(confirmPwd, ' ');
     return true;
   }
 

@@ -72,6 +72,7 @@ public class IdentClient implements PropertyChangeListener {
   @Override
   public void finalize() throws Throwable {
     identityClient.close();
+    super.toString();
   }
 
   public Compartment getRootCompartment() {
@@ -99,7 +100,7 @@ public class IdentClient implements PropertyChangeListener {
         }
       }
       catch (Exception ex) {
-        ex.printStackTrace();
+        throw new RuntimeException(ex);
       }
     }
     while (nextPageToken != null);
@@ -132,7 +133,7 @@ public class IdentClient implements PropertyChangeListener {
         }
       }
       catch (Exception ex) {
-        ex.printStackTrace();
+        throw new RuntimeException(ex);
       }
     }
     while (nextPageToken != null);

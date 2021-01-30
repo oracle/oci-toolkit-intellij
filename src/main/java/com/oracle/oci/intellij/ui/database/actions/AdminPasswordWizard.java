@@ -15,6 +15,7 @@ import com.oracle.oci.intellij.ui.database.ADBInstanceWrapper;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.Arrays;
 
 public class AdminPasswordWizard extends DialogWrapper {
   private JPanel mainPanel;
@@ -32,8 +33,6 @@ public class AdminPasswordWizard extends DialogWrapper {
     init();
     setTitle("ADB Admin Password Change");
     setOKButtonText("Update");
-    ADBInstanceWrapper adbInstanceWrapper = ADBInstanceClient
-        .getInstance().getInstanceDetails(autonomousDatabaseSummary.getId());
     userNameTxt.setText("ADMIN");
     userNameTxt.setEditable(false);
   }
@@ -44,9 +43,11 @@ public class AdminPasswordWizard extends DialogWrapper {
     }
     Runnable nonblockingUpdate = () -> {
       try {
+        final char[] pwd = pwdTxt.getPassword();
         ADBInstanceClient.getInstance()
             .changeAdminPassword(autonomousDatabaseSummary,
-                new String(pwdTxt.getPassword()));
+                new String(pwd));
+        Arrays.fill(pwd, ' ');
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
             .fireSuccessNotification("Admin Password Updated Successfully."));
       }
@@ -62,8 +63,8 @@ public class AdminPasswordWizard extends DialogWrapper {
   }
 
   private boolean isValidPassword() {
-    final String adminPassword = new String(pwdTxt.getPassword());
-    final String confirmAdminPassword = new String(confirmPwdTxt.getPassword());
+    final char[] adminPassword = pwdTxt.getPassword();
+    final char[] confirmAdminPassword = confirmPwdTxt.getPassword();
 
     if (!UIUtil.isValidAdminPassword(adminPassword)) {
       Messages.showErrorDialog("Admin password entered is not valid.",
@@ -71,12 +72,14 @@ public class AdminPasswordWizard extends DialogWrapper {
       return false;
     }
 
-    if (!adminPassword.equals(confirmAdminPassword)) {
+    if (!Arrays.equals(adminPassword,confirmAdminPassword)) {
       Messages.showErrorDialog("Admin password mismatch error",
           "Confirm Admin password must match Admin password");
       return false;
     }
 
+    Arrays.fill(adminPassword, ' ');
+    Arrays.fill(confirmAdminPassword, ' ');
     return true;
   }
 

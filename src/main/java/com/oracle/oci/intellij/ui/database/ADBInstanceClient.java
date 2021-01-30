@@ -111,20 +111,21 @@ public class ADBInstanceClient implements PropertyChangeListener {
     }
 
     instances = response.getItems();
-    if(instances != null)
+    if(instances != null) {
       LogHandler.info("Got " + instances.size() + " ADB Instance details.");
-    else
+      final Iterator<AutonomousDatabaseSummary> it = instances.iterator();
+      while (it.hasNext()) {
+        AutonomousDatabaseSummary instance = it.next();
+        if (LifecycleState.Terminated.equals(instance.getLifecycleState())) {
+          it.remove();
+        }
+        else {
+          instancesMap.put(instance.getId(), new ADBInstanceWrapper(instance));
+        }
+      }
+    }
+    else {
       LogHandler.warn("ADB Instance details is null");
-
-    final Iterator<AutonomousDatabaseSummary> it = instances.iterator();
-    while (it.hasNext()) {
-      AutonomousDatabaseSummary instance = it.next();
-      if (LifecycleState.Terminated.equals(instance.getLifecycleState())) {
-        it.remove();
-      }
-      else {
-        instancesMap.put(instance.getId(), new ADBInstanceWrapper(instance));
-      }
     }
     return instances;
   }
@@ -246,9 +247,10 @@ public class ADBInstanceClient implements PropertyChangeListener {
   public void createClone(CreateAutonomousDatabaseCloneDetails cloneRequest) {
     LogHandler.info("Creating clone source ID : " + cloneRequest.getSourceId());
     try {
-      CreateAutonomousDatabaseResponse response = databaseClient
+      databaseClient
           .createAutonomousDatabase(CreateAutonomousDatabaseRequest.builder()
               .createAutonomousDatabaseDetails(cloneRequest).build());
+
       LogHandler.info("Creating clone source ID : " + cloneRequest.getSourceId() + " success.");
     }
     catch(Exception e) {
@@ -354,7 +356,7 @@ public class ADBInstanceClient implements PropertyChangeListener {
       LogHandler.info("Downloaded Client Credentials (Wallet) for database: " + instance.getId());
     }
     catch (Exception e) {
-      LogHandler.error("Error occured while downloading wallet for ADB: " + instance.getId(), e);
+      LogHandler.error("Error occurred while downloading wallet for ADB: " + instance.getId(), e);
       throw new RuntimeException(e);
     }
   }

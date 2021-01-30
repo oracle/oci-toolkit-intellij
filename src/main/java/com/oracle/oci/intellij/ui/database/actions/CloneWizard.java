@@ -26,6 +26,7 @@ import com.oracle.bmc.database.model.CreateAutonomousDatabaseCloneDetails.CloneT
 import javax.swing.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -256,18 +257,19 @@ public class CloneWizard extends DialogWrapper {
   }
 
   private boolean isValidPassword() {
-    final String adminPassword = new String(passwordTxt.getPassword());
-    final String confirmAdminPassword = new String(
-        confirmPasswordTxt.getPassword());
+    final char[] adminPassword = passwordTxt.getPassword();
+    final char[] confirmAdminPassword = confirmPasswordTxt.getPassword();
 
-    if (adminPassword == null || adminPassword.trim().equals("")) {
+    if (adminPassword == null || adminPassword.length == 0) {
       Messages.showErrorDialog("Admin password cannot be empty.", "Error");
       return false;
     }
-    else if (!adminPassword.equals(confirmAdminPassword)) {
+    else if (!Arrays.equals(adminPassword, confirmAdminPassword)) {
       Messages.showErrorDialog("Confirm Admin password must match Admin password", "Error");
       return false;
     }
+    Arrays.fill(adminPassword,' ');
+    Arrays.fill(confirmAdminPassword,' ');
     return true;
   }
 

@@ -205,37 +205,35 @@ public final class ConfigFileOperations {
   public static void save(String configurationFilePath, ConfigFile profile,
       String profileName) throws IOException {
 
+    final String lineSep = System.getProperty("line.separator");
     StringBuffer formatProfile = new StringBuffer();
-    formatProfile.append(System.getProperty("line.separator"));
+    formatProfile.append(lineSep);
     formatProfile.append("[" + profileName.toUpperCase() + "]");
     for (String entry : profile.getProfile(profileName).keySet()) {
       String value = profile.get(entry);
-      formatProfile.append(System.getProperty("line.separator"));
+      formatProfile.append(lineSep);
       formatProfile.append(entry + " = " + value);
     }
-    formatProfile.append(System.getProperty("line.separator"));
+    formatProfile.append(lineSep);
 
     File f = new File(expandUserHome(configurationFilePath));
 
     File directory = f.getParentFile();
-    if (!directory.exists()) {
-      directory.mkdirs();
-    }
+    if (!directory.exists())
+      if(!directory.mkdirs())
+        throw new IOException("Unable to create file");
+
 
     StandardOpenOption option = StandardOpenOption.APPEND;
     if (!f.exists()) {
       option = StandardOpenOption.CREATE;
     }
 
-    try {
-      Files.write(Paths.get(expandUserHome(configurationFilePath)),
-          formatProfile.toString().getBytes(), option);
-      if (option == StandardOpenOption.CREATE)
-        setConfigFilePermissions(
-            Paths.get(expandUserHome(configurationFilePath)));
-    }
-    catch (IOException e) {
-    }
+    Files.write(Paths.get(expandUserHome(configurationFilePath)),
+        formatProfile.toString().getBytes(), option);
+    if (option == StandardOpenOption.CREATE)
+      setConfigFilePermissions(
+          Paths.get(expandUserHome(configurationFilePath)));
   }
 
   private ConfigFileOperations() {
