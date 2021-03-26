@@ -20,8 +20,8 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.util.containers.ContainerUtil;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
-import com.oracle.oci.intellij.LogHandler;
-import com.oracle.oci.intellij.account.AuthProvider;
+import com.oracle.oci.intellij.util.LogHandler;
+import com.oracle.oci.intellij.account.AuthenticationDetails;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import org.jetbrains.annotations.Nullable;
 
@@ -111,7 +111,7 @@ public class CreateConnectionWizard extends DialogWrapper {
     if (!validateInput(user, password, walletLocation, aliasName))
       return; // Return if the validation fails.
 
-    final String regionName = AuthProvider.getInstance().getRegion().toString();
+    final String regionName = AuthenticationDetails.getInstance().getRegion().toString();
     final String profileName =
         user.toUpperCase() + "." + aliasName + "." + regionName;
     final String url =

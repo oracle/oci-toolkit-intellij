@@ -8,7 +8,7 @@ package com.oracle.oci.intellij.ui.database.actions;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase;
-import com.oracle.oci.intellij.LogHandler;
+import com.oracle.oci.intellij.util.LogHandler;
 import com.oracle.oci.intellij.ui.database.ADBInstanceClient;
 import com.oracle.oci.intellij.ui.database.ADBInstanceWrapper;
 

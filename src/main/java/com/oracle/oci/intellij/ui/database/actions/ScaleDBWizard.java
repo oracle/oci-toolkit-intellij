@@ -7,9 +7,8 @@ package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.openapi.ui.Messages;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
-import com.oracle.oci.intellij.account.PreferencesWrapper;
+import com.oracle.oci.intellij.account.ServicePreferences;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.ADBConstants;
 import com.oracle.oci.intellij.ui.database.ADBInstanceClient;
@@ -56,7 +55,7 @@ public class ScaleDBWizard extends DialogWrapper {
                 autoScalingChkBox.isSelected());
         ApplicationManager.getApplication().invokeLater(() -> {
           UIUtil.fireSuccessNotification("Scaleup or Scaledown completed successfully.");
-          PreferencesWrapper.fireADBInstanceUpdateEvent("Scale");
+          ServicePreferences.fireADBInstanceUpdateEvent("Scale");
         });
       }
       catch (Exception e) {

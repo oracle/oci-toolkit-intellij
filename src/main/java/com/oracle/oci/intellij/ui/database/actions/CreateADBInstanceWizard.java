@@ -8,11 +8,10 @@ package com.oracle.oci.intellij.ui.database.actions;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase;
 import com.oracle.bmc.identity.model.Compartment;
-import com.oracle.oci.intellij.account.IdentClient;
-import com.oracle.oci.intellij.account.PreferencesWrapper;
+import com.oracle.oci.intellij.account.Identity;
+import com.oracle.oci.intellij.account.ServicePreferences;
 import com.oracle.oci.intellij.ui.common.CompartmentSelection;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.ADBConstants;
@@ -114,7 +113,7 @@ public class CreateADBInstanceWizard extends DialogWrapper {
     serverlessRBtn.setSelected(true);
     byolRBtn.setSelected(true);
 
-    selectedCompartment = IdentClient.getInstance().getRootCompartment();
+    selectedCompartment = Identity.getInstance().getRootCompartment();
     if(selectedCompartment != null)
       compartmentCmb.setText(selectedCompartment.getName());
     else
@@ -197,7 +196,7 @@ public class CreateADBInstanceWizard extends DialogWrapper {
       byolRBtn.setEnabled(!dedicatedRBtn.isSelected());
       licenseIncldBtn.setEnabled(!dedicatedRBtn.isSelected());
       if(dedicatedRBtn.isSelected()) {
-        selectedADCCompartment = IdentClient.getInstance().getRootCompartment();
+        selectedADCCompartment = Identity.getInstance().getRootCompartment();
         handleADCCompartmentChange();
       }
     });
@@ -280,7 +279,7 @@ public class CreateADBInstanceWizard extends DialogWrapper {
         ADBInstanceClient.getInstance().createInstance(createADBRequest);
         ApplicationManager.getApplication().invokeLater(() -> {
           UIUtil.fireSuccessNotification("ADB Instance created successfully.");
-          PreferencesWrapper.fireADBInstanceUpdateEvent("Create");
+          ServicePreferences.fireADBInstanceUpdateEvent("Create");
         });
       }
       catch (Exception e) {

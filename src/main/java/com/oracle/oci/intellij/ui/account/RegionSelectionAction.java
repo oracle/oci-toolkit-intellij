@@ -5,14 +5,13 @@
 
 package com.oracle.oci.intellij.ui.account;
 
-
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.oracle.bmc.Region;
 import com.oracle.bmc.identity.model.RegionSubscription;
-import com.oracle.oci.intellij.LogHandler;
-import com.oracle.oci.intellij.account.IdentClient;
-import com.oracle.oci.intellij.account.PreferencesWrapper;
+import com.oracle.oci.intellij.util.LogHandler;
+import com.oracle.oci.intellij.account.Identity;
+import com.oracle.oci.intellij.account.ServicePreferences;
 import com.oracle.oci.intellij.ui.common.Icons;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,9 +22,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * Action handler for selection event of UI component 'Region'.
+ */
 public class RegionSelectionAction extends AnAction {
 
-  public static final HashMap<String, String> iconMap = new HashMap<String, String>() {
+  private static final HashMap<String, String> iconMap = new HashMap<String, String>() {
     {
       put("us-ashburn-1", Icons.REGION_US.getPath());
       put("us-phoenix-1", Icons.REGION_US.getPath());
@@ -41,45 +43,58 @@ public class RegionSelectionAction extends AnAction {
 
   private static ImageIcon regionIcon = new ImageIcon(
       RegionSelectionAction.class
-          .getResource(iconMap.get(PreferencesWrapper.getRegion())));
+          .getResource(iconMap.get(ServicePreferences.getRegion())));
 
   public RegionSelectionAction() {
-    super("Region", "Select Region", regionIcon);
+    super("Region", "Select region", regionIcon);
   }
 
+  /**
+   * Event handler.
+   *
+   * @param event event.
+   */
   @Override
   // TODO: See if non-blocking UI calls required here.
-  public void actionPerformed(@NotNull AnActionEvent e) {
+  public void actionPerformed(@NotNull AnActionEvent event) {
     try {
-      if (e.getInputEvent() instanceof MouseEvent) {
-        final MouseEvent mouseEvent = ((MouseEvent) e.getInputEvent());
-        final List<RegionSubscription> regionList = IdentClient.getInstance()
+      // TODO: Why is only MouseEvent handled?
+      if (event.getInputEvent() instanceof MouseEvent) {
+        final MouseEvent mouseEvent = ((MouseEvent) event.getInputEvent());
+
+        final List<RegionSubscription> regionList = Identity.getInstance()
             .getRegionsList();
+
         final JPopupMenu popupMenu = new JPopupMenu();
         final ButtonGroup menuGroup = new ButtonGroup();
-        final String currentRegion = PreferencesWrapper.getRegion();
-        for (RegionSubscription r : regionList) {
+        
+        final String currentRegion = ServicePreferences.getRegion();
+        for (RegionSubscription subscription : regionList) {
           final JMenuItem regionMenu = new JRadioButtonMenuItem();
-          final Region selectedRegion = Region.fromRegionCode(r.getRegionKey());
-          if (Pattern.matches("\\w{2}-\\w+-\\d+", r.getRegionName())) {
-            regionMenu.setText(getFormattedRegion(r.getRegionName()));
+          final Region selectedRegion = Region.fromRegionCode(subscription.getRegionKey());
+
+          if (Pattern.matches("\\w{2}-\\w+-\\d+", subscription.getRegionName())) {
+            regionMenu.setText(getFormattedRegion(subscription.getRegionName()));
+          } else {
+            regionMenu.setText(subscription.getRegionName());
           }
-          else {
-            regionMenu.setText(r.getRegionName());
-          }
-          if (iconMap.get(r.getRegionName()) != null) {
-            URL url = getClass().getResource(iconMap.get(r.getRegionName()));
+
+          if (iconMap.get(subscription.getRegionName()) != null) {
+            URL url = getClass().getResource(iconMap.get(subscription.getRegionName()));
             if (url != null)
               regionMenu.setIcon(new ImageIcon(url));
           }
+
           regionMenu.addActionListener((e1) -> {
-            PreferencesWrapper.setRegion(selectedRegion.getRegionId());
+            ServicePreferences.updateRegion(selectedRegion.getRegionId());
           });
+
           if (currentRegion.equals(selectedRegion.getRegionId()))
             regionMenu.setSelected(true);
           menuGroup.add(regionMenu);
           popupMenu.add(regionMenu);
         }
+
         popupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(),
             mouseEvent.getY());
       }
@@ -87,15 +102,13 @@ public class RegionSelectionAction extends AnAction {
     catch(Exception ex) {
       LogHandler.error(ex.getMessage(), ex);
     }
-
-
   }
 
   @Override
-  public void update(@NotNull AnActionEvent e) {
-    e.getPresentation().setIcon(new ImageIcon(RegionSelectionAction.class
-        .getResource(iconMap.get(PreferencesWrapper.getRegion()))));
-    super.update(e);
+  public void update(@NotNull AnActionEvent event) {
+    event.getPresentation().setIcon(new ImageIcon(RegionSelectionAction.class
+        .getResource(iconMap.get(ServicePreferences.getRegion()))));
+    super.update(event);
   }
 
   private String getFormattedRegion(String regionId) {

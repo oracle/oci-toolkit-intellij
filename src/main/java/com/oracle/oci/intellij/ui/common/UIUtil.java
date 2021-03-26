@@ -5,17 +5,14 @@
 
 package com.oracle.oci.intellij.ui.common;
 
-import com.google.common.primitives.Chars;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.wm.WindowManager;
-import com.intellij.ui.JBColor;
-import com.oracle.oci.intellij.LogHandler;
+import com.oracle.oci.intellij.util.LogHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

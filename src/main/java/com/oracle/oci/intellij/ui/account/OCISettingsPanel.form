@@ -38,7 +38,7 @@
                   <text value="Profile"/>
                 </properties>
               </component>
-              <component id="e04a3" class="javax.swing.JComboBox" binding="profileCmb">
+              <component id="e04a3" class="javax.swing.JComboBox" binding="profileCombo">
                 <constraints>
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
@@ -52,7 +52,7 @@
                   <text value="Region"/>
                 </properties>
               </component>
-              <component id="647de" class="javax.swing.JComboBox" binding="regionCmb">
+              <component id="647de" class="javax.swing.JComboBox" binding="regionCombo">
                 <constraints>
                   <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>

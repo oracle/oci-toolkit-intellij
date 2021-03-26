@@ -7,14 +7,13 @@ package com.oracle.oci.intellij.ui.account;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.ui.DialogWrapper;
-import com.oracle.oci.intellij.account.PreferencesWrapper;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.awt.*;
 
+/**
+ * Action handler for selection event of UI component 'Oracle Cloud Infrastructure'.
+ */
 public class OCISettingsAction extends AnAction {
 
   public OCISettingsAction() {
@@ -23,8 +22,13 @@ public class OCISettingsAction extends AnAction {
             .class.getResource("/icons/toolbar-login.png")));
   }
 
+  /**
+   * Event handler.
+   *
+   * @param event event.
+   */
   @Override
-  public void actionPerformed(@NotNull AnActionEvent e) {
+  public void actionPerformed(@NotNull AnActionEvent event) {
     final OCISettingsPanel settings = new OCISettingsPanel();
     settings.showAndGet();
   }

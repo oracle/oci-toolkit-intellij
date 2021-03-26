@@ -21,10 +21,9 @@ import com.oracle.bmc.Region;
 import com.oracle.bmc.database.model.*;
 import com.oracle.bmc.database.requests.*;
 import com.oracle.bmc.database.responses.*;
-import com.oracle.oci.intellij.LogHandler;
-import com.oracle.oci.intellij.account.AuthProvider;
-import com.oracle.oci.intellij.account.GlobalEventHandler;
-import com.oracle.oci.intellij.account.PreferencesWrapper;
+import com.oracle.oci.intellij.util.LogHandler;
+import com.oracle.oci.intellij.account.AuthenticationDetails;
+import com.oracle.oci.intellij.account.ServicePreferences;
 import org.apache.commons.io.FileUtils;
 
 import com.oracle.bmc.database.DatabaseClient;
@@ -60,8 +59,8 @@ public class ADBInstanceClient implements PropertyChangeListener {
   private void createADBInstanceClient() {
     try{
       LogHandler.info("Creating ADBInstanceClient..");
-      databaseClient = new DatabaseClient(AuthProvider.getInstance().getProvider());
-      databaseClient.setRegion(AuthProvider.getInstance().getRegion());
+      databaseClient = new DatabaseClient(AuthenticationDetails.getInstance().getProvider());
+      databaseClient.setRegion(AuthenticationDetails.getInstance().getRegion());
     }
     catch(Exception e) {
       LogHandler.error("Unable to create ADBInstanceClient", e);
@@ -85,7 +84,7 @@ public class ADBInstanceClient implements PropertyChangeListener {
       throws Exception {
     LogHandler.info("Fetching ADB Instance details from the server..");
     ListAutonomousDatabasesRequest listInstancesRequest = ListAutonomousDatabasesRequest
-        .builder().compartmentId(AuthProvider.getInstance().getCompartmentId())
+        .builder().compartmentId(AuthenticationDetails.getInstance().getCompartmentId())
         .dbWorkload(workloadType)
         .sortBy(ListAutonomousDatabasesRequest.SortBy.Timecreated)
         .sortOrder(ListAutonomousDatabasesRequest.SortOrder.Desc).build();
@@ -504,12 +503,12 @@ public class ADBInstanceClient implements PropertyChangeListener {
   public void propertyChange(PropertyChangeEvent evt) {
     LogHandler.info("ADBInstanceClient: Handling the Event Update : " + evt.toString());
     switch (evt.getPropertyName()) {
-    case PreferencesWrapper.EVENT_COMPARTMENT_UPDATE:
+    case ServicePreferences.EVENT_COMPARTMENT_UPDATE:
       break;
-    case PreferencesWrapper.EVENT_REGION_UPDATE:
+    case ServicePreferences.EVENT_REGION_UPDATE:
       databaseClient.setRegion(Region.fromRegionId(evt.getNewValue().toString()));
       break;
-    case PreferencesWrapper.EVENT_SETTINGS_UPDATE:
+    case ServicePreferences.EVENT_SETTINGS_UPDATE:
       // reset the state.
       reset();
       break;

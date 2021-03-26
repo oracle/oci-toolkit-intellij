@@ -7,9 +7,9 @@ package com.oracle.oci.intellij.ui.common;
 
 import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.identity.model.Compartment;
-import com.oracle.oci.intellij.LogHandler;
-import com.oracle.oci.intellij.account.AuthProvider;
-import com.oracle.oci.intellij.account.IdentClient;
+import com.oracle.oci.intellij.util.LogHandler;
+import com.oracle.oci.intellij.account.AuthenticationDetails;
+import com.oracle.oci.intellij.account.Identity;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -40,7 +40,7 @@ public class CompartmentSelection extends DialogWrapper {
 
   private void buildCompartmentTree() {
     try {
-      final Compartment rootCompartment = IdentClient.getInstance()
+      final Compartment rootCompartment = Identity.getInstance()
           .getRootCompartment();
       final DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(
           rootCompartment);
@@ -77,14 +77,14 @@ public class CompartmentSelection extends DialogWrapper {
 
   private void addChildren(Compartment parent,
       DefaultMutableTreeNode parentNode) {
-    final List<Compartment> compartments = IdentClient.getInstance()
+    final List<Compartment> compartments = Identity.getInstance()
         .getCompartmentList(parent);
     for (Compartment compartment : compartments) {
       final DefaultMutableTreeNode compartmentNode = new DefaultMutableTreeNode(
           compartment);
 
       if (compartment.getId()
-          .equals(AuthProvider.getInstance().getCompartmentId()))
+          .equals(AuthenticationDetails.getInstance().getCompartmentId()))
         selectedNode = compartmentNode;
 
       parentNode.add(compartmentNode);

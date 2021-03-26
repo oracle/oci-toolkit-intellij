@@ -8,7 +8,7 @@ package com.oracle.oci.intellij.ui.database.actions;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.ui.Messages;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
-import com.oracle.oci.intellij.account.PreferencesWrapper;
+import com.oracle.oci.intellij.account.ServicePreferences;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.ADBInstanceClient;
 
@@ -80,7 +80,7 @@ public class SimpleActionHandler extends AbstractAction {
         ADBInstanceClient.getInstance()
             .changeWorkloadTypeToOLTP(autonomousDatabaseSummary.getId());
         UIUtil.fireSuccessNotification(actionType.actionSuccessMsg);
-        PreferencesWrapper.fireADBInstanceUpdateEvent(actionType.name());
+        ServicePreferences.fireADBInstanceUpdateEvent(actionType.name());
       }
     }
     catch(Exception ex) {
@@ -100,7 +100,7 @@ public class SimpleActionHandler extends AbstractAction {
           ADBInstanceClient.getInstance().stopInstance(autonomousDatabaseSummary);
         }
         UIUtil.fireSuccessNotification(actionType.actionSuccessMsg);
-        PreferencesWrapper.fireADBInstanceUpdateEvent(actionType.name());
+        ServicePreferences.fireADBInstanceUpdateEvent(actionType.name());
       }
     }
     catch(Exception ex) {
@@ -123,7 +123,7 @@ public class SimpleActionHandler extends AbstractAction {
         ADBInstanceClient.getInstance()
             .terminate(autonomousDatabaseSummary.getId());
         UIUtil.fireSuccessNotification(dbName + " terminated successfully.");
-        PreferencesWrapper.fireADBInstanceUpdateEvent(actionType.name());
+        ServicePreferences.fireADBInstanceUpdateEvent(actionType.name());
       }
       catch (Exception ex) {
         UIUtil.fireErrorNotification(

@@ -8,11 +8,10 @@ package com.oracle.oci.intellij.ui.database;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase;
-import com.oracle.oci.intellij.LogHandler;
-import com.oracle.oci.intellij.account.AuthProvider;
-import com.oracle.oci.intellij.account.GlobalEventHandler;
-import com.oracle.oci.intellij.account.IdentClient;
-import com.oracle.oci.intellij.account.PreferencesWrapper;
+import com.oracle.oci.intellij.util.LogHandler;
+import com.oracle.oci.intellij.account.AuthenticationDetails;
+import com.oracle.oci.intellij.account.Identity;
+import com.oracle.oci.intellij.account.ServicePreferences;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.actions.*;
 
@@ -70,7 +69,7 @@ public class DatabaseDetails implements PropertyChangeListener {
   private void initializeLabels() {
 
     try{
-      profileValueLbl.setText(PreferencesWrapper.getProfile());
+      profileValueLbl.setText(ServicePreferences.getProfile());
     }
     catch(Exception e) {
       profileValueLbl.setText("");
@@ -79,14 +78,14 @@ public class DatabaseDetails implements PropertyChangeListener {
 
     try{
       // TODO: This will always set the root compartment when initialized and might require change
-      compartmentValueLbl.setText(IdentClient.getInstance().getCurrentCompartmentName());
+      compartmentValueLbl.setText(Identity.getInstance().getCurrentCompartmentName());
     }
     catch(Exception e) {
       compartmentValueLbl.setText("");
     }
 
     try{
-      regionValueLbl.setText(AuthProvider.getInstance().getRegion().toString());
+      regionValueLbl.setText(AuthenticationDetails.getInstance().getRegion().toString());
     }
     catch(Exception e) {
       regionValueLbl.setText("");
@@ -331,18 +330,18 @@ public class DatabaseDetails implements PropertyChangeListener {
   public void propertyChange(PropertyChangeEvent evt) {
     LogHandler.info("DatabaseDetails: Handling the Event Update : " + evt.toString());
     switch (evt.getPropertyName()) {
-    case PreferencesWrapper.EVENT_COMPARTMENT_UPDATE:
-      compartmentValueLbl.setText(IdentClient.getInstance().getCurrentCompartmentName());
+    case ServicePreferences.EVENT_COMPARTMENT_UPDATE:
+      compartmentValueLbl.setText(Identity.getInstance().getCurrentCompartmentName());
       break;
 
-    case PreferencesWrapper.EVENT_REGION_UPDATE:
-      regionValueLbl.setText(PreferencesWrapper.getRegion());
+    case ServicePreferences.EVENT_REGION_UPDATE:
+      regionValueLbl.setText(ServicePreferences.getRegion());
       break;
 
-    case PreferencesWrapper.EVENT_SETTINGS_UPDATE:
-    case PreferencesWrapper.EVENT_ADBINSTANCE_UPDATE:
-      regionValueLbl.setText(PreferencesWrapper.getRegion());
-      compartmentValueLbl.setText(IdentClient.getInstance().getCurrentCompartmentName());
+    case ServicePreferences.EVENT_SETTINGS_UPDATE:
+    case ServicePreferences.EVENT_ADB_INSTANCE_UPDATE:
+      regionValueLbl.setText(ServicePreferences.getRegion());
+      compartmentValueLbl.setText(Identity.getInstance().getCurrentCompartmentName());
       break;
     }
     populateTableData();

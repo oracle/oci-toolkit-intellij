@@ -13,9 +13,9 @@ import com.intellij.openapi.wm.ex.ToolWindowEx;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 
-import com.oracle.oci.intellij.account.AuthProvider;
-import com.oracle.oci.intellij.account.IdentClient;
-import com.oracle.oci.intellij.account.PreferencesWrapper;
+import com.oracle.oci.intellij.account.AuthenticationDetails;
+import com.oracle.oci.intellij.account.Identity;
+import com.oracle.oci.intellij.account.ServicePreferences;
 import com.oracle.oci.intellij.ui.account.CompartmentSelectionAction;
 import com.oracle.oci.intellij.ui.account.OCISettingsAction;
 import com.oracle.oci.intellij.ui.account.RegionSelectionAction;
@@ -34,12 +34,12 @@ public class OCIExplorerFactory
   public OCIExplorerFactory() {
 
     // Property Event Change has to be updated in this order.
-    PreferencesWrapper.addPropertyChangeListener(AuthProvider.getInstance());
-    PreferencesWrapper.addPropertyChangeListener(IdentClient.getInstance());
-    PreferencesWrapper.addPropertyChangeListener(ADBInstanceClient.getInstance());
+    ServicePreferences.addPropertyChangeListener(AuthenticationDetails.getInstance());
+    ServicePreferences.addPropertyChangeListener(Identity.getInstance());
+    ServicePreferences.addPropertyChangeListener(ADBInstanceClient.getInstance());
 
     databaseDetails = new DatabaseDetails();
-    PreferencesWrapper.addPropertyChangeListener(databaseDetails);
+    ServicePreferences.addPropertyChangeListener(databaseDetails);
   }
 
   @Override
