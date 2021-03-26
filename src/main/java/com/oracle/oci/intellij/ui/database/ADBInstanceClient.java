@@ -34,7 +34,7 @@ public class ADBInstanceClient implements PropertyChangeListener {
 
   private static final ADBInstanceClient single_instance = new ADBInstanceClient();
   private DatabaseClient databaseClient;
-  private Map<String, ADBInstanceWrapper> instancesMap = new LinkedHashMap<String, ADBInstanceWrapper>();
+  private Map<String, ADBInstanceWrapper> instancesMap = new LinkedHashMap<>();
 
   public final static ADBInstanceClient getInstance() {
     if (single_instance.databaseClient == null) {
