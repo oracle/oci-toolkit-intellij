@@ -12,6 +12,7 @@ import com.oracle.oci.intellij.util.LogHandler;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 import java.io.File;
+import java.io.IOException;
 
 import static com.oracle.bmc.ClientRuntime.setClientUserAgent;
 import static com.oracle.oci.intellij.account.ServicePreferences.*;
@@ -69,23 +70,17 @@ public class AuthenticationDetails implements PropertyChangeListener {
    */
   private void init() {
     try {
-      final File configFile = new File(getConfigFileName());
-      if (!configFile.exists()) {
-        LogHandler.error("File does not exist : " + getConfigFileName());
-      } else {
-        provider = new ConfigFileAuthenticationDetailsProvider(
-                getConfigFileName(), getProfile());
+      provider = new ConfigFileAuthenticationDetailsProvider(
+              getConfigFileName(), getProfile());
 
-        currentConfigFileName = getConfigFileName();
-        currentProfileName = getProfile();
-        currentRegionName = ServicePreferences.getRegion();
-        currentCompartmentId = provider.getTenantId();
+      currentConfigFileName = getConfigFileName();
+      currentProfileName = getProfile();
+      currentRegionName = ServicePreferences.getRegion();
+      currentCompartmentId = provider.getTenantId();
 
-        setClientUserAgent(getUserAgent());
-      }
-    } catch (Exception e) {
-      LogHandler.error(e.getMessage(), e);
-      throw new RuntimeException(e);
+      setClientUserAgent(getUserAgent());
+    } catch (IOException ioEx) {
+      throw new RuntimeException(ioEx);
     }
   }
 

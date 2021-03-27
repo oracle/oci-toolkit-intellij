@@ -108,7 +108,7 @@ public class ServicePreferences {
    * @return the profile name.
    */
   public static String getProfile() {
-    return preferences.get("profile", "DEFAULT");
+      return preferences.get("profile", "DEFAULT");
   }
 
   /**

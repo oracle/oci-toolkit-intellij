@@ -47,10 +47,14 @@ public final class ConfigFileHandler {
    * @throws IOException is thrown if I/O fails.
    */
   public static ProfilesSet parse(String configFile) throws IOException {
-    final Reader reader = new FileReader(expandUserHome(configFile));
-    final BufferedReader bufferedReader = new BufferedReader(reader);
+    final File file = new File(expandUserHome(configFile));
+    if (file.length() > 50000) {
+      throw new IllegalStateException("File too large : " + configFile);
+    }
 
-    return ProfilesSet.instance().populate(bufferedReader);
+    try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+      return ProfilesSet.instance().populate(bufferedReader);
+    }
   }
 
   /**
@@ -83,7 +87,7 @@ public final class ConfigFileHandler {
     final StringBuffer profileBuffer = read(profile);
 
     String expandedPath = expandUserHome(configurationFilePath);
-    File file = new File(expandedPath);
+    final File file = new File(expandedPath);
     File directory = file.getParentFile();
 
     if (!directory.exists() && !directory.mkdirs()) {

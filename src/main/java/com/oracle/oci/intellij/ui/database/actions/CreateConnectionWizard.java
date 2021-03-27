@@ -61,11 +61,6 @@ public class CreateConnectionWizard extends DialogWrapper {
 
   private void onConfigFileChange() {
     final String configFileName = walletLocationTxt.getText();
-    File f = new File(configFileName);
-    if (f.length() > 50000) {
-      Messages.showErrorDialog("File is too large", "Error");
-      return;
-    }
     Set<String> profileNames = getTnsEntries(configFileName);
     tnsAliasCmb.removeAllItems();
     profileNames.forEach(e -> tnsAliasCmb.addItem(e));

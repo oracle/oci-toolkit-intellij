@@ -157,8 +157,8 @@ public class OCISettingsPanel extends DialogWrapper {
       configFileTxt.setText(configFile);
       profileCombo.addItem(ADD_PROFILE);
 
-      int selectedIndex = 0;
-      int idx = 0;
+      int selectedIndex = profileNames.size() > 0 ? 1 : 0;
+      int idx = 1;
       for (String profileName : profileNames) {
         profileCombo.addItem(profileName);
         if (profileName.equals(DEFAULT_PROFILE_NAME)) {
@@ -358,14 +358,6 @@ public class OCISettingsPanel extends DialogWrapper {
       return false;
     }
 
-    // 3. Key file name is a valid file
-    File keyFile = new File(keyFileText);
-    if (!keyFile.exists()) {
-      Messages.showErrorDialog(
-              "Enter valid key file. The provided file does not exist: "
-                      + keyFileText, "Error");
-      return false;
-    }
     return true;
   }
 
