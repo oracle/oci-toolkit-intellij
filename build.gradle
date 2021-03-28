@@ -37,12 +37,13 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
     compileOnly fileTree(include: ['*.jar'], dir: '/Applications/IntelliJ IDEA.app/Contents/plugins/DatabaseTools/lib/')
     compile files('lib/sdk/oci-java-sdk-full-1.23.0.jar')
     compile fileTree(dir:  'lib/thirdparty', include: "*.jar")
-}
 
+    testImplementation(platform('org.junit:junit-bom:5.7.1'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
+}
 
 intellij {
     type 'IU'
