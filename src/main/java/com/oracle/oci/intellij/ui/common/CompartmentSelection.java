@@ -8,92 +8,109 @@ package com.oracle.oci.intellij.ui.common;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.util.LogHandler;
-import com.oracle.oci.intellij.account.AuthenticationDetails;
 import com.oracle.oci.intellij.account.Identity;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.util.List;
 
 public class CompartmentSelection extends DialogWrapper {
   private JPanel mainPanel;
   private JTree compartmentTree;
-  private Compartment selectedCompartment;
-  private DefaultMutableTreeNode selectedNode;
+  private JPanel secondPane;
 
-  public CompartmentSelection() {
+  private Compartment selectedCompartment = null;
+  private static DefaultMutableTreeNode rootNode = null;
+
+  public static CompartmentSelection newInstance() {
+    return new CompartmentSelection();
+  }
+
+  private CompartmentSelection() {
     super(true);
-    buildCompartmentTree();
+    setTitle("Compartment");
+    populateCompartmentTree(false);
     init();
+  }
+
+  private void buildCompartmentTree(boolean isRefresh) {
+    if (rootNode == null || isRefresh) {
+      final Compartment rootCompartment = Identity.getInstance().getRootCompartment();
+      rootNode = new DefaultMutableTreeNode(rootCompartment);
+      addChildren(rootCompartment, rootNode);
+    }
   }
 
   public Compartment getSelectedCompartment() {
     return selectedCompartment;
   }
 
-  private void buildCompartmentTree() {
+  private void populateCompartmentTree(boolean isRefresh) {
     try {
-      final Compartment rootCompartment = Identity.getInstance()
-          .getRootCompartment();
-      final DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(
-          rootCompartment);
-      selectedNode = rootNode;
-      addChildren(rootCompartment, rootNode);
+      buildCompartmentTree(isRefresh);
+
       final DefaultTreeModel dtm = new DefaultTreeModel(rootNode);
       compartmentTree.setModel(dtm);
       compartmentTree.getSelectionModel()
-          .addTreeSelectionListener(new TreeSelectionListener() {
-            @Override public void valueChanged(TreeSelectionEvent e) {
-              selectedCompartment = ((Compartment) ((DefaultMutableTreeNode) compartmentTree
-                  .getLastSelectedPathComponent()).getUserObject());
-            }
-          });
+              .addTreeSelectionListener(e -> selectedCompartment = ((Compartment) ((DefaultMutableTreeNode) compartmentTree
+                      .getLastSelectedPathComponent()).getUserObject()));
 
       compartmentTree.setCellRenderer(new DefaultTreeCellRenderer() {
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value,
-            boolean sel, boolean expanded, boolean leaf, int row,
-            boolean hasFocus) {
-          return new JLabel(
-              ((Compartment) ((DefaultMutableTreeNode) value).getUserObject())
-                  .getName());
+                                                      boolean sel, boolean expanded, boolean leaf, int row,
+                                                      boolean hasFocus){
+          return new JLabel( ((Compartment) ((DefaultMutableTreeNode) value).getUserObject()).getName());
         }
       });
 
-      compartmentTree.setSelectionPath(new TreePath(selectedNode.getPath()));
-    }
-    catch(Exception e) {
+    } catch (Exception e) {
       LogHandler.error(e.getMessage(), e);
     }
-
   }
 
   private void addChildren(Compartment parent,
-      DefaultMutableTreeNode parentNode) {
+                           DefaultMutableTreeNode parentNode){
     final List<Compartment> compartments = Identity.getInstance()
-        .getCompartmentList(parent);
+            .getCompartmentList(parent);
     for (Compartment compartment : compartments) {
       final DefaultMutableTreeNode compartmentNode = new DefaultMutableTreeNode(
-          compartment);
-
-      if (compartment.getId()
-          .equals(AuthenticationDetails.getInstance().getCompartmentId()))
-        selectedNode = compartmentNode;
+              compartment);
 
       parentNode.add(compartmentNode);
       addChildren(compartment, compartmentNode);
     }
   }
 
-  @Nullable @Override protected JComponent createCenterPanel() {
+  @Nullable
+  @Override
+  protected JComponent createCenterPanel() {
     mainPanel.setPreferredSize(new Dimension(450, 300));
     return mainPanel;
+  }
+
+  @NotNull
+  @Override
+  protected Action[] createActions() {
+    final Action[] actions = new Action[]{new RefreshAction(), getOKAction(), getCancelAction()};
+    return actions;
+  }
+
+  private class RefreshAction extends AbstractAction {
+    RefreshAction() {
+      putValue(Action.NAME, "Refresh");
+      putValue(Action.SHORT_DESCRIPTION, "Refresh compartments list.");
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      buildCompartmentTree(true);
+    }
   }
 }

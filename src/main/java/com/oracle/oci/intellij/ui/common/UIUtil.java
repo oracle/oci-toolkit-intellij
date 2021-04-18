@@ -5,7 +5,6 @@
 
 package com.oracle.oci.intellij.ui.common;
 
-import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
@@ -20,12 +19,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 
 public class UIUtil {
-
   private static Project currentProject;
+
   private static final NotificationGroup NOTIFICATION_GROUP =
       new NotificationGroup("Oracle Cloud Infrastructure",
           NotificationDisplayType.BALLOON, true);
@@ -37,30 +38,18 @@ public class UIUtil {
   }
 
   public static void setStatus(@NotNull final String msg) {
-    if(msg == null || currentProject == null)
-      return;
-    try {
+    if(currentProject != null) {
       WindowManager.getInstance()
-          .getStatusBar(currentProject)
-          .setInfo(msg);
-    }
-    catch (Exception e) {
-      LogHandler.error("Unable to update the status", e);
+              .getStatusBar(currentProject)
+              .setInfo(msg);
     }
   }
 
-  public static void fireSuccessNotification(@NotNull final String msg) {
+  public static void fireNotification(NotificationType notificationType, @NotNull final String msg){
     //fireNotification(msg, Messages.getInformationIcon(), JBColor.PanelBackground);
-    final Notification notification = NOTIFICATION_GROUP.createNotification("Oracle Cloud Infrastructure","",
-        msg, NotificationType.INFORMATION);
-    notification.notify(currentProject);
-  }
-
-  public static void fireErrorNotification(@NotNull final String msg) {
-    //fireNotification(msg, Messages.getErrorIcon(), JBColor.PanelBackground);
-    final Notification notification = NOTIFICATION_GROUP.createNotification("Oracle Cloud Infrastructure","",
-        msg, NotificationType.ERROR);
-    notification.notify(currentProject);
+    NOTIFICATION_GROUP
+            .createNotification("Oracle Cloud Infrastructure", "", msg, notificationType)
+            .notify(currentProject);
   }
 
   public static void fetchAndUpdateUI(@NotNull Runnable fetch, @Nullable Runnable update) {
@@ -69,19 +58,19 @@ public class UIUtil {
         fetch.run();
       }
       catch (Throwable th) {
-        LogHandler.error("Unable to execute the fetch job", th);
-        fireErrorNotification("Unable to execute the fetch job" + th.getMessage());
+        final String errorMsg = "Unable to execute the fetch job";
+        LogHandler.error(errorMsg, th);
+
+        fireNotification(NotificationType.ERROR, errorMsg + th.getMessage());
       }
-      // Scchedule the UI update after fetching the data in background thread.
+      /* Schedule the UI update after fetching the data in background thread. */
       if(update != null)  {
         ApplicationManager.getApplication().invokeLater(update);
       }
-
-
     });
   }
 
-  public static void makeWebLink(JLabel lbl, String uri) {
+  public static void makeWebLink(JComponent lbl, String uri) {
     lbl.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
     lbl.addMouseListener(new MouseAdapter() {
       @Override
@@ -90,8 +79,8 @@ public class UIUtil {
           if(!Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
             return;
           Desktop.getDesktop().browse(new URI(uri));
-        }
-        catch (Exception ex) {
+        } catch (URISyntaxException | IOException ex) {
+          throw new RuntimeException(ex);
         }
       }
     });
@@ -101,21 +90,4 @@ public class UIUtil {
     return currentProject;
   }
 
-  public static boolean isValidAdminPassword(char[] pwd) {
-    if(pwd == null || pwd.length == 0)
-      return false;
-
-    if(pwd.length < 12 || pwd.length > 30)
-      return false;
-
-    final char[] pwdLowerCase = new char[pwd.length];
-    for(int i = 0; i < pwd.length; i++)
-      pwdLowerCase[i]  = Character.toLowerCase(pwd[i]);
-
-    final boolean result = (!Arrays.equals(pwdLowerCase, ADMIN_CHARS))
-        && (Arrays.binarySearch(pwd, '\"') == -1);
-    Arrays.fill(pwdLowerCase,' ');
-
-    return result;
-  }
 }

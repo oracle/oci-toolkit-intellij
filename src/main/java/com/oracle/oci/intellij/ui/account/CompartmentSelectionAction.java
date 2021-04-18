@@ -21,7 +21,7 @@ import javax.swing.*;
  */
 public class CompartmentSelectionAction extends AnAction {
 
-  public CompartmentSelectionAction(){
+  public CompartmentSelectionAction() {
     super("Compartment", "Select compartment", new ImageIcon(
             RegionSelectionAction.class.getResource("/icons/compartments.png")));
   }
@@ -32,13 +32,11 @@ public class CompartmentSelectionAction extends AnAction {
    * @param event event.
    */
   @Override
-  public void actionPerformed(@NotNull AnActionEvent event){
-    final CompartmentSelection compartmentSelection = new CompartmentSelection();
-    compartmentSelection.showAndGet();
+  public void actionPerformed(@NotNull AnActionEvent event) {
+    final CompartmentSelection compartmentSelection = CompartmentSelection.newInstance();
 
-    if (compartmentSelection.isOK()) {
-      final Compartment selectedCompartment = compartmentSelection
-              .getSelectedCompartment();
+    if (compartmentSelection.showAndGet()) {
+      final Compartment selectedCompartment =compartmentSelection.getSelectedCompartment();
 
       if (!selectedCompartment.getId()
               .equals(AuthenticationDetails.getInstance().getCompartmentId())) {

@@ -24,7 +24,7 @@ public class Identity implements PropertyChangeListener {
   private static final Identity instance = new Identity();
   private IdentityClient identityClient;
 
-  static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
+  static final String ROOT_COMPARTMENT_NAME = "root";
   private String currentCompartmentName = ROOT_COMPARTMENT_NAME;
 
   /**
@@ -88,11 +88,11 @@ public class Identity implements PropertyChangeListener {
    *
    * @return root compartment.
    */
-  public Compartment getRootCompartment(){
-    String compartmentId = AuthenticationDetails.getInstance().getProvider().getTenantId();
+  public Compartment getRootCompartment() {
+    String tenantId = AuthenticationDetails.getInstance().getProvider().getTenantId();
     return Compartment.builder()
-            .compartmentId(compartmentId)
-            .id(compartmentId).name(ROOT_COMPARTMENT_NAME)
+            .compartmentId(tenantId)
+            .id(tenantId).name(ROOT_COMPARTMENT_NAME)
             .lifecycleState(LifecycleState.Active)
             .build();
   }

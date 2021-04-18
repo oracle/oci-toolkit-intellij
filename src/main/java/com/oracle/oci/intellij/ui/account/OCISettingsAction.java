@@ -17,7 +17,7 @@ import javax.swing.*;
 public class OCISettingsAction extends AnAction {
 
   public OCISettingsAction() {
-    super("Oracle Cloud Infrastructure", "OCI Explorer Settings",
+    super("Configure", "Oracle Cloud Infrastructure configuration",
         new ImageIcon(OCISettingsAction
             .class.getResource("/icons/toolbar-login.png")));
   }
@@ -29,7 +29,6 @@ public class OCISettingsAction extends AnAction {
    */
   @Override
   public void actionPerformed(@NotNull AnActionEvent event) {
-    final OCISettingsPanel settings = new OCISettingsPanel();
-    settings.showAndGet();
+    OCIConfigurationPanel.newInstance().showAndGet();
   }
 }

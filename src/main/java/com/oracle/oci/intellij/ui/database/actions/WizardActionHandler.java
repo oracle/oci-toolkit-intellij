@@ -24,15 +24,6 @@ public class WizardActionHandler extends AbstractAction {
   private final Action action;
   private final AutonomousDatabaseSummary adbSummary;
   private final CreateAutonomousDatabaseBase.DbWorkload workloadType;
-  private DialogWrapper wizard;
-
-  public WizardActionHandler(Action action,
-      CreateAutonomousDatabaseBase.DbWorkload workloadType, String actionName) {
-    super(actionName);
-    this.action = action;
-    this.adbSummary = null;
-    this.workloadType = workloadType;
-  }
 
   public WizardActionHandler(Action action,
       AutonomousDatabaseSummary adbSummary, String actionName) {
@@ -44,11 +35,12 @@ public class WizardActionHandler extends AbstractAction {
 
   @Override
   public void actionPerformed(ActionEvent e) {
-    wizard = createWizard(action);
-    if(wizard != null)
+    final DialogWrapper wizard = createWizard(action);
+    if(wizard != null) {
       wizard.showAndGet();
-    else
+    } else {
       LogHandler.error("Unable to create wizard for the type : " + action.toString());
+    }
   }
 
   private DialogWrapper createWizard(Action action) {
@@ -62,7 +54,7 @@ public class WizardActionHandler extends AbstractAction {
     case SCALE_ADB:
       return new ScaleDBWizard(adbSummary);
     case CREATE_ADB:
-      return new CreateADBInstanceWizard(workloadType);
+      return new CreateAutonomousDatabaseWizard();
     case RESTORE_ADB:
       return new RestoreWizard(adbSummary);
     case UPDATE_LICENSE:

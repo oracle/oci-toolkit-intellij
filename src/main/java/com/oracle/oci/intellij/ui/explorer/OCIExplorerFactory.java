@@ -24,15 +24,11 @@ import com.oracle.oci.intellij.ui.database.ADBInstanceClient;
 import com.oracle.oci.intellij.ui.database.DatabaseDetails;
 import org.jetbrains.annotations.NotNull;
 
-
-
-public class OCIExplorerFactory
-    implements ToolWindowFactory {
+public class OCIExplorerFactory implements ToolWindowFactory {
 
   private final DatabaseDetails databaseDetails;
 
   public OCIExplorerFactory() {
-
     // Property Event Change has to be updated in this order.
     ServicePreferences.addPropertyChangeListener(AuthenticationDetails.getInstance());
     ServicePreferences.addPropertyChangeListener(Identity.getInstance());
@@ -44,7 +40,8 @@ public class OCIExplorerFactory
 
   @Override
   public void createToolWindowContent(@NotNull Project project,
-      @NotNull ToolWindow toolWindow) {
+                                      @NotNull ToolWindow toolWindow){
+
     UIUtil.setCurrentProject(project);
     final ToolWindowEx toolWindowEx = (ToolWindowEx) toolWindow;
 
@@ -58,9 +55,8 @@ public class OCIExplorerFactory
     final TabbedExplorer ociTabbedToolBar = new TabbedExplorer(toolWindow, databaseDetails);
     final ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
     final Content ociTabbedToolBarContent = contentFactory
-        .createContent(ociTabbedToolBar.getContent(), "", false);
+            .createContent(ociTabbedToolBar.getContent(), "", false);
     toolWindow.getContentManager().addContent(ociTabbedToolBarContent);
-
   }
 
 }

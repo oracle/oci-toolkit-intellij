@@ -5,9 +5,9 @@
 
 package com.oracle.oci.intellij.ui.database.actions;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.openapi.ui.Messages;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LicenseModel;
 import com.oracle.bmc.database.model.UpdateAutonomousDatabaseDetails;
@@ -16,60 +16,77 @@ import com.oracle.oci.intellij.ui.database.ADBInstanceClient;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.*;
 
 public class UpdateLicenseWizard extends DialogWrapper {
-
-  private JPanel mainPanel;
-  private JRadioButton alreadyRBtn;
-  private JRadioButton newLicenseRBtn;
-  private ButtonGroup bGroup;
+  private JPanel chooseLicenseTypePanel;
+  private JRadioButton bringYourOwnLicenseRadioButton;
+  private JRadioButton licenseIncludedRadioButton;
+  private ButtonGroup licenseTypeButtonGroup;
 
   private final AutonomousDatabaseSummary autonomousDatabaseSummary;
 
   protected UpdateLicenseWizard(
-      AutonomousDatabaseSummary autonomousDatabaseSummary) {
+          AutonomousDatabaseSummary autonomousDatabaseSummary){
     super(true);
     this.autonomousDatabaseSummary = autonomousDatabaseSummary;
-    init();
-    setTitle("ADB Update License");
-    setOKButtonText("Update");
-    bGroup = new ButtonGroup();
-    bGroup.add(alreadyRBtn);
-    bGroup.add(newLicenseRBtn);
-    LicenseModel licenseModel = autonomousDatabaseSummary.getLicenseModel();
-    if (licenseModel.equals(LicenseModel.LicenseIncluded))
-      newLicenseRBtn.setSelected(true);
-    else
-      alreadyRBtn.setSelected(true);
 
+    init();
+    setTitle("Update License Type");
+    setOKButtonText("Save Changes");
+    chooseLicenseTypePanel.setPreferredSize(new Dimension(300, 65));
+
+    // Set the border line text for scale panel.
+    final String licenseHelpWebLink =
+            "https://docs.cloud.oracle.com/iaas/Content/Database/Tasks/adbmanaging.htm#updatelicense";
+    final String scalePanelBorderText = "<html>Choose a license type. " +
+            "<a href=" + "\"" + licenseHelpWebLink + "\"" + ">HELP</a></html";
+    final Border borderLine = BorderFactory
+            .createTitledBorder(scalePanelBorderText);
+    chooseLicenseTypePanel.setBorder(borderLine);
+    UIUtil.makeWebLink(chooseLicenseTypePanel, licenseHelpWebLink);
+
+    licenseTypeButtonGroup = new ButtonGroup();
+    licenseTypeButtonGroup.add(bringYourOwnLicenseRadioButton);
+    licenseTypeButtonGroup.add(licenseIncludedRadioButton);
+
+    final LicenseModel licenseModel = autonomousDatabaseSummary.getLicenseModel();
+    if (licenseModel.equals(LicenseModel.LicenseIncluded)) {
+      licenseIncludedRadioButton.setSelected(true);
+    } else {
+      bringYourOwnLicenseRadioButton.setSelected(true);
+    }
   }
 
-  @Override public void doOKAction() {
+  @Override
+  public void doOKAction(){
     final UpdateAutonomousDatabaseDetails.LicenseModel licenseModel =
-        newLicenseRBtn.isSelected() ?
-            UpdateAutonomousDatabaseDetails.LicenseModel.LicenseIncluded :
-            UpdateAutonomousDatabaseDetails.LicenseModel.BringYourOwnLicense;
+            licenseIncludedRadioButton.isSelected() ?
+                    UpdateAutonomousDatabaseDetails.LicenseModel.LicenseIncluded :
+                    UpdateAutonomousDatabaseDetails.LicenseModel.BringYourOwnLicense;
 
     final Runnable nonblockingUpdate = () -> {
       try {
         ADBInstanceClient.getInstance()
-            .updateLicenseType(autonomousDatabaseSummary, licenseModel);
+                .updateLicenseType(autonomousDatabaseSummary, licenseModel);
+
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireSuccessNotification("License model successfully updated."));
-      }
-      catch (Exception e) {
+                .fireNotification(NotificationType.INFORMATION, "License model updated."));
+      } catch (Exception ex) {
         ApplicationManager.getApplication().invokeLater(
-            () -> UIUtil.fireErrorNotification("Failed to update the license model : " + e.getMessage()));
+                () -> UIUtil.fireNotification(NotificationType.ERROR, "License model update failed: " + ex.getMessage()));
       }
     };
 
     // Do this in background
     UIUtil.fetchAndUpdateUI(nonblockingUpdate, null);
-
     close(DialogWrapper.OK_EXIT_CODE);
   }
 
-  @Nullable @Override protected JComponent createCenterPanel() {
-    return mainPanel;
+  @Nullable
+  @Override
+  protected JComponent createCenterPanel(){
+    return chooseLicenseTypePanel;
   }
 }

@@ -5,6 +5,7 @@
 
 package com.oracle.oci.intellij.ui.database.actions;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
@@ -92,6 +93,7 @@ public class CreateADBInstanceWizard extends DialogWrapper {
     final String defaultDBName = "DB" + DATE_TIME_FORMAT.format(new Date());
     dbNameTxt.setText(defaultDBName);
     displayNameTxt.setText(defaultDBName);
+
     cpuCountSpnr.setModel(
         new SpinnerNumberModel(ADBConstants.CPU_CORE_COUNT_DEFAULT,
             ADBConstants.CPU_CORE_COUNT_MIN, ADBConstants.CPU_CORE_COUNT_MAX,
@@ -121,39 +123,24 @@ public class CreateADBInstanceWizard extends DialogWrapper {
     compartmentCmb.setEditable(false);
 
     compartmentBtn.addActionListener((e) -> {
-      compartmentBtn.setEnabled(false);
-      try {
-        CompartmentSelection compartmentSelection = new CompartmentSelection();
-        compartmentSelection.showAndGet();
-        if(compartmentSelection.isOK()) {
-          selectedCompartment = compartmentSelection.getSelectedCompartment();
-          if(selectedCompartment != null)
-            compartmentCmb.setText(selectedCompartment.getName());
+      CompartmentSelection compartmentSelection = CompartmentSelection.newInstance();
+      if(compartmentSelection.showAndGet()) {
+        selectedCompartment = compartmentSelection.getSelectedCompartment();
+        if(selectedCompartment != null) {
+          compartmentCmb.setText(selectedCompartment.getName());
         }
       }
-      catch(Exception ex) {
-        Messages.showErrorDialog("Unable to load compartment details.", "Select Compartment");
-      }
-      compartmentBtn.setEnabled(true);
     });
 
     adcCompartmentBtn.addActionListener((e) -> {
-      adcCompartmentBtn.setEnabled(false);
-      try {
-        CompartmentSelection compartmentSelection = new CompartmentSelection();
-        compartmentSelection.showAndGet();
-        if(compartmentSelection.isOK()) {
-          selectedADCCompartment = compartmentSelection.getSelectedCompartment();
-          if(selectedADCCompartment != null) {
-            adcCompartmentCmb.setText(selectedADCCompartment.getName());
-            handleADCCompartmentChange();
-          }
+      CompartmentSelection compartmentSelection = CompartmentSelection.newInstance();
+      if(compartmentSelection.showAndGet()) {
+        selectedADCCompartment = compartmentSelection.getSelectedCompartment();
+        if(selectedADCCompartment != null) {
+          adcCompartmentCmb.setText(selectedADCCompartment.getName());
+          handleADCCompartmentChange();
         }
       }
-      catch(Exception ex) {
-        Messages.showErrorDialog("Unable to load compartment details.", "Select Compartment");
-      }
-      adcCompartmentBtn.setEnabled(true);
     });
 
     alwayFreeChk.addChangeListener((e) -> {
@@ -171,7 +158,6 @@ public class CreateADBInstanceWizard extends DialogWrapper {
         serverlessRBtn.setEnabled(false);
         byolRBtn.setEnabled(false);
         licenseIncldBtn.setEnabled(false);
-
       }
       else {
         autoScalingChk.setEnabled(true);
@@ -221,7 +207,6 @@ public class CreateADBInstanceWizard extends DialogWrapper {
       licenseIncldBtn.setEnabled(false);
       byolRBtn.setEnabled(false);
     }
-
   }
 
   private void handleADCCompartmentChange() {
@@ -244,7 +229,7 @@ public class CreateADBInstanceWizard extends DialogWrapper {
     }
     final boolean isDedicated = dedicatedRBtn.isSelected();
     final String containerDB = isDedicated ? getContainerDatabaseId() : "";
-    if (!isValidPassword() || !isValidContainerDatabase(containerDB))
+    if (!isValidContainerDatabase(containerDB))
       return;
 
     final String compartmentId = selectedCompartment.getId();
@@ -278,13 +263,13 @@ public class CreateADBInstanceWizard extends DialogWrapper {
       try {
         ADBInstanceClient.getInstance().createInstance(createADBRequest);
         ApplicationManager.getApplication().invokeLater(() -> {
-          UIUtil.fireSuccessNotification("ADB Instance created successfully.");
+          UIUtil.fireNotification(NotificationType.INFORMATION, "ADB Instance created successfully.");
           ServicePreferences.fireADBInstanceUpdateEvent("Create");
         });
       }
       catch (Exception e) {
         ApplicationManager.getApplication().invokeLater(
-            () -> UIUtil.fireErrorNotification("Failed to create ADB Instance : " + e.getMessage()));
+            () -> UIUtil.fireNotification(NotificationType.ERROR,"Failed to create ADB Instance : " + e.getMessage()));
       }
     };
 
@@ -313,33 +298,6 @@ public class CreateADBInstanceWizard extends DialogWrapper {
     else
       return containerMap.get(databaseContainerCmb.getSelectedItem());
   }
-/*
-  public String getStorageInTB() {
-    if (alwayFreeChk.isSelected())
-      return ADBConstants.ALWAYS_FREE_STORAGE_TB_DUMMY;
-    return storageSpnr.getValue().toString();
-  }
-*/
-  private boolean isValidPassword() {
-    final char[] adminPwd = passwordTxt.getPassword();
-    final char[] confirmPwd = confirmPasswordTxt.getPassword();
-
-    if (!Arrays.equals(adminPwd, confirmPwd)) {
-      Messages.showErrorDialog("Confirm Admin password must match Admin password.",
-          "Password mismatch error");
-      return false;
-    }
-
-    if (!UIUtil.isValidAdminPassword(adminPwd)) {
-      Messages.showErrorDialog("Admin password entered is not valid.",
-          "Invalid Password");
-      return false;
-    }
-
-    Arrays.fill(adminPwd, ' ');
-    Arrays.fill(confirmPwd, ' ');
-    return true;
-  }
 
   private boolean isValidContainerDatabase(final String selectedContainerDBID) {
     if(!dedicatedRBtn.isSelected())
@@ -360,7 +318,4 @@ public class CreateADBInstanceWizard extends DialogWrapper {
     return mainPanel;
   }
 
-  private void createUIComponents() {
-    // TODO: place custom component creation code here
-  }
 }

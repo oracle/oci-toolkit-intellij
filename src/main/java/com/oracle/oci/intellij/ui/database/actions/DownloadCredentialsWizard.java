@@ -5,6 +5,7 @@
 
 package com.oracle.oci.intellij.ui.database.actions;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
@@ -16,6 +17,11 @@ import com.oracle.oci.intellij.ui.database.ADBInstanceClient;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Map;
@@ -24,17 +30,24 @@ public class DownloadCredentialsWizard extends DialogWrapper {
   private JPanel mainPanel;
   private JPanel descriptionPanel;
   private JPanel centerPanel;
-  private JPanel walletPanel;
-  private JPanel credentialsPanel;
-  private JPasswordField passwordPasswordField;
-  private JPasswordField confirmPasswordPasswordField;
+  private JPasswordField passwordField;
+  private JPasswordField confirmPasswordField;
   private JTextField walletLocationTextField;
   private JButton browseButton;
-  private JPanel walletTypePanel;
-  private JLabel walletTypeLbl;
-  private JComboBox walletTypeCmb;
-  private JButton rotateWalletBtn;
-  private JLabel rotateWalletLbl;
+  private JLabel walletTypeLabel;
+  private JComboBox walletTypeComboBox;
+  private JButton rotateWalletButton;
+  private JLabel rotateWalletLabel;
+  private JPanel level1Panel;
+  private JPanel level2Panel;
+  private JPanel level3Panel;
+  private JPanel walletLocationPanel;
+  private JPanel downloadWalletPanel;
+  private JCheckBox downloadWalletCheckBox;
+  private JLabel walletLocationLabel;
+  private JLabel passwordLabel;
+  private JLabel confirmPasswordLabel;
+  private JLabel rotateWalletHelpLabel;
 
   private final String rotationMsgInstanceWallet =
         "Rotating the instance wallet invalidates the certificate keys associated with the existing instance wallet"+"\n"
@@ -55,7 +68,7 @@ public class DownloadCredentialsWizard extends DialogWrapper {
             + "\n" + "You cannot perform a wallet download during the rotation process. Existing connections to database"
             + "\n" + "will be terminated, and will need to be reestablished using the new wallet. Please try after sometime.";
 
-  private final String rotationMsg1 = "ENTER THE DATABASE NAME (%s) TO CONFIRM THE %s ROTATION";
+  private final String rotationMsg1 = "Enter the currently selected database name (%s) to confirm the %s rotation";
 
   private final AutonomousDatabaseSummary autonomousDatabaseSummary;
   private AutonomousDatabaseWallet regionalWallet = null;
@@ -71,12 +84,32 @@ public class DownloadCredentialsWizard extends DialogWrapper {
             && autonomousDatabaseSummary.getIsDedicated());
     init();
 
-    setTitle("Download Client Credentials");
+    setTitle("Download Client Credentials (Wallet)");
     setOKButtonText("Download");
+    mainPanel.setPreferredSize(new Dimension(850, 300));
+
+    // Add download wallet help web link.
+    final String downloadWalletHelpWebLink =
+            "https://docs.oracle.com/en-us/iaas/Content/Database/Tasks/adbconnecting.htm#access";
+    final String downloadWalletHelpText = "<html>Download Wallet  " +
+            "<a href=" + "\"" + downloadWalletHelpWebLink + "\"" + ">HELP</a></html";
+    final Border borderLine = BorderFactory
+            .createTitledBorder(downloadWalletHelpText);
+    downloadWalletPanel.setBorder(borderLine);
+    UIUtil.makeWebLink(downloadWalletPanel, downloadWalletHelpWebLink);
+
+    // Add rotate wallet help web link.
+    final String rotateWalletHelpWebLink =
+            "https://docs.oracle.com/en-us/iaas/Content/Database/Tasks/adbconnecting.htm#AboutDownloadingClientCredentials";
+    final String rotateWalletHelpText = "<html>" +
+            "<a href=" + "\"" + rotateWalletHelpWebLink + "\"" + ">HELP</a></html";
+    rotateWalletHelpLabel.setText(rotateWalletHelpText);
+    UIUtil.makeWebLink(rotateWalletHelpLabel, rotateWalletHelpWebLink);
+
     walletLocationTextField.setEditable(false);
     if (isDedicatedInstance) {
-      walletTypeCmb.setEnabled(false);
-      rotateWalletBtn.setEnabled(false);
+      walletTypeComboBox.setEnabled(false);
+      rotateWalletButton.setEnabled(false);
     }
     else {
       initializeWalletTypes();
@@ -91,14 +124,36 @@ public class DownloadCredentialsWizard extends DialogWrapper {
       if (fileChooser.showOpenDialog(mainPanel)
           == JFileChooser.APPROVE_OPTION) {
         File downloadFolder = fileChooser.getSelectedFile();
-        //Messages.showInfoMessage("Selected file : " + downloadFolder.getAbsolutePath(), "Secetechg");
         walletLocationTextField.setText(downloadFolder.getAbsolutePath());
+      }
+    });
+
+    downloadWalletCheckBox.addItemListener((event) ->{
+      boolean isSelected = (event.getStateChange() == ItemEvent.SELECTED);
+
+      walletLocationPanel.setEnabled(isSelected);
+      walletLocationLabel.setEnabled(isSelected);
+      walletLocationTextField.setEnabled(isSelected);
+      browseButton.setEnabled(isSelected);
+
+      downloadWalletPanel.setEnabled(isSelected);
+      passwordLabel.setEnabled(isSelected);
+      passwordField.setEnabled(isSelected);
+      confirmPasswordLabel.setEnabled(isSelected);
+      confirmPasswordField.setEnabled(isSelected);
+
+      if (!isSelected) {
+        walletLocationTextField.setText("");
+        passwordField.setText("");
+        confirmPasswordField.setText("");
       }
     });
   }
 
   private void initializeWalletTypes() {
-    final Map<String, AutonomousDatabaseWallet> walletTypes = ADBInstanceClient.getInstance().getWalletType(autonomousDatabaseSummary);
+    final Map<String, AutonomousDatabaseWallet> walletTypes =
+            ADBInstanceClient.getInstance().getWalletType(autonomousDatabaseSummary);
+
     regionalWallet = walletTypes.get(ADBConstants.REGIONAL_WALLET);
     instanceWallet = walletTypes.get(ADBConstants.INSTANCE_WALLET);
 
@@ -111,73 +166,76 @@ public class DownloadCredentialsWizard extends DialogWrapper {
       close(DialogWrapper.CLOSE_EXIT_CODE);
     }
 
-    walletTypeCmb.addItem(ADBConstants.INSTANCE_WALLET);
-    walletTypeCmb.addItem(ADBConstants.REGIONAL_WALLET);
-    walletTypeCmb.addItemListener((e) -> {
-      final String selectedWalletType = (String) walletTypeCmb
+    walletTypeComboBox.addItem(ADBConstants.INSTANCE_WALLET);
+    walletTypeComboBox.addItem(ADBConstants.REGIONAL_WALLET);
+
+    walletTypeComboBox.addItemListener((e) -> {
+      final String selectedWalletType = (String) walletTypeComboBox
           .getSelectedItem();
       String rotationTimeStr = "";
-      if (selectedWalletType.equals(ADBConstants.INSTANCE_WALLET))
+      if (selectedWalletType.equals(ADBConstants.INSTANCE_WALLET)) {
         rotationTimeStr = (instanceWallet != null
-            && instanceWallet.getTimeRotated() != null) ?
-            instanceWallet.getTimeRotated().toGMTString() :
-            "Not Available";
-      else
+                && instanceWallet.getTimeRotated() != null) ?
+                instanceWallet.getTimeRotated().toString() :
+                "-";
+      } else {
         rotationTimeStr = (regionalWallet != null
-            && regionalWallet.getTimeRotated() != null) ?
-            regionalWallet.getTimeRotated().toGMTString() :
-            "Not Available";
+                && regionalWallet.getTimeRotated() != null) ?
+                regionalWallet.getTimeRotated().toString() :
+                "-";
+      }
 
-      rotateWalletLbl.setText("Wallet Last Rotated Time : " + rotationTimeStr);
-      rotateWalletLbl.updateUI();
-
+      rotateWalletLabel.setText(rotationTimeStr);
+      rotateWalletLabel.updateUI();
     });
-    walletTypeCmb.setSelectedIndex(0);
+
+    walletTypeComboBox.setSelectedIndex(0);
     final String rotationTimeStr =
         (instanceWallet != null && instanceWallet.getTimeRotated() != null) ?
-            instanceWallet.getTimeRotated().toGMTString() : "Not Available";
-    rotateWalletLbl.setText("Wallet Last Rotated Time : " + rotationTimeStr);
+            instanceWallet.getTimeRotated().toString() : "-";
+    rotateWalletLabel.setText(rotationTimeStr);
 
-    rotateWalletBtn.addActionListener((e) -> {
-      final String selectedWalletType = (String) walletTypeCmb
+    rotateWalletButton.addActionListener((e) -> {
+      final String selectedWalletType = (String) walletTypeComboBox
           .getSelectedItem();
+
       final String msg;
-      if (selectedWalletType.equals(ADBConstants.INSTANCE_WALLET))
+      if (selectedWalletType.equals(ADBConstants.INSTANCE_WALLET)) {
         msg = rotationMsgInstanceWallet + String
-            .format(rotationMsg1, autonomousDatabaseSummary.getDbName(),
-                "INSTANCE WALLET");
-      else
+                .format(rotationMsg1, autonomousDatabaseSummary.getDbName(),
+                        selectedWalletType);
+      } else {
         msg = rotationMsgRegionalWallet + String
-            .format(rotationMsg1, autonomousDatabaseSummary.getDbName(),
-                "REGIONAL WALLET");
+                .format(rotationMsg1, autonomousDatabaseSummary.getDbName(),
+                        selectedWalletType);
+      }
 
       final String input = Messages
           .showInputDialog(msg, "Rotate Wallet", Messages.getQuestionIcon());
+
       if (autonomousDatabaseSummary.getDbName().equals(input)) {
         ADBInstanceClient.getInstance()
             .rotateWallet(autonomousDatabaseSummary.getId(),
                 selectedWalletType);
         Messages.showInfoMessage("Wallet rotated successfully", "Success");
         close(DialogWrapper.CLOSE_EXIT_CODE);
-      }
-      else {
+      } else {
         Messages.showErrorDialog(
-            "Entered database name does not match with existing name.",
-            "Database name mismatch error");
+            "Entered database name does not match the existing value.",
+            "Database name mismatch");
       }
     });
   }
 
   public void doOKAction() {
-    if (!isValidPassword())
-      return;
-
     final String dirPath = walletLocationTextField.getText().trim();
-    if (!isValidWalletDir(dirPath))
-      return;
 
-    final char[] adminPassword = passwordPasswordField.getPassword();
-    final String selectedWalletType = (String) walletTypeCmb.getSelectedItem();
+    if (!isValidPassword() || !isValidWalletDir(dirPath)) {
+      return;
+    }
+
+    final char[] adminPassword = passwordField.getPassword();
+    final String selectedWalletType = (String) walletTypeComboBox.getSelectedItem();
     final String walletDirectory =
         dirPath + File.separator + "Wallet_" + autonomousDatabaseSummary
             .getDbName();
@@ -189,32 +247,31 @@ public class DownloadCredentialsWizard extends DialogWrapper {
                 new String(adminPassword), walletDirectory);
         Arrays.fill(adminPassword, ' ');
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireSuccessNotification(
+            .fireNotification(NotificationType.INFORMATION,
                 "<html>Wallet downloaded successfully." + "<br>Path : "
                     + walletDirectory + "</html>"));
       }
       catch (Exception e) {
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireErrorNotification("Wallet download failed : " + e.getMessage()));
+            .fireNotification(NotificationType.ERROR,"Wallet download failed : " + e.getMessage()));
       }
     };
 
     // Do this in background
     UIUtil.fetchAndUpdateUI(nonblockingDownload, null);
-
     close(DialogWrapper.OK_EXIT_CODE);
   }
 
   private boolean isValidPassword() {
-    final char[] password = passwordPasswordField.getPassword();
-    final char[] confirmPassword = confirmPasswordPasswordField.getPassword();
+    final char[] password = passwordField.getPassword();
+    final char[] confirmPassword = confirmPasswordField.getPassword();
 
     if (password == null || password.length == 0) {
       Messages.showErrorDialog("Wallet password cannot be empty", " Error");
       return false;
     }
     else if (!Arrays.equals(password, confirmPassword)) {
-      Messages.showErrorDialog("Confirm wallet password must match wallet password", "Error");
+      Messages.showErrorDialog("Confirmation must match wallet password", "Error");
       return false;
     }
     Arrays.fill(password,' ');
@@ -224,9 +281,10 @@ public class DownloadCredentialsWizard extends DialogWrapper {
 
   private boolean isValidWalletDir(final String dirPath) {
     if (dirPath == null || dirPath.trim().equals("")) {
-      Messages.showErrorDialog("Wallet directory path cannot be empty", "Error");
+      Messages.showErrorDialog("Wallet location cannot be empty", "Error");
       return false;
     }
+
     return true;
   }
 

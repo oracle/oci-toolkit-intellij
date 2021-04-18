@@ -11,7 +11,6 @@ import com.oracle.oci.intellij.util.LogHandler;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
-import java.io.File;
 import java.io.IOException;
 
 import static com.oracle.bmc.ClientRuntime.setClientUserAgent;
@@ -61,7 +60,7 @@ public class AuthenticationDetails implements PropertyChangeListener {
    * @return {@code boolean}.
    */
   private boolean isNewProfileParams() {
-    return ((!getProfile().equals(currentProfileName)) ||
+    return ((!getProfileName().equals(currentProfileName)) ||
             (!getConfigFileName().endsWith(currentConfigFileName)));
   }
 
@@ -71,10 +70,10 @@ public class AuthenticationDetails implements PropertyChangeListener {
   private void init() {
     try {
       provider = new ConfigFileAuthenticationDetailsProvider(
-              getConfigFileName(), getProfile());
+              getConfigFileName(), getProfileName());
 
       currentConfigFileName = getConfigFileName();
-      currentProfileName = getProfile();
+      currentProfileName = getProfileName();
       currentRegionName = ServicePreferences.getRegion();
       currentCompartmentId = provider.getTenantId();
 

@@ -27,25 +27,31 @@ import java.util.regex.Pattern;
  */
 public class RegionSelectionAction extends AnAction {
 
-  private static final HashMap<String, String> iconMap = new HashMap<String, String>() {
-    {
-      put("us-ashburn-1", Icons.REGION_US.getPath());
-      put("us-phoenix-1", Icons.REGION_US.getPath());
-      put("eu-frankfurt-1", Icons.REGION_GERMANY.getPath());
-      put("uk-london-1", Icons.REGION_UK.getPath());
-      put("ca-toronto-1", Icons.REGION_CANADA.getPath());
-      put("ap-mumbai-1", Icons.REGION_INDIA.getPath());
-      put("ap-seoul-1", Icons.REGION_SOUTH_KOREA.getPath());
-      put("ap-tokyo-1", Icons.REGION_JAPAN.getPath());
-      put("eu-zurich-1", Icons.REGION_SWITZERLAND.getPath());
-    }
-  };
+  private static final HashMap<String, String> iconMap;
+  private static final ImageIcon regionIcon;
 
-  private static ImageIcon regionIcon = new ImageIcon(
-      RegionSelectionAction.class
-          .getResource(iconMap.get(ServicePreferences.getRegion())));
+  static{
+    iconMap = new HashMap<String, String>() {
+      {
+        put("us-ashburn-1", Icons.REGION_US.getPath());
+        put("us-phoenix-1", Icons.REGION_US.getPath());
+        put("eu-frankfurt-1", Icons.REGION_GERMANY.getPath());
+        put("uk-london-1", Icons.REGION_UK.getPath());
+        put("ca-toronto-1", Icons.REGION_CANADA.getPath());
+        put("ap-mumbai-1", Icons.REGION_INDIA.getPath());
+        put("ap-seoul-1", Icons.REGION_SOUTH_KOREA.getPath());
+        put("ap-tokyo-1", Icons.REGION_JAPAN.getPath());
+        put("eu-zurich-1", Icons.REGION_SWITZERLAND.getPath());
+        put("ap-sydney-1", Icons.REGION_AUSTRALIA.getPath());
+      }
+    };
 
-  public RegionSelectionAction() {
+    regionIcon = new ImageIcon(
+            RegionSelectionAction.class
+                    .getResource(iconMap.get(ServicePreferences.getRegion())));
+  }
+
+  public RegionSelectionAction(){
     super("Region", "Select region", regionIcon);
   }
 
@@ -57,61 +63,54 @@ public class RegionSelectionAction extends AnAction {
   @Override
   // TODO: See if non-blocking UI calls required here.
   public void actionPerformed(@NotNull AnActionEvent event) {
-    try {
-      // TODO: Why is only MouseEvent handled?
-      if (event.getInputEvent() instanceof MouseEvent) {
-        final MouseEvent mouseEvent = ((MouseEvent) event.getInputEvent());
+    // TODO: Why is only MouseEvent handled?
+    if (event.getInputEvent() instanceof MouseEvent) {
+      final MouseEvent mouseEvent = ((MouseEvent) event.getInputEvent());
 
-        final List<RegionSubscription> regionList = Identity.getInstance()
-            .getRegionsList();
+      final List<RegionSubscription> regionList = Identity.getInstance()
+              .getRegionsList();
 
-        final JPopupMenu popupMenu = new JPopupMenu();
-        final ButtonGroup menuGroup = new ButtonGroup();
-        
-        final String currentRegion = ServicePreferences.getRegion();
-        for (RegionSubscription subscription : regionList) {
-          final JMenuItem regionMenu = new JRadioButtonMenuItem();
-          final Region selectedRegion = Region.fromRegionCode(subscription.getRegionKey());
+      final JPopupMenu popupMenu = new JPopupMenu();
+      final ButtonGroup menuGroup = new ButtonGroup();
 
-          if (Pattern.matches("\\w{2}-\\w+-\\d+", subscription.getRegionName())) {
-            regionMenu.setText(getFormattedRegion(subscription.getRegionName()));
-          } else {
-            regionMenu.setText(subscription.getRegionName());
-          }
+      final String currentRegion = ServicePreferences.getRegion();
+      for (RegionSubscription subscription : regionList) {
+        final JMenuItem regionMenu = new JRadioButtonMenuItem();
+        final Region selectedRegion = Region.fromRegionCode(subscription.getRegionKey());
 
-          if (iconMap.get(subscription.getRegionName()) != null) {
-            URL url = getClass().getResource(iconMap.get(subscription.getRegionName()));
-            if (url != null)
-              regionMenu.setIcon(new ImageIcon(url));
-          }
-
-          regionMenu.addActionListener((e1) -> {
-            ServicePreferences.updateRegion(selectedRegion.getRegionId());
-          });
-
-          if (currentRegion.equals(selectedRegion.getRegionId()))
-            regionMenu.setSelected(true);
-          menuGroup.add(regionMenu);
-          popupMenu.add(regionMenu);
+        if (Pattern.matches("\\w{2}-\\w+-\\d+", subscription.getRegionName())) {
+          regionMenu.setText(getFormattedRegion(subscription.getRegionName()));
+        } else {
+          regionMenu.setText(subscription.getRegionName());
         }
 
-        popupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(),
-            mouseEvent.getY());
+        if (iconMap.get(subscription.getRegionName()) != null) {
+          URL url = getClass().getResource(iconMap.get(subscription.getRegionName()));
+          if (url != null)
+            regionMenu.setIcon(new ImageIcon(url));
+        }
+
+        regionMenu.addActionListener((e1) -> ServicePreferences.updateRegion(selectedRegion.getRegionId()));
+
+        if (currentRegion.equals(selectedRegion.getRegionId()))
+          regionMenu.setSelected(true);
+        menuGroup.add(regionMenu);
+        popupMenu.add(regionMenu);
       }
-    }
-    catch(Exception ex) {
-      LogHandler.error(ex.getMessage(), ex);
+
+      popupMenu.show(mouseEvent.getComponent(), mouseEvent.getX(),
+              mouseEvent.getY());
     }
   }
 
   @Override
-  public void update(@NotNull AnActionEvent event) {
+  public void update(@NotNull AnActionEvent event){
     event.getPresentation().setIcon(new ImageIcon(RegionSelectionAction.class
-        .getResource(iconMap.get(ServicePreferences.getRegion()))));
+            .getResource(iconMap.get(ServicePreferences.getRegion()))));
     super.update(event);
   }
 
-  private String getFormattedRegion(String regionId) {
+  private String getFormattedRegion(String regionId){
     final String[] label = regionId.split("-");
     final String[] new_label = new String[label.length - 1];
     new_label[0] = label[0].toUpperCase();

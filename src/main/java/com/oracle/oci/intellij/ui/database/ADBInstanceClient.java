@@ -44,10 +44,7 @@ public class ADBInstanceClient implements PropertyChangeListener {
   }
 
   public void reset(){
-    try {
-      databaseClient.close();
-    } catch (Exception e) {
-    }
+    databaseClient.close();
     databaseClient = null;
     instancesMap.clear();
   }
@@ -67,19 +64,14 @@ public class ADBInstanceClient implements PropertyChangeListener {
     }
   }
 
-  public void close(){
-    try {
-      if (databaseClient != null) {
-        LogHandler.info("Closing ADBInstanceClient..");
-        databaseClient.close();
-      }
-    } catch (Exception e) {
-      LogHandler.error("Unable to close ADBInstanceClient", e);
+  public void close() {
+    if (databaseClient != null) {
+      LogHandler.info("Closing ADBInstanceClient..");
+      databaseClient.close();
     }
   }
 
-  public List<AutonomousDatabaseSummary> getInstances(DbWorkload workloadType)
-  throws Exception{
+  public List<AutonomousDatabaseSummary> getInstances(DbWorkload workloadType) {
     LogHandler.info("Fetching ADB Instance details from the server..");
     ListAutonomousDatabasesRequest listInstancesRequest = ListAutonomousDatabasesRequest
             .builder().compartmentId(AuthenticationDetails.getInstance().getCompartmentId())
@@ -93,7 +85,7 @@ public class ADBInstanceClient implements PropertyChangeListener {
       return instances;
     }
 
-    ListAutonomousDatabasesResponse response = null;
+    ListAutonomousDatabasesResponse response;
     try {
       response = databaseClient.listAutonomousDatabases(listInstancesRequest);
     } catch (Exception e) {
@@ -244,22 +236,14 @@ public class ADBInstanceClient implements PropertyChangeListener {
       LogHandler.error("Failed to CreateClone for the ADB Instance : " + cloneRequest.getSourceId(), e);
       throw e;
     }
-
-
   }
 
-  public void createInstance(final CreateAutonomousDatabaseDetails request){
+  public void createInstance(final CreateAutonomousDatabaseDetails request) {
     LogHandler.info("Creating ADBInstance..");
-    try {
-      CreateAutonomousDatabaseResponse response = databaseClient
-              .createAutonomousDatabase(CreateAutonomousDatabaseRequest.builder()
-                      .createAutonomousDatabaseDetails(request).build());
-      LogHandler.info("ADBInstance created successfully.");
-    } catch (Exception ex) {
-      LogHandler.error("Failed to Create ADB Instance", ex);
-      throw ex;
-    }
-
+    CreateAutonomousDatabaseResponse response = databaseClient
+            .createAutonomousDatabase(CreateAutonomousDatabaseRequest.builder()
+                    .createAutonomousDatabaseDetails(request).build());
+    LogHandler.info("ADBInstance created successfully.");
   }
 
   public void terminate(final String databaseId){
@@ -277,7 +261,8 @@ public class ADBInstanceClient implements PropertyChangeListener {
 
   public void downloadWallet(final AutonomousDatabaseSummary instance,
                              final String walletType, final String password,
-                             final String walletDirectory){
+                             final String walletDirectory) {
+
     final GenerateAutonomousDatabaseWalletDetails walletDetails;
     if ((instance.getIsDedicated() != null && instance.getIsDedicated())) {
       walletDetails = GenerateAutonomousDatabaseWalletDetails.builder()
@@ -297,19 +282,16 @@ public class ADBInstanceClient implements PropertyChangeListener {
                             .generateAutonomousDatabaseWalletDetails(walletDetails)
                             .autonomousDatabaseId(instance.getId()).build());
 
-    final ZipInputStream zin = new ZipInputStream(
-            adbWalletResponse.getInputStream());
-
-    final File file = new File(walletDirectory);
-    if (!file.exists()) {
-      if (!file.mkdir()) {
+    final File directory = new File(walletDirectory);
+    if (!directory.exists()) {
+      if (!directory.mkdir()) {
         LogHandler.error("Cannot create wallet directory : " + walletDirectory);
         return;
       }
     } else {
       LogHandler.info("Wallet directory already exists : " + walletDirectory);
       try {
-        FileUtils.cleanDirectory(file);
+        FileUtils.cleanDirectory(directory);
       } catch (IOException e) {
         LogHandler.info("Failed to clean the existing wallet directory : " + walletDirectory);
       }
@@ -317,32 +299,31 @@ public class ADBInstanceClient implements PropertyChangeListener {
 
     final Path outDir = Paths.get(walletDirectory);
     final byte[] buffer = new byte[2048];
-    ZipEntry entry;
-    try {
-      while ((entry = zin.getNextEntry()) != null) {
-        Path filePath = outDir.resolve(entry.getName());
+    try (ZipInputStream zipInputStream = new ZipInputStream(adbWalletResponse.getInputStream());) {
+      ZipEntry entry;
+      while ((entry = zipInputStream.getNextEntry()) != null) {
+        final Path filePath = outDir.resolve(entry.getName());
+        final File file = filePath.toFile();
 
-        try (FileOutputStream fos = new FileOutputStream(filePath.toFile());
-             BufferedOutputStream bos = new BufferedOutputStream(fos,
-                     buffer.length)) {
+        try (FileOutputStream fos = new FileOutputStream(file);
+             BufferedOutputStream bos = new BufferedOutputStream(fos, buffer.length)) {
 
           int len;
-          while ((len = zin.read(buffer)) > 0) {
+          while ((len = zipInputStream.read(buffer)) > 0) {
             bos.write(buffer, 0, len);
           }
         }
       }
-
       LogHandler.info("Downloaded Client Credentials (Wallet) for database: " + instance.getId());
-    } catch (Exception e) {
-      LogHandler.error("Error occurred while downloading wallet for ADB: " + instance.getId(), e);
-      throw new RuntimeException(e);
+    } catch (Exception ex) {
+      LogHandler.error("Error occurred while downloading wallet for ADB: " + instance.getId(), ex);
+      throw new RuntimeException(ex);
     }
   }
 
   public Map<String, String> getContainerDatabaseMap(
-          final String compartmentId) {
-    final Map<String, String> containerDBMap = new TreeMap<String, String>();
+          final String compartmentId){
+    final Map<String, String> containerDBMap = new TreeMap<>();
 
     if (databaseClient == null)
       return containerDBMap;
@@ -351,7 +332,7 @@ public class ADBInstanceClient implements PropertyChangeListener {
             .builder().compartmentId(compartmentId).lifecycleState(
                     AutonomousContainerDatabaseSummary.LifecycleState.Available)
             .build();
-    ListAutonomousContainerDatabasesResponse response = null;
+    ListAutonomousContainerDatabasesResponse response;
     try {
       response = databaseClient.listAutonomousContainerDatabases(request);
     } catch (Exception e) {
@@ -369,21 +350,16 @@ public class ADBInstanceClient implements PropertyChangeListener {
     return containerDBMap;
   }
 
-  public List<AutonomousDatabaseBackupSummary> getBackupList(final AutonomousDatabaseSummary instance){
-    ListAutonomousDatabaseBackupsResponse response = null;
-    try {
-      LogHandler.info("Getting backup list for ADBInstance : " + instance.getId());
-      final ListAutonomousDatabaseBackupsRequest request = ListAutonomousDatabaseBackupsRequest
-              .builder().autonomousDatabaseId(instance.getId())
-              .lifecycleState(AutonomousDatabaseBackupSummary.LifecycleState.Active)
-              .sortBy(ListAutonomousDatabaseBackupsRequest.SortBy.Timecreated)
-              .sortOrder(ListAutonomousDatabaseBackupsRequest.SortOrder.Desc)
-              .build();
-      response = databaseClient.listAutonomousDatabaseBackups(request);
-    } catch (Exception e) {
-      LogHandler.error("Unable to get backup list for Database", e);
-      throw e;
-    }
+  public List<AutonomousDatabaseBackupSummary> getBackupList(final AutonomousDatabaseSummary instance) {
+    ListAutonomousDatabaseBackupsResponse response;
+    LogHandler.info("Getting backup list for ADBInstance : " + instance.getId());
+    final ListAutonomousDatabaseBackupsRequest request = ListAutonomousDatabaseBackupsRequest
+            .builder().autonomousDatabaseId(instance.getId())
+            .lifecycleState(AutonomousDatabaseBackupSummary.LifecycleState.Active)
+            .sortBy(ListAutonomousDatabaseBackupsRequest.SortBy.Timecreated)
+            .sortOrder(ListAutonomousDatabaseBackupsRequest.SortOrder.Desc)
+            .build();
+    response = databaseClient.listAutonomousDatabaseBackups(request);
     if (response != null) {
       final List<AutonomousDatabaseBackupSummary> adbsList = response.getItems();
       LogHandler.info("Got backup list. Size : " + adbsList.size());
@@ -439,7 +415,7 @@ public class ADBInstanceClient implements PropertyChangeListener {
 
   public Map<String, AutonomousDatabaseWallet> getWalletType(
           final AutonomousDatabaseSummary instance){
-    final Map<String, AutonomousDatabaseWallet> walletTypeMap = new HashMap<String, AutonomousDatabaseWallet>();
+    final Map<String, AutonomousDatabaseWallet> walletTypeMap = new HashMap<>();
     if (!(instance.getIsDedicated() != null && instance.getIsDedicated())) {
       try {
         final GetAutonomousDatabaseRegionalWalletRequest regionalWalletRequest = GetAutonomousDatabaseRegionalWalletRequest

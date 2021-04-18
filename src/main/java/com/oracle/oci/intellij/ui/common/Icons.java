@@ -5,6 +5,9 @@
 
 package com.oracle.oci.intellij.ui.common;
 
+/**
+ * Path of icons used by plugin.
+ */
 public enum Icons {
     BUCKET("icons/bucket.png"),
     TOOLBAR_LOGIN("icons/toolbar-login.png"),
@@ -20,19 +23,28 @@ public enum Icons {
     REGION_JAPAN("/icons/regions/japan-flag.png"),
     REGION_SOUTH_KOREA("/icons/regions/south-korea-flag.png"),
     REGION_SWITZERLAND("/icons/regions/switzerland-flag.png"),
+    REGION_AUSTRALIA("/icons/regions/australia-flag.png"),
     DATABASE("icons/database.png"),
     DATABASE_AVAILABLE_STATE("icons/db-available-state.png"),
-    DATABASE_INPROGRESS_STATE("icons/db-inprogress-state.png"),
+    DATABASE_IN_PROGRESS_STATE("icons/db-inprogress-state.png"),
     DATABASE_UNAVAILABLE_STATE("icons/db-unavailable-state.png"),
     BACKUP_ACTIVE_STATE("icons/backup-active-state.png"),
     CONTAINER("icons/compute.png");
 
-    private String path;
+    private final String path;
 
-    private Icons(String path) {
+    /**
+     * Construct the icon path.
+     * @param path the icon file path.
+     */
+    Icons(String path) {
         this.path = path;
     }
 
+    /**
+     * Get icon path.
+     * @return icon path.
+     */
     public String getPath() {
         return path;
     }

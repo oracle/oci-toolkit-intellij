@@ -5,6 +5,7 @@
 
 package com.oracle.oci.intellij.ui.account;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
@@ -30,9 +31,9 @@ import java.util.regex.Pattern;
 
 import static com.oracle.bmc.util.internal.FileUtils.expandUserHome;
 
-public class OCISettingsPanel extends DialogWrapper {
+public class OCIConfigurationPanel extends DialogWrapper {
 
-  private static final String ADD_PROFILE = "Add Profile";
+  private static final String ADD_PROFILE = "Add profile";
   private static final Pattern PATTERN = Pattern.compile("\\$\\{(\\w+)\\}");
   private static final String DEFAULT_PROFILE_NAME = "DEFAULT";
 
@@ -42,31 +43,34 @@ public class OCISettingsPanel extends DialogWrapper {
   private JPanel mainPanel;
   private TextFieldWithBrowseButton configFileTxt;
   private JPanel configPanel;
-  private JPanel clientOptionsPanel;
   private JPanel parametersPanel;
-  private JComboBox<String> profileCombo;
+  private JComboBox<String> selectCombo;
   private JComboBox<String> regionCombo;
   private JTextField ocidTxt;
   private JTextField tenantOcidTxt;
   private TextFieldWithBrowseButton privateKeyFileTxt;
   private JTextField fingerPrintTxt;
   private JTextField passPhraseTxt;
-  private JTextField connTimeoutTxt;
-  private JTextField readTimeoutTxt;
   private JButton saveProfileButton;
   private JTextField profileNameTxt;
   private JLabel profileNameLbl;
-  private JLabel ociConfigInstrcutionLbl;
+  private JLabel exampleConfigurationLabel;
   private JLabel ociFreeTrialLbl;
+  private JPanel configurationFilePanel;
+  private JPanel signupPanel;
   private final JFileChooser fileChooser = new JFileChooser();
   private final JFileChooser pemFileChooser = new JFileChooser();
 
-  public OCISettingsPanel(){
+  public static OCIConfigurationPanel newInstance() {
+    return new OCIConfigurationPanel();
+  }
+
+  private OCIConfigurationPanel() {
     super(true);
     init();
-    setTitle("OCI Settings");
+    setTitle("Oracle Cloud Infrastructure configuration");
     setOKButtonText("Apply");
-    configFileTxt.setEditable(false);
+    mainPanel.setPreferredSize(new Dimension(650, 430));
 
     configFileTxt.addActionListener(event -> {
       fileChooser.setSelectedFile(new File(ServicePreferences.getConfigFileName()));
@@ -75,7 +79,9 @@ public class OCISettingsPanel extends DialogWrapper {
       int state = fileChooser.showDialog(mainPanel, "Select Config File");
 
       if (state == JFileChooser.APPROVE_OPTION) {
-        onConfigFileChange(fileChooser.getSelectedFile().getAbsolutePath());
+        String configFile = fileChooser.getSelectedFile().getAbsolutePath();
+        configFileTxt.setText(configFile);
+        onConfigFileChange(configFile, ServicePreferences.getProfileName());
       }
     });
 
@@ -95,10 +101,8 @@ public class OCISettingsPanel extends DialogWrapper {
     });
 
     profileNameTxt.setEditable(false);
-    profileCombo.addItem(ADD_PROFILE);
-    profileCombo.addItemListener((e) -> onProfileChange());
-    connTimeoutTxt.setText("3000");
-    readTimeoutTxt.setText("60000");
+    selectCombo.addItem(ADD_PROFILE);
+    selectCombo.addItemListener((e) -> onProfileChange());
 
     Region[] regions = Region.values();
     for (int idx = 0; idx < regions.length; idx++) {
@@ -113,18 +117,19 @@ public class OCISettingsPanel extends DialogWrapper {
     regionCombo.setSelectedIndex(defaultRegionIndex);
     saveProfileButton.addActionListener(e -> saveProfile());
 
-    UIUtil.makeWebLink(ociConfigInstrcutionLbl,
+    UIUtil.makeWebLink(exampleConfigurationLabel,
             "https://docs.cloud.oracle.com/iaas/Content/API/Concepts/sdkconfig.htm");
     UIUtil.makeWebLink(ociFreeTrialLbl, "https://www.oracle.com/cloud/free/");
 
-    onConfigFileChange(ServicePreferences.getConfigFileName());
+    onConfigFileChange(ServicePreferences.getConfigFileName(), ServicePreferences.getProfileName());
   }
 
   @Override
-  public void doOKAction(){
+  public void doOKAction() {
     final String profileName = getSelectedProfile();
     final String configFile = getConfigFile();
     final String region = getSelectedRegion();
+
     if (configFile == null || configFile.trim().isEmpty()) {
       Messages.showErrorDialog("Invalid Config File", "Error");
     } else if (profileName == null || profileName.trim().isEmpty()) {
@@ -133,54 +138,66 @@ public class OCISettingsPanel extends DialogWrapper {
       Messages.showErrorDialog("Invalid Region", "Error");
     } else {
       ServicePreferences.updateSettings(configFile, profileName, region);
-      UIUtil.fireSuccessNotification("<html>OCI configuration updated.<br>Config file Path : " + configFile +
-              "<br>Profile : " + profileName +
-              "<br>Region : " + region + "</html>");
       close(DialogWrapper.OK_EXIT_CODE);
     }
   }
 
   @Nullable
   @Override
-  protected JComponent createCenterPanel(){
+  protected JComponent createCenterPanel() {
     final JPanel panel = (JPanel) createPanel();
     panel.setPreferredSize(new Dimension(800, 500));
     return panel;
   }
 
-  private void onConfigFileChange(String configFile){
+  private void onConfigFileChange(String configFile, String givenProfileName) {
+
+    String profileNameToSelect = givenProfileName;
     try {
       final ProfilesSet profilesSet = ConfigFileHandler.parse(configFile);
       final Set<String> profileNames = profilesSet.getProfileNames();
 
-      profileCombo.removeAllItems();
-      configFileTxt.setText(configFile);
-      profileCombo.addItem(ADD_PROFILE);
+      if (!profileNames.contains(profileNameToSelect)) {
+        profileNameToSelect = DEFAULT_PROFILE_NAME;
+      }
 
-      int selectedIndex = profileNames.size() > 0 ? 1 : 0;
+      selectCombo.removeAllItems();
+      configFileTxt.setText(configFile);
+      selectCombo.addItem(ADD_PROFILE);
+
+      /*
+       ADD_PROFILE is the first item (index 0) in select combo.
+       If there are one or more profiles in config file, add
+       them to select combo from index 1. That means, the actual
+       profiles start at index 1. */
+
       int idx = 1;
+      // Select the first profile (at index 1).
+      int selectedIndex = profileNames.size() > 0 ? 1 : 0;
+
       for (String profileName : profileNames) {
-        profileCombo.addItem(profileName);
-        if (profileName.equals(DEFAULT_PROFILE_NAME)) {
+        selectCombo.addItem(profileName);
+
+        if (profileName.equalsIgnoreCase(profileNameToSelect)) {
           selectedIndex = idx;
         }
         idx++;
       }
 
-      profileCombo.setSelectedIndex(selectedIndex);
-      if (profileCombo.getSelectedIndex() > 1) {
+      selectCombo.setSelectedIndex(selectedIndex);
+      if (selectCombo.getSelectedIndex() > 1) {
         onProfileChange();
       }
     } catch (IOException ioEx) {
-      UIUtil.fireErrorNotification(ioEx.getMessage());
+      UIUtil.fireNotification(NotificationType.ERROR, ioEx.getMessage());
     }
   }
 
-  private void onProfileChange(){
-    if (profileCombo.getSelectedIndex() == 0) {
+  private void onProfileChange() {
+    if (selectCombo.getSelectedIndex() == 0) {
       prepareForAddProfile();
-    } else if (profileCombo.getSelectedIndex() > 0) {
-      final String profile = (String) profileCombo.getSelectedItem();
+    } else if (selectCombo.getSelectedIndex() > 0) {
+      final String profile = (String) selectCombo.getSelectedItem();
       populateProfileParams(profile);
     }
   }
@@ -198,7 +215,6 @@ public class OCISettingsPanel extends DialogWrapper {
     fingerPrintTxt.setText("");
     fingerPrintTxt.setEditable(true);
 
-    passPhraseTxt.setText("");
     passPhraseTxt.setEditable(true);
 
     regionCombo.setSelectedIndex(defaultRegionIndex);
@@ -211,7 +227,7 @@ public class OCISettingsPanel extends DialogWrapper {
   }
 
   private void populateProfileParams(String profileName){
-    final Profile profile = ProfilesSet.instance().get(profileName);
+    final Profile profile = ProfilesSet.getInstance().get(profileName);
     final Properties profileProperties = profile.getProperties();
 
     ocidTxt.setText((String) profileProperties.get("user"));
@@ -221,7 +237,7 @@ public class OCISettingsPanel extends DialogWrapper {
     tenantOcidTxt.setEditable(false);
 
     privateKeyFileTxt
-            .setText(expanduser(expandvars((String) profileProperties.get("key_file"))));
+            .setText(expandUser(expandVars((String) profileProperties.get("key_file"))));
     privateKeyFileTxt.setEnabled(false);
 
     fingerPrintTxt.setText((String) profileProperties.get("fingerprint"));
@@ -253,18 +269,18 @@ public class OCISettingsPanel extends DialogWrapper {
   }
 
   /*
-   * os.path.expanduser
+   * os.path.expandUser
    */
-  public static String expanduser(String path){
+  public static String expandUser(String path){
     String user = System.getProperty("user.home");
 
     return path.replaceFirst("~", user);
   }
 
   /*
-   * os.path.expandvars
+   * os.path.expandVars
    */
-  public static String expandvars(String path){
+  public static String expandVars(String path){
     String result = path;
 
     Matcher matcher = PATTERN.matcher(path);
@@ -285,23 +301,15 @@ public class OCISettingsPanel extends DialogWrapper {
     return mainPanel;
   }
 
-  private void saveProfile(){
+  private void saveProfile() {
     try {
-      if (!validateValues(ocidTxt.getText(), privateKeyFileTxt.getText(),
-              fingerPrintTxt.getText(), tenantOcidTxt.getText()))
-        return;
-
-      try {
-        ConfigFileHandler.parse(configFileTxt.getText());
-      } catch (IllegalStateException illegalStateException) {
-        Messages.showErrorDialog(illegalStateException.getMessage(), "Error");
-        return;
-      }
+      validateAddProfileParams();
+      ConfigFileHandler.parse(configFileTxt.getText());
 
       final Properties newProfileParams = new Properties();
       newProfileParams.put("user", ocidTxt.getText());
-      newProfileParams.put("key_file", privateKeyFileTxt.getText());
       newProfileParams.put("fingerprint", fingerPrintTxt.getText());
+      newProfileParams.put("key_file", privateKeyFileTxt.getText());
 
       if (!passPhraseTxt.getText().isEmpty()) {
         newProfileParams.put("pass_phrase", passPhraseTxt.getText());
@@ -319,53 +327,69 @@ public class OCISettingsPanel extends DialogWrapper {
         }
       }
 
-      final Profile profile = new Profile(profileNameTxt.getText(), newProfileParams);
-      ConfigFileHandler.save(expandUserHome(configFileTxt.getText()), profile);
+      final Profile newProfile = new Profile(profileNameTxt.getText(), newProfileParams);
+      ConfigFileHandler.save(expandUserHome(configFileTxt.getText()), newProfile);
 
       Messages.showInfoMessage("Saved Successfully", "Success");
-      onConfigFileChange(configFileTxt.getText());
-    } catch (IOException e) {
-      LogHandler.error("Error", e);
+      onConfigFileChange(configFileTxt.getText(), profileNameTxt.getText());
+    } catch (Exception ex) {
+      LogHandler.error("Error", ex);
+      Messages.showErrorDialog(ex.getMessage(), "Error");
     }
   }
 
-  private boolean validateValues(String userOcidText, String keyFileText,
-                                 String fingerprintText, String tenancyOcidText) {
-
-    // Validate the following:
-    // 2. Valid Ocids (userOcid, tenancyOcid)
-    if (!(userOcidText.startsWith("ocid") && (userOcidText.contains("user")))) {
-      Messages.showErrorDialog(
-              "Enter valid User OCID. Not a valid User OCID: " + userOcidText,
-              "Error");
-      return false;
+  private void validateAddProfileParams() {
+    if (profileNameTxt.getText().isEmpty()) {
+      throw new IllegalStateException("Profile name cannot be empty.");
     }
 
-    if (!(tenancyOcidText.startsWith("ocid") && (tenancyOcidText
-            .contains("tenancy")))) {
-      Messages.showErrorDialog(
-              "Enter valid Tenancy OCID. Not a valid Tenancy OCID: "
-                      + tenancyOcidText, "Error");
-      return false;
+    // Validate OCID of the user.
+    final String userOcid = ocidTxt.getText();
+    if (userOcid.isEmpty()) {
+      throw new IllegalStateException("OCID of the user cannot be empty.");
     }
 
-    // 5. Fingerprint is in valid format
-    String fingerprintRegex = "([0-9a-f]{2}:){15}[0-9a-f]{2}";
-    if (!fingerprintText.matches(fingerprintRegex)) {
-      Messages.showErrorDialog(
-              "Enter valid fingerprint. Not a valid fingerprint: "
-                      + fingerprintRegex, "Error");
-      return false;
+    if (!userOcid.startsWith("ocid") ||
+            !userOcid.contains("user")) {
+      throw new IllegalStateException("OCID of the user is invalid.");
     }
 
-    return true;
+    // Validate Fingerprint for the public key.
+    final String fingerPrint = fingerPrintTxt.getText();
+
+    if (fingerPrint.isEmpty()) {
+      throw new IllegalStateException("Fingerprint for the public key cannot be empty.");
+    }
+
+    final String fingerprintRegex = "([0-9a-f]{2}:){15}[0-9a-f]{2}";
+    if (!fingerPrint.matches(fingerprintRegex)) {
+      throw new IllegalStateException("Fingerprint for the public key is invalid.");
+    }
+
+    // Validate path and filename of the private key
+    final String keyFile = privateKeyFileTxt.getText();
+    if (keyFile.isEmpty()) {
+      throw new IllegalStateException("Private key file path cannot be empty.");
+    }
+
+    final String tenantOcid = tenantOcidTxt.getText();
+    if (tenantOcid.isEmpty()) {
+      throw new IllegalStateException("OCID of the your tenancy cannot be empty.");
+    }
+
+    if (!tenantOcid.startsWith("ocid") ||
+            !tenantOcid.contains("tenancy")) {
+      throw new IllegalStateException("OCID of your tenancy is invalid.");
+    }
   }
 
   public String getSelectedProfile(){
-    if (profileCombo.getSelectedIndex() > 0)
-      return (String) profileCombo.getSelectedItem();
-    else
+    if (selectCombo.getSelectedIndex() > 0) {
+      return (String) selectCombo.getSelectedItem();
+    }
+    else {
       return null;
+    }
   }
 
   public String getConfigFile(){
@@ -376,7 +400,4 @@ public class OCISettingsPanel extends DialogWrapper {
     return (String) regionCombo.getSelectedItem();
   }
 
-  private void createUIComponents(){
-    // TODO: place custom component creation code here
-  }
 }

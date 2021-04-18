@@ -6,9 +6,9 @@
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.openapi.ui.DialogWrapper;
-import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.intellij.ui.database.ADBConstants;
 import com.oracle.oci.intellij.ui.database.ADBInstanceWrapper;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -53,6 +53,7 @@ public class ADBInfoWizard extends DialogWrapper {
 
     }
 
+    @NotNull
     @Override
     protected Action[] createActions() {
         return new Action[] {getOKAction()};

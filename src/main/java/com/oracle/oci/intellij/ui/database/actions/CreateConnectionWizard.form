@@ -7,58 +7,53 @@
     <properties/>
     <border type="none"/>
     <children>
-      <grid id="ae4a" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-        <margin top="0" left="0" bottom="0" right="0"/>
-        <constraints border-constraint="North"/>
-        <properties/>
-        <border type="none"/>
-        <children>
-          <component id="1b200" class="javax.swing.JLabel">
-            <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <text value="&lt;html&gt;This wizard creates a new connection to Autonomous Database. Please enter the required details below.&lt;br&gt;&lt;br&gt;&lt;/html&gt;"/>
-            </properties>
-          </component>
-          <hspacer id="c4f6d">
-            <constraints>
-              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-            </constraints>
-          </hspacer>
-        </children>
-      </grid>
-      <grid id="77f0d" layout-manager="GridLayoutManager" row-count="4" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="9540a" binding="createNewConnectionPanel" layout-manager="GridLayoutManager" row-count="4" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="0" right="0"/>
         <constraints border-constraint="Center"/>
         <properties/>
-        <border type="none"/>
+        <border type="none" title="Create a new connection to the Autonomous Database"/>
         <children>
-          <component id="fb5d4" class="javax.swing.JLabel">
+          <component id="fb5d4" class="javax.swing.JLabel" binding="walletPathLabel">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Wallet Location :"/>
+              <text value="Wallet Path *"/>
             </properties>
           </component>
-          <component id="57080" class="com.intellij.openapi.ui.TextFieldWithBrowseButton" binding="walletLocationTxt">
+          <component id="57080" class="com.intellij.openapi.ui.TextFieldWithBrowseButton" binding="walletPathTextField">
             <constraints>
               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="-1"/>
               </grid>
             </constraints>
+            <properties>
+              <editable value="false"/>
+            </properties>
+          </component>
+          <component id="a069" class="javax.swing.JLabel" binding="tnsNameAliasLabel">
+            <constraints>
+              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="TNS alias *"/>
+            </properties>
+          </component>
+          <component id="ee5b5" class="javax.swing.JComboBox" binding="tnsNameAliasComboBox">
+            <constraints>
+              <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
             <properties/>
           </component>
-          <component id="f25c8" class="javax.swing.JLabel">
+          <component id="f25c8" class="javax.swing.JLabel" binding="userNameLabel">
             <constraints>
               <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="User Name :"/>
+              <text value="Username *"/>
             </properties>
           </component>
-          <component id="282ff" class="javax.swing.JTextField" binding="userNameTxt">
+          <component id="282ff" class="javax.swing.JTextField" binding="userNameTextField">
             <constraints>
               <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="-1"/>
@@ -66,33 +61,19 @@
             </constraints>
             <properties/>
           </component>
-          <component id="92544" class="javax.swing.JLabel">
+          <component id="92544" class="javax.swing.JLabel" binding="passwordLabel">
             <constraints>
               <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Password : "/>
+              <text value="Password *"/>
             </properties>
           </component>
-          <component id="5c76b" class="javax.swing.JPasswordField" binding="passwordTxt">
+          <component id="5c76b" class="javax.swing.JPasswordField" binding="passwordField">
             <constraints>
               <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="-1"/>
               </grid>
-            </constraints>
-            <properties/>
-          </component>
-          <component id="a069" class="javax.swing.JLabel">
-            <constraints>
-              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <text value="TNS Names Alias : "/>
-            </properties>
-          </component>
-          <component id="ee5b5" class="javax.swing.JComboBox" binding="tnsAliasCmb">
-            <constraints>
-              <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties/>
           </component>

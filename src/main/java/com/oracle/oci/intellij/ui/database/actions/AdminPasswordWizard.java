@@ -5,24 +5,28 @@
 
 package com.oracle.oci.intellij.ui.database.actions;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.ADBInstanceClient;
-import com.oracle.oci.intellij.ui.database.ADBInstanceWrapper;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.Arrays;
 
 public class AdminPasswordWizard extends DialogWrapper {
   private JPanel mainPanel;
-  private JPanel contentPanel;
-  private JTextField userNameTxt;
+  private JPanel passwordMainPanel;
+  private JTextField userNameTextField;
   private JPasswordField pwdTxt;
   private JPasswordField confirmPwdTxt;
+  private JLabel usernameLabel;
+  private JLabel passwordHelpLabel;
+  private JPanel passwordFieldsPanel;
 
   private final AutonomousDatabaseSummary autonomousDatabaseSummary;
 
@@ -31,16 +35,22 @@ public class AdminPasswordWizard extends DialogWrapper {
     super(true);
     this.autonomousDatabaseSummary = autonomousDatabaseSummary;
     init();
-    setTitle("ADB Admin Password Change");
+    setTitle("Administrator Password");
     setOKButtonText("Update");
-    userNameTxt.setText("ADMIN");
-    userNameTxt.setEditable(false);
+    userNameTextField.setText("ADMIN");
+
+    passwordMainPanel.setPreferredSize(new Dimension(500,150));
+    UIUtil.makeWebLink(passwordHelpLabel,
+            "https://docs.oracle.com/en-us/iaas/Content/Database/Tasks/adbmanaging.htm#setadminpassword");
   }
 
   @Override protected void doOKAction() {
-    if (!isValidPassword()) {
+    if (!Arrays.equals(pwdTxt.getPassword(),confirmPwdTxt.getPassword())) {
+      Messages.showErrorDialog("Error. Password mismatch",
+              "Confirmation must match password.");
       return;
     }
+
     Runnable nonblockingUpdate = () -> {
       try {
         final char[] pwd = pwdTxt.getPassword();
@@ -49,38 +59,17 @@ public class AdminPasswordWizard extends DialogWrapper {
                 new String(pwd));
         Arrays.fill(pwd, ' ');
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireSuccessNotification("Admin Password Updated Successfully."));
+            .fireNotification(NotificationType.INFORMATION, "Admin Password Updated Successfully."));
       }
       catch (Exception e) {
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireErrorNotification("Admin Password Update failed : " + e.getMessage()));
+            .fireNotification(NotificationType.ERROR, "Admin Password Update failed : " + e.getMessage()));
       }
     };
 
     // Do this in background
     UIUtil.fetchAndUpdateUI(nonblockingUpdate, null);
     close(DialogWrapper.OK_EXIT_CODE);
-  }
-
-  private boolean isValidPassword() {
-    final char[] adminPassword = pwdTxt.getPassword();
-    final char[] confirmAdminPassword = confirmPwdTxt.getPassword();
-
-    if (!UIUtil.isValidAdminPassword(adminPassword)) {
-      Messages.showErrorDialog("Admin password entered is not valid.",
-          "Invalid Password");
-      return false;
-    }
-
-    if (!Arrays.equals(adminPassword,confirmAdminPassword)) {
-      Messages.showErrorDialog("Admin password mismatch error",
-          "Confirm Admin password must match Admin password");
-      return false;
-    }
-
-    Arrays.fill(adminPassword, ' ');
-    Arrays.fill(confirmAdminPassword, ' ');
-    return true;
   }
 
   @Nullable

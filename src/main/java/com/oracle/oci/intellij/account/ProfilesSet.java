@@ -11,7 +11,7 @@ import java.util.*;
  * A Set of all profiles read from config file.
  */
 public class ProfilesSet {
-  private final Map<String, Properties> mapOfProfiles = new HashMap<>();
+  private final Map<String, Properties> mapOfProfiles = new LinkedHashMap<>();
   private static final ProfilesSet instance = new ProfilesSet();
 
   /**
@@ -19,7 +19,7 @@ public class ProfilesSet {
    *
    * @return the singleton instance.
    */
-  public static ProfilesSet instance() {
+  public static ProfilesSet getInstance() {
     return instance;
   }
 
@@ -87,7 +87,7 @@ public class ProfilesSet {
                         + line);
       }
     }
-    return instance();
+    return getInstance();
   }
 
   public Profile get(String profileName) {

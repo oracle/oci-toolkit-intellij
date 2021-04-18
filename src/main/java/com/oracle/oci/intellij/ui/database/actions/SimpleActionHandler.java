@@ -6,6 +6,7 @@
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.ide.BrowserUtil;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.ui.Messages;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.intellij.account.ServicePreferences;
@@ -75,36 +76,27 @@ public class SimpleActionHandler extends AbstractAction {
 
     int result = Messages.showOkCancelDialog(actionType.actionConfirmation,
         actionType.actionName, "Change", "Cancel", Messages.getQuestionIcon());
-    try{
-      if (result == Messages.OK) {
-        ADBInstanceClient.getInstance()
-            .changeWorkloadTypeToOLTP(autonomousDatabaseSummary.getId());
-        UIUtil.fireSuccessNotification(actionType.actionSuccessMsg);
-        ServicePreferences.fireADBInstanceUpdateEvent(actionType.name());
-      }
-    }
-    catch(Exception ex) {
-      UIUtil.fireErrorNotification(actionType.actionFailMsg + " : " + ex.getMessage());
+    if (result == Messages.OK) {
+      ADBInstanceClient.getInstance()
+              .changeWorkloadTypeToOLTP(autonomousDatabaseSummary.getId());
+      UIUtil.fireNotification(NotificationType.INFORMATION, actionType.actionSuccessMsg);
+      ServicePreferences.fireADBInstanceUpdateEvent(actionType.name());
     }
   }
 
   private void startStopTerminate() {
     int result = Messages.showOkCancelDialog(actionType.actionConfirmation,
         actionType.actionName, "Yes", "No", Messages.getQuestionIcon());
-    try{
-      if (result == Messages.OK) {
-        if (actionType == ActionType.START) {
-          ADBInstanceClient.getInstance().startInstance(autonomousDatabaseSummary);
-        }
-        else {
-          ADBInstanceClient.getInstance().stopInstance(autonomousDatabaseSummary);
-        }
-        UIUtil.fireSuccessNotification(actionType.actionSuccessMsg);
-        ServicePreferences.fireADBInstanceUpdateEvent(actionType.name());
+
+    if (result == Messages.OK) {
+      if (actionType == ActionType.START) {
+        ADBInstanceClient.getInstance().startInstance(autonomousDatabaseSummary);
       }
-    }
-    catch(Exception ex) {
-      UIUtil.fireErrorNotification(actionType.actionFailMsg + " : " + ex.getMessage());
+      else {
+        ADBInstanceClient.getInstance().stopInstance(autonomousDatabaseSummary);
+      }
+      UIUtil.fireNotification(NotificationType.INFORMATION, actionType.actionSuccessMsg);
+      ServicePreferences.fireADBInstanceUpdateEvent(actionType.name());
     }
   }
 
@@ -119,19 +111,13 @@ public class SimpleActionHandler extends AbstractAction {
       return; // Selected cancel
 
     if (dbName.equals(autonomousDatabaseSummary.getDbName())) {
-      try {
-        ADBInstanceClient.getInstance()
-            .terminate(autonomousDatabaseSummary.getId());
-        UIUtil.fireSuccessNotification(dbName + " terminated successfully.");
-        ServicePreferences.fireADBInstanceUpdateEvent(actionType.name());
-      }
-      catch (Exception ex) {
-        UIUtil.fireErrorNotification(
-            actionType.actionFailMsg + " : " + ex.getMessage());
-      }
+      ADBInstanceClient.getInstance()
+              .terminate(autonomousDatabaseSummary.getId());
+      UIUtil.fireNotification(NotificationType.INFORMATION,dbName + " terminated successfully.");
+      ServicePreferences.fireADBInstanceUpdateEvent(actionType.name());
     }
     else {
-      UIUtil.fireErrorNotification(
+      UIUtil.fireNotification(NotificationType.ERROR,
           "Terminate Failed : Invalid ADB Instance Name");
     }
   }

@@ -5,6 +5,7 @@
 
 package com.oracle.oci.intellij.ui.database.actions;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
@@ -69,11 +70,11 @@ public class RestoreWizard extends DialogWrapper {
         ADBInstanceClient.getInstance()
             .restore(autonomousDatabaseSummary.getId(), restoreTimestamp);
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireSuccessNotification("ADB Instance successfully restored."));
+            .fireNotification(NotificationType.INFORMATION,"ADB Instance successfully restored."));
       }
       catch (Exception e) {
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireErrorNotification("Failed to restore : " + e.getMessage()));
+            .fireNotification(NotificationType.ERROR, "Failed to restore : " + e.getMessage()));
       }
     };
 
@@ -95,52 +96,41 @@ public class RestoreWizard extends DialogWrapper {
 
   private void fetchRestoreList() {
     // TODO : Need to convert it to asyc model. Currently leaving it as it is.
-    // Coverting to async model using UIUtil.fetchAndUpdateUI is not working for some unknown reason
+    // Converting to async model using UIUtil.fetchAndUpdateUI is not working for some unknown reason
     // have to debug it later.
     final DefaultTableModel model = (DefaultTableModel) backupListTable.getModel();
     model.setRowCount(0);
     updateActionState(false);
     UIUtil.setStatus("Loading the restore data. Please wait..");
-    try {
-      backupList = ADBInstanceClient.getInstance().getBackupList(autonomousDatabaseSummary);
-      filterList();
-    }
-    catch(Exception e) {
-      ApplicationManager.getApplication().invokeLater( () ->
-          UIUtil.fireErrorNotification("Unable to get the restore list : " + e.getMessage()));
-    }
+    backupList = ADBInstanceClient.getInstance().getBackupList(autonomousDatabaseSummary);
+    filterList();
   }
 
   private void filterList() {
-    try {
-      final DefaultTableModel model = (DefaultTableModel) backupListTable
-          .getModel();
-      model.setRowCount(0);
-      if(backupList != null && backupList.size() > 0) {
-        //UIUtil.setStatus("Found " + backupList.size() +" restore " + (backupList.size() == 1 ? "point." : "points."));
-        final Date fromDate = (Date) dateModel1.getDate();
-        final Date toDate = (Date) dateModel2.getDate();
-        int hiddingCount = 0;
-        for (AutonomousDatabaseBackupSummary backup : backupList) {
-          if (backup.getTimeEnded().compareTo(fromDate) >= 0
-              && backup.getTimeEnded().compareTo(toDate) <= 0) {
-            model.addRow(new Object[] { backup.getDisplayName(),
-                backup.getLifecycleState().getValue(),
-                backup.getType().getValue() });
-          }
-          else {
-            hiddingCount++;
-          }
+    final DefaultTableModel model = (DefaultTableModel) backupListTable
+            .getModel();
+    model.setRowCount(0);
+    if(backupList != null && backupList.size() > 0) {
+      //UIUtil.setStatus("Found " + backupList.size() +" restore " + (backupList.size() == 1 ? "point." : "points."));
+      final Date fromDate = dateModel1.getDate();
+      final Date toDate = dateModel2.getDate();
+      int hidingCount = 0;
+      for (AutonomousDatabaseBackupSummary backup : backupList) {
+        if (backup.getTimeEnded().compareTo(fromDate) >= 0
+                && backup.getTimeEnded().compareTo(toDate) <= 0) {
+          model.addRow(new Object[] { backup.getDisplayName(),
+                  backup.getLifecycleState().getValue(),
+                  backup.getType().getValue() });
         }
-        UIUtil.setStatus("Found " + backupList.size() +" restore " + (backupList.size() == 1 ? "point." : "points.")
-            + " Shown : " + (backupList.size() - hiddingCount) + " Hidden : " + hiddingCount);
+        else {
+          hidingCount++;
+        }
       }
-      else {
-        UIUtil.setStatus("No restore data found.");
-      }
+      UIUtil.setStatus("Found " + backupList.size() +" restore " + (backupList.size() == 1 ? "point." : "points.")
+              + " Shown : " + (backupList.size() - hidingCount) + " Hidden : " + hidingCount);
     }
-    catch(Exception ex) {
-      UIUtil.fireErrorNotification("Filter List: Unable to get the restore list : " + ex.getMessage());
+    else {
+      UIUtil.setStatus("No restore data found.");
     }
     updateActionState(true);
   }

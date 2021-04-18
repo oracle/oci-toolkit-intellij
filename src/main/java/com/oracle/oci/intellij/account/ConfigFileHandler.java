@@ -4,7 +4,6 @@
  */
 package com.oracle.oci.intellij.account;
 
-import com.intellij.openapi.ui.Messages;
 import com.oracle.oci.intellij.util.SystemProperties;
 
 import java.io.*;
@@ -53,7 +52,7 @@ public final class ConfigFileHandler {
     }
 
     try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
-      return ProfilesSet.instance().populate(bufferedReader);
+      return ProfilesSet.getInstance().populate(bufferedReader);
     }
   }
 
@@ -65,9 +64,11 @@ public final class ConfigFileHandler {
   private static void setPermissions(Path path) throws IOException {
     if (SystemProperties.isWindows()) {
       File file = path.toFile();
-      file.setReadable(true, true);
-      file.setWritable(true, true);
-      file.setExecutable(false);
+      if (!file.setReadable(true, true) ||
+              !file.setWritable(true, true) ||
+              !file.setExecutable(false)) {
+        throw new RuntimeException("Failed to set permissions on file : " + file.getName());
+      }
     } else if (SystemProperties.isLinux() || SystemProperties.isMac()) {
       Set<PosixFilePermission> perms = new HashSet<>();
       perms.add(PosixFilePermission.OWNER_READ);
@@ -120,6 +121,8 @@ public final class ConfigFileHandler {
     profileBuffer
             .append(lineSep)
             .append("[")
+            /* Convert the user given name to upper case
+             before saving the new profile in config file.*/
             .append(profile.getName().toUpperCase())
             .append("]");
 
@@ -129,8 +132,7 @@ public final class ConfigFileHandler {
       String value = (String) profile.getProperties().get(key);
 
       profileBuffer
-              .append(lineSep)
-              .append(key + " = " + value);
+              .append(lineSep).append(key).append(" = ").append(value);
     }
 
     profileBuffer.append(lineSep);

@@ -25,10 +25,11 @@ public class ServicePreferences {
 
   private final static Preferences preferences = Preferences.userRoot().node(PREFERENCES_LOCATION);
   private final static PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(new ServicePreferences());
+  private static final String DEFAULT_REGION = "us-phoenix-1";
 
   /**
    * Adds the property change listener
-   * @param propertyChangeListener property change listner.
+   * @param propertyChangeListener property change listener.
    */
   public static void addPropertyChangeListener(PropertyChangeListener propertyChangeListener) {
     propertyChangeSupport.addPropertyChangeListener(propertyChangeListener);
@@ -99,7 +100,7 @@ public class ServicePreferences {
    * @return the region name.
    */
   public static String getRegion() {
-    return preferences.get("region", "us-phoenix-1");
+    return preferences.get("region", DEFAULT_REGION);
   }
 
   /**
@@ -107,7 +108,7 @@ public class ServicePreferences {
    *
    * @return the profile name.
    */
-  public static String getProfile() {
+  public static String getProfileName() {
       return preferences.get("profile", "DEFAULT");
   }
 
