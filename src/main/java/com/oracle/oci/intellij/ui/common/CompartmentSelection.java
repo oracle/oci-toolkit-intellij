@@ -7,8 +7,8 @@ package com.oracle.oci.intellij.ui.common;
 
 import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.identity.model.Compartment;
+import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.util.LogHandler;
-import com.oracle.oci.intellij.account.Identity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,25 +35,25 @@ public class CompartmentSelection extends DialogWrapper {
   private CompartmentSelection() {
     super(true);
     setTitle("Compartment");
-    populateCompartmentTree(false);
+    populateCompartmentTree();
     init();
   }
 
   private void buildCompartmentTree(boolean isRefresh) {
-    if (rootNode == null || isRefresh) {
-      final Compartment rootCompartment = Identity.getInstance().getRootCompartment();
-      rootNode = new DefaultMutableTreeNode(rootCompartment);
-      addChildren(rootCompartment, rootNode);
-    }
+    final Compartment rootCompartment = OracleCloudAccount.getInstance()
+            .getIdentityClient().getRootCompartment(isRefresh);
+
+    rootNode = new DefaultMutableTreeNode(rootCompartment);
+    addChildren(rootCompartment, rootNode);
   }
 
   public Compartment getSelectedCompartment() {
     return selectedCompartment;
   }
 
-  private void populateCompartmentTree(boolean isRefresh) {
+  private void populateCompartmentTree() {
     try {
-      buildCompartmentTree(isRefresh);
+      buildCompartmentTree(false);
 
       final DefaultTreeModel dtm = new DefaultTreeModel(rootNode);
       compartmentTree.setModel(dtm);
@@ -76,9 +76,10 @@ public class CompartmentSelection extends DialogWrapper {
   }
 
   private void addChildren(Compartment parent,
-                           DefaultMutableTreeNode parentNode){
-    final List<Compartment> compartments = Identity.getInstance()
-            .getCompartmentList(parent);
+                           DefaultMutableTreeNode parentNode) {
+    final List<Compartment> compartments =
+            OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(parent);
+
     for (Compartment compartment : compartments) {
       final DefaultMutableTreeNode compartmentNode = new DefaultMutableTreeNode(
               compartment);
@@ -97,9 +98,8 @@ public class CompartmentSelection extends DialogWrapper {
 
   @NotNull
   @Override
-  protected Action[] createActions() {
-    final Action[] actions = new Action[]{new RefreshAction(), getOKAction(), getCancelAction()};
-    return actions;
+  protected Action @NotNull [] createActions() {
+    return new Action[]{new RefreshAction(), getOKAction(), getCancelAction()};
   }
 
   private class RefreshAction extends AbstractAction {

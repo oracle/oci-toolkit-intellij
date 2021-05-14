@@ -10,6 +10,7 @@ import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.NlsSafe;
 import com.intellij.openapi.wm.WindowManager;
 import com.oracle.oci.intellij.util.LogHandler;
 import org.jetbrains.annotations.NotNull;
@@ -22,62 +23,59 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 
 public class UIUtil {
   private static Project currentProject;
 
-  private static final NotificationGroup NOTIFICATION_GROUP =
-      new NotificationGroup("Oracle Cloud Infrastructure",
-          NotificationDisplayType.BALLOON, true);
-
-  private static final char[] ADMIN_CHARS = "admin".toCharArray();
+  private static @NlsSafe final String id = "Oracle Cloud Infrastructure";
+  //private static NotificationGroup notificationGroup = NotificationGroupManager.getInstance().getNotificationGroup(id);
+  private static final NotificationGroup notificationGroup =
+          new NotificationGroup("Oracle Cloud Infrastructure",
+                                NotificationDisplayType.BALLOON, true);
 
   public static void setCurrentProject(@NotNull Project project) {
     currentProject = project;
   }
 
-  public static void setStatus(@NotNull final String msg) {
+  public static void showInfoInStatusBar(@NotNull final String info) {
     if(currentProject != null) {
       WindowManager.getInstance()
               .getStatusBar(currentProject)
-              .setInfo(msg);
+              .setInfo(info);
     }
   }
 
-  public static void fireNotification(NotificationType notificationType, @NotNull final String msg){
-    //fireNotification(msg, Messages.getInformationIcon(), JBColor.PanelBackground);
-    NOTIFICATION_GROUP
-            .createNotification("Oracle Cloud Infrastructure", "", msg, notificationType)
+  public static void fireNotification(NotificationType notificationType, @NotNull final String msg) {
+    notificationGroup
+            .createNotification(id, "", msg, notificationType)
             .notify(currentProject);
   }
 
-  public static void fetchAndUpdateUI(@NotNull Runnable fetch, @Nullable Runnable update) {
+  public static void executeAndUpdateUIAsync(@NotNull Runnable action, @Nullable Runnable update) {
     ApplicationManager.getApplication().executeOnPooledThread(() -> {
       try{
-        fetch.run();
-      }
-      catch (Throwable th) {
-        final String errorMsg = "Unable to execute the fetch job";
+        action.run();
+      } catch (Throwable th) {
+        final String errorMsg = "Action execution failed.";
         LogHandler.error(errorMsg, th);
-
         fireNotification(NotificationType.ERROR, errorMsg + th.getMessage());
       }
       /* Schedule the UI update after fetching the data in background thread. */
-      if(update != null)  {
+      if (update != null) {
         ApplicationManager.getApplication().invokeLater(update);
       }
     });
   }
 
-  public static void makeWebLink(JComponent lbl, String uri) {
-    lbl.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-    lbl.addMouseListener(new MouseAdapter() {
+  public static void createWebLink(JComponent component, String uri) {
+    component.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+    component.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
         try {
-          if(!Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+          if(!Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
             return;
+          }
           Desktop.getDesktop().browse(new URI(uri));
         } catch (URISyntaxException | IOException ex) {
           throw new RuntimeException(ex);
@@ -85,9 +83,4 @@ public class UIUtil {
       }
     });
   }
-
-  public static Project getCurrentProject() {
-    return currentProject;
-  }
-
 }

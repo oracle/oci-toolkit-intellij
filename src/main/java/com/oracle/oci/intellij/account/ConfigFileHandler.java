@@ -4,7 +4,7 @@
  */
 package com.oracle.oci.intellij.account;
 
-import com.oracle.oci.intellij.util.SystemProperties;
+import com.intellij.openapi.util.SystemInfo;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,9 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static com.oracle.bmc.util.internal.FileUtils.expandUserHome;
 
@@ -23,37 +21,88 @@ import static com.oracle.bmc.util.internal.FileUtils.expandUserHome;
  * a "DEFAULT" profile,else validation fails. Additional profiles are optional.
  */
 public final class ConfigFileHandler {
-
-  public static final String DEFAULT_CONFIG_FOLDER = ".oci";
-  public static final String DEFAULT_CONFIG_FILE_NAME = "config";
-
-  /**
-   * Returns absolute path of Oracle cloud service config file.
-   *
-   * @return absolute path of Oracle cloud service config file.
-   */
-  static String getConfigFilePath() {
-    return SystemProperties.userHome() + File.separator
-            + DEFAULT_CONFIG_FOLDER + File.separator
-            + DEFAULT_CONFIG_FILE_NAME;
-  }
-
   /**
    * Parses the given config file.
    *
    * @param configFile path of config file.
-   * @return the {@link ProfilesSet}
+   * @return the ProfilesSet.
    * @throws IOException is thrown if I/O fails.
    */
-  public static ProfilesSet parse(String configFile) throws IOException {
+  public static ProfileSet parse(String configFile) throws IOException {
     final File file = new File(expandUserHome(configFile));
     if (file.length() > 50000) {
       throw new IllegalStateException("File too large : " + configFile);
     }
 
     try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
-      return ProfilesSet.getInstance().populate(bufferedReader);
+      return populate(bufferedReader);
     }
+  }
+
+  /**
+   * Populates ProfilesSet from the given Reader.
+   *
+   * @param bufferedReader the config file
+   * @return ProfilesSet.
+   * @throws IOException throws if file read fails.
+   */
+  private static ProfileSet populate(BufferedReader bufferedReader) throws IOException {
+    final Map<String, Properties> mapOfProfiles = new LinkedHashMap<>();
+
+    String line;
+    String currentReadingProfile = null;
+
+    while ((line = bufferedReader.readLine()) != null) {
+      final String trimmedLine = line.trim();
+
+      if (trimmedLine.isEmpty() || trimmedLine.charAt(0) == '#') {
+        continue;
+      }
+
+      // If the line is profile name.
+      if (trimmedLine.charAt(0) == '['
+              && trimmedLine.charAt(trimmedLine.length() - 1) == ']') {
+        // This is a profile name.
+        final String profileName = trimmedLine.substring(1, trimmedLine.length() - 1);
+
+        if (profileName.isEmpty()) {
+          throw new IllegalStateException(
+                  "Profile name cannot be empty: " + line);
+        }
+
+        if (mapOfProfiles.containsKey(profileName)) {
+          throw new IllegalStateException("Profile exists already : " + profileName);
+        }
+        mapOfProfiles.put(profileName, new Properties());
+        currentReadingProfile = profileName;
+      } else if (currentReadingProfile != null) {
+        // Read a property of current reading profile and put it in properties map.
+        final int splitIndex = trimmedLine.indexOf('=');
+
+        if (splitIndex == -1) {
+          throw new IllegalStateException(
+                  "Found line with no key-value pair: " + line);
+        }
+
+        // Trim the key.
+        final String key = trimmedLine.substring(0, splitIndex).trim();
+        // Trim the value.
+        final String value = trimmedLine.substring(splitIndex + 1).trim();
+        // Key cannot be empty.
+        if (key.isEmpty()) {
+          throw new IllegalStateException("Found line with no key: " + line);
+        }
+
+        // Add the key-value pair to properties of the current reading profile.
+        final Properties currentReadingProfileProperties = mapOfProfiles.get(currentReadingProfile);
+        currentReadingProfileProperties.put(key, value);
+      } else {
+        throw new IllegalStateException(
+                "Config parse error, attempted to read configuration without specifying a profile: "
+                        + line);
+      }
+    }
+    return new ProfileSet(mapOfProfiles);
   }
 
   /**
@@ -62,14 +111,14 @@ public final class ConfigFileHandler {
    * @throws IOException thrown if file read fails.
    */
   private static void setPermissions(Path path) throws IOException {
-    if (SystemProperties.isWindows()) {
+    if (SystemInfo.isWindows) {
       File file = path.toFile();
       if (!file.setReadable(true, true) ||
               !file.setWritable(true, true) ||
               !file.setExecutable(false)) {
         throw new RuntimeException("Failed to set permissions on file : " + file.getName());
       }
-    } else if (SystemProperties.isLinux() || SystemProperties.isMac()) {
+    } else if (SystemInfo.isLinux || SystemInfo.isMac) {
       Set<PosixFilePermission> perms = new HashSet<>();
       perms.add(PosixFilePermission.OWNER_READ);
       perms.add(PosixFilePermission.OWNER_WRITE);
@@ -115,7 +164,7 @@ public final class ConfigFileHandler {
    * @return the profile as {@link StringBuffer}.
    */
   private static StringBuffer read(Profile profile) {
-    final String lineSep = SystemProperties.lineSeparator();
+    final String lineSep = System.getProperty("line.separator");
 
     final StringBuffer profileBuffer = new StringBuffer();
     profileBuffer
@@ -126,17 +175,75 @@ public final class ConfigFileHandler {
             .append(profile.getName().toUpperCase())
             .append("]");
 
-    final Enumeration<Object> keys = profile.getProperties().keys();
+    final Enumeration<Object> keys = profile.getEntries().keys();
     while (keys.hasMoreElements()) {
       String key = (String) keys.nextElement();
-      String value = (String) profile.getProperties().get(key);
+      String value = (String) profile.getEntries().get(key);
 
       profileBuffer
-              .append(lineSep).append(key).append(" = ").append(value);
+              .append(lineSep).append(key).append("=").append(value);
     }
 
     profileBuffer.append(lineSep);
     return profileBuffer;
+  }
+
+  /**
+   * A Set of all profiles read from config file.
+   */
+  public static class ProfileSet {
+    private final Map<String, Properties> mapOfProfiles;
+
+    private ProfileSet(Map<String, Properties> mapOfProfiles) {
+      this.mapOfProfiles = mapOfProfiles;
+    }
+
+    public Profile get(String profileName) {
+      if (mapOfProfiles.containsKey(profileName)) {
+        return new Profile(profileName, mapOfProfiles.get(profileName));
+      }
+      return null;
+    }
+
+    public boolean containsKey(String profileName) {
+      return mapOfProfiles.containsKey(profileName);
+    }
+
+    public Set<String> getProfileNames() {
+      return mapOfProfiles.keySet();
+    }
+  }
+
+  public static class Profile {
+    private final String name;
+    private final Properties entries;
+
+    public Profile(String name) {
+      this.name = name;
+      entries = new Properties();
+    }
+
+    public Profile(String name, Properties entries) {
+      this.name = name;
+      this.entries = entries;
+    }
+
+    public Profile add(String key, String value) {
+      entries.put(key, value);
+      return this;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public Properties getEntries() {
+      return entries;
+    }
+
+    public String get(String key) {
+      return (String) entries.get(key);
+    }
   }
 
 }

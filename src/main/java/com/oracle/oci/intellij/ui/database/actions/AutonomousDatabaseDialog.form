@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.oracle.oci.intellij.ui.database.actions.AutonomousDatabaseDialog">
+  <grid id="27dc6" binding="panel1" default-binding="true" layout-manager="BorderLayout" hgap="0" vgap="0">
+    <constraints>
+      <xy x="20" y="20" width="618" height="409"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <component id="59c47" class="javax.swing.JTable" binding="table1" default-binding="true">
+        <constraints border-constraint="Center"/>
+        <properties>
+          <autoResizeMode value="0"/>
+          <intercellSpacing width="0" height="0"/>
+          <showHorizontalLines value="false"/>
+          <showVerticalLines value="false"/>
+        </properties>
+      </component>
+    </children>
+  </grid>
+</form>

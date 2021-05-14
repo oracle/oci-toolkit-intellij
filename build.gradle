@@ -1,55 +1,34 @@
-buildscript {
-    repositories {
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-        maven {
-            url 'http://dl.bintray.com/jetbrains/intellij-plugin-service'
-        }
-
-    }
-    dependencies {
-        classpath "gradle.plugin.org.jetbrains.intellij.plugins:gradle-intellij-plugin:0.4.15"
-    }
-}
-
 plugins {
-    id "org.jetbrains.intellij" version "0.4.15"
-}
-
-jar {
-    from{
-        ["LICENSE.txt", "THIRD_PARTY_LICENSES.txt"]
-    }
+    id 'java'
+    id 'org.jetbrains.intellij' version '0.7.2'
 }
 
 group 'com.oracle'
 version '1.0.0'
-
-apply plugin: 'idea'
-apply plugin: 'org.jetbrains.intellij'
-apply plugin: 'java'
-
-sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compileOnly fileTree(include: ['*.jar'], dir: '/Applications/IntelliJ IDEA.app/Contents/plugins/DatabaseTools/lib/')
-    compile files('lib/sdk/oci-java-sdk-full-1.23.0.jar')
-    compile fileTree(dir:  'lib/thirdparty', include: "*.jar")
+    compile files('lib/sdk/oci-java-sdk-full-1.36.0.jar')
+
+    compile files('lib/thirdparty/javax.ws.rs-api-2.1.jar')
+    compile files('lib/thirdparty/resilience4j-circuitbreaker-1.2.0.jar')
+
+    compile files('lib/thirdparty/jersey-client-2.27.jar')
+    compile files('lib/thirdparty/jersey-common-2.27.jar')
+    compile files('lib/thirdparty/jersey-hk2-2.27.jar')
+    compile files('lib/thirdparty/jersey-media-json-jackson-2.27.jar')
+
+    compile files('lib/thirdparty/hk2-api-2.5.0-b42.jar')
+    compile files('lib/thirdparty/hk2-locator-2.5.0-b42.jar')
+    compile files('lib/thirdparty/hk2-utils-2.5.0-b42.jar')
 
     testImplementation(platform('org.junit:junit-bom:5.7.1'))
     testImplementation('org.junit.jupiter:junit-jupiter')
 }
 
 intellij {
-    type 'IU'
-    version '2020.1'
-    updateSinceUntilBuild false
-    instrumentCode true
-    pluginName 'OCI Toolkit'
-    sandboxDirectory = project.rootDir.canonicalPath + "/.sandbox"
+    version '2021.1'
 }

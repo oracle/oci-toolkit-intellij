@@ -11,7 +11,7 @@ import com.intellij.openapi.diagnostic.Logger;
  */
 public class LogHandler {
 
-  private static final Logger logger = Logger.getInstance("oci-plugin");
+  private static final Logger logger = Logger.getInstance("oci-intellij-plugin");
 
   /**
    * Logs info note.
