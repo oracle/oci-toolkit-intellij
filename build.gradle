@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    compile files('lib/sdk/oci-java-sdk-full-1.36.0.jar')
+    compile files('lib/sdk/oci-java-sdk-full-1.36.4.jar')
 
     compile files('lib/thirdparty/javax.ws.rs-api-2.1.jar')
     compile files('lib/thirdparty/resilience4j-circuitbreaker-1.2.0.jar')

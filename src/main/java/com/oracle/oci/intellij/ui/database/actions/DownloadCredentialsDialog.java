@@ -244,8 +244,7 @@ public class DownloadCredentialsDialog extends DialogWrapper {
         Arrays.fill(adminPassword, ' ');
         ApplicationManager.getApplication().invokeLater(() -> UIUtil
             .fireNotification(NotificationType.INFORMATION,
-                "<html>Wallet download successful." + "<br>Path : "
-                    + walletDirectory + "</html>"));
+                "<html>Wallet downloaded successfully.</html>"));
       }
       catch (Exception e) {
         ApplicationManager.getApplication().invokeLater(() -> UIUtil

@@ -36,51 +36,32 @@ public class IdentityClientProxy implements PropertyChangeListener {
     identityClient.setRegion(region);
   }
 
-  private Compartment rootCompartment = null;
-
   /**
    * Returns the root compartment.
    * @return the root compartment.
    */
-  public Compartment                                                                                                                                                                                                  getRootCompartment(boolean isRefresh) {
-    if (rootCompartment == null || isRefresh) {
+  public Compartment getRootCompartment() {
       String tenantId = authenticationDetailsProvider.getTenantId();
-      rootCompartment =  Compartment.builder()
+      return Compartment.builder()
               .compartmentId(tenantId)
               .id(tenantId)
               .name(ROOT_COMPARTMENT_NAME)
               .lifecycleState(Compartment.LifecycleState.Active)
               .build();
-    }
-    return rootCompartment;
   }
 
   public List<Compartment> getCompartmentList(Compartment compartment) {
     final List<Compartment> compartmentList = new ArrayList<>();
-    String nextPageToken = null;
 
-    do {
-      try {
-        ListCompartmentsRequest listCompartmentsRequest =
-                ListCompartmentsRequest.builder()
-                        .limit(10)
-                        .compartmentId(compartment.getId())
-                        .page(nextPageToken)
-                        .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible)
-                        .build();
+    final ListCompartmentsResponse response = identityClient.listCompartments(
+            ListCompartmentsRequest.builder()
+                    .compartmentId(compartment.getId())
+                    .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible)
+                    .build());
 
-        final ListCompartmentsResponse response =
-                identityClient.listCompartments(listCompartmentsRequest);
-
-        if (response != null) {
-          compartmentList.addAll(response.getItems());
-          nextPageToken = response.getOpcNextPage();
-        }
-      } catch (Exception ex) {
-        throw new RuntimeException(ex);
-      }
-    }  while (nextPageToken != null);
-
+    if (response != null) {
+      compartmentList.addAll(response.getItems());
+    }
     return compartmentList;
   }
 
@@ -114,7 +95,6 @@ public class IdentityClientProxy implements PropertyChangeListener {
       identityClient.close();
       identityClient = null;
       authenticationDetailsProvider = null;
-      rootCompartment = null;
     }
   }
 

@@ -8,6 +8,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseCloneDetails;
+import com.oracle.bmc.database.model.CustomerContact;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
@@ -19,7 +20,11 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
@@ -55,21 +60,16 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
   private JLabel confirmPasswordLabel;
   private JPanel chooseNetworkAccessPanel;
   private JPanel accessTypePanel;
-  private JRadioButton allowSecureAccessFromSpecifiedIPsRadioButton;
-  private JRadioButton virtualCloudNetworkRadioButton;
+  private JRadioButton secureAccessFromEveryWhereRadioButton;
+  private JRadioButton privateEndPointAccessOnlyRadioButton;
   private JCheckBox configureAccessControlRulesCheckBox;
   private JPanel ipNotationTypeOuterPanel;
   private JPanel ipNotationTypeInnerPanel;
   private JPanel ipNotationValuesPanel;
   private JComboBox ipNotationComboBox;
   private JTextField ipNotationValuesTextField;
-  private JPanel chooseLicenseTypePanel;
   private JRadioButton bringYourOwnLicenseRadioButton;
   private JRadioButton licenseIncludedRadioButton;
-  private JPanel provideTenMaintenanceContactsPanel;
-  private JPanel contactEmailPanel = new JPanel();
-  private JTextField contactEmailTextField;
-  private JButton addContactButton;
   private JPanel virtualCloudNetworkOuterPanel;
   private JPanel virtualCloudNetworkInnerPanel;
   private JButton virtualNetworkChangeCompartmentButton;
@@ -88,7 +88,12 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
   private JButton selectCompartmentButton;
   private JPanel basicInformationPanel;
   private JPanel createInCompartmentPanel;
+  private JTextField contactEmailTextField;
+  private JButton addContactButton;
   private JPanel addContactPanel;
+  private JPanel contactEmailPanel;
+  private JPanel provideTenMaintenanceContactsPanel;
+  private Compartment selectedCompartment;
 
   private static final String VIRTUAL_CLOUD_NETWORK_PANEL_TEXT = "Virtual cloud network in ";
   private static final String SUBNET_PANEL_TEXT = "Subnet in ";
@@ -110,13 +115,20 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
     cloneTypeButtonGroup.add(refreshableCloneRadioButton);
     cloneTypeButtonGroup.add(metadataCloneRadioButton);
 
+    // CreateAutonomousDatabaseCloneDetails.CloneType does not have
+    // "Refreshable clone" type. So removed from UI.
+    refreshableCloneRadioButton.setVisible(false);
+
     final ButtonGroup cloneSourceButtonGroup = new ButtonGroup();
     cloneSourceButtonGroup.add(cloneFromDatabaseInstanceRadioButton);
     cloneSourceButtonGroup.add(cloneFromABackupRadioButton);
 
+    // Support this option in the next release.
+    cloneFromABackupRadioButton.setVisible(false);
+
     final ButtonGroup accessTypeButtonGroup = new ButtonGroup();
-    accessTypeButtonGroup.add(allowSecureAccessFromSpecifiedIPsRadioButton);
-    accessTypeButtonGroup.add(virtualCloudNetworkRadioButton);
+    accessTypeButtonGroup.add(secureAccessFromEveryWhereRadioButton);
+    accessTypeButtonGroup.add(privateEndPointAccessOnlyRadioButton);
 
     final ButtonGroup licenseTypeButtonGroup = new ButtonGroup();
     licenseTypeButtonGroup.add(bringYourOwnLicenseRadioButton);
@@ -126,7 +138,7 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
       final CompartmentSelection compartmentSelection = CompartmentSelection.newInstance();
 
       if(compartmentSelection.showAndGet()) {
-        final Compartment selectedCompartment = compartmentSelection.getSelectedCompartment();
+        selectedCompartment = compartmentSelection.getSelectedCompartment();
         if(selectedCompartment != null) {
           compartmentTextField.setText(selectedCompartment.getName());
         }
@@ -143,17 +155,18 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
     databaseNameTextField.setText(databaseNameDefault);
 
     // Initialize the spinners with defaults.
+    chooseDatabaseVersionComboBox.addItem(adbSummary.getDbVersion());
     ocpuCountSpinner.setModel(new SpinnerNumberModel(adbSummary.getCpuCoreCount().intValue(),
             AutonomousDatabaseConstants.CPU_CORE_COUNT_MIN, AutonomousDatabaseConstants.CPU_CORE_COUNT_MAX,
             AutonomousDatabaseConstants.CPU_CORE_COUNT_INCREMENT));
     storageSpinner.setModel(new SpinnerNumberModel(adbSummary.getDataStorageSizeInTBs().intValue(),
             AutonomousDatabaseConstants.STORAGE_IN_TB_MIN, AutonomousDatabaseConstants.STORAGE_IN_TB_MAX,
             AutonomousDatabaseConstants.STORAGE_IN_TB_INCREMENT));
+    autoScalingCheckBox.setSelected(true);
 
     usernameTextField.setText(AutonomousDatabaseConstants.DATABASE_DEFAULT_USERNAME);
-
-    // TODO: Fix this
-    // chooseDatabaseVersionComboBox.add(adbSummary.getDbVersion(), null);
+    // Removing secure access and private end-point options in this release.
+    chooseNetworkAccessPanel.setVisible(false);
 
     // Set the initial border title for panels that show compartment name, on selection, in its title.
     Border initialTitleBorder = BorderFactory.createTitledBorder(VIRTUAL_CLOUD_NETWORK_PANEL_TEXT);
@@ -219,7 +232,7 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
       cloneSourcePanel.setVisible(true);
     });
 
-    allowSecureAccessFromSpecifiedIPsRadioButton.addActionListener((event) -> {
+    secureAccessFromEveryWhereRadioButton.addActionListener((event) -> {
       virtualCloudNetworkOuterPanel.setVisible(false);
 
       configureAccessControlRulesCheckBox.setVisible(true);
@@ -230,7 +243,7 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
       }
     });
 
-    virtualCloudNetworkRadioButton.addActionListener((event) -> {
+    privateEndPointAccessOnlyRadioButton.addActionListener((event) -> {
       ipNotationTypeOuterPanel.setVisible(false);
       virtualCloudNetworkOuterPanel.setVisible(true);
       configureAccessControlRulesCheckBox.setVisible(false);
@@ -245,6 +258,7 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
         ipNotationTypeOuterPanel.setVisible(false);
       }
     });
+    addContactPanel.setVisible(false);
 
     final JBScrollPane jbScrollPane = new JBScrollPane(mainPanel);
     jbScrollPane.createVerticalScrollBar();
@@ -293,10 +307,6 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
       throw new IllegalStateException(errorMessage);
     };
 
-    // TODO:
-    // CreateAutonomousDatabaseCloneDetails.CloneType does not have "Refreshable clone" type.
-    // Remove from UI.
-
     final CreateAutonomousDatabaseCloneDetails.Builder createAutonomousDatabaseCloneDetailsBuilder
             = CreateAutonomousDatabaseCloneDetails.builder();
 
@@ -319,11 +329,11 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
     // Build the common parameters.
     createAutonomousDatabaseCloneDetailsBuilder
             .cloneType(cloneTypeSupplier.get())
-            .compartmentId(compartmentTextField.getText())
-            //.sourceId("") // TODO: add source database name.
+            .compartmentId(selectedCompartment.getId())
+            .sourceId(adbSummary.getId())
             .displayName(displayNameTextField.getText())
             .dbName(databaseNameTextField.getText())
-            //.dbVersion("")  // TODO: populate and build database version.
+            .dbVersion((String) chooseDatabaseVersionComboBox.getSelectedItem())
             .cpuCoreCount((Integer) ocpuCountSpinner.getValue())
             .dataStorageSizeInTBs((Integer) storageSpinner.getValue())
             .isAutoScalingEnabled(autoScalingCheckBox.isSelected())
@@ -337,21 +347,6 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
             .freeformTags(adbSummary.getFreeformTags())
             .definedTags(adbSummary.getDefinedTags())
             .isPreviewVersionWithServiceTermsAccepted(adbSummary.getIsPreview());
-
-    if (allowSecureAccessFromSpecifiedIPsRadioButton.isSelected()) {
-      createAutonomousDatabaseCloneDetailsBuilder
-              .isAccessControlEnabled(configureAccessControlRulesCheckBox.isSelected());
-      // TODO:
-      //createAutonomousDatabaseCloneDetailsBuilder
-            //.arePrimaryWhitelistedIpsUsed(Boolean arePrimaryWhitelistedIpsUsed)
-            //.standbyWhitelistedIps(List<String> standbyWhitelistedIps)
-            //.whitelistedIps(List<String> whitelistedIps)
-    } else if (virtualCloudNetworkRadioButton.isSelected()) {
-      // TODO:
-      //createAutonomousDatabaseCloneDetailsBuilder
-            //.nsgIds(List<String> nsgIds)
-            //.subnetId(String subnetId)
-    }
 
     // Declaration of supplier that returns the license type chosen by user.
     final Supplier<CreateAutonomousDatabaseBase.LicenseModel> licenseModelSupplier = () -> {
@@ -369,10 +364,19 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
     createAutonomousDatabaseCloneDetailsBuilder
             .licenseModel(licenseModelSupplier.get());
 
-    // TODO:
-    // Provide up to 10 maintenance contacts
-    //createAutonomousDatabaseCloneDetailsBuilder
-        // .customerContacts(List<CustomerContact> customerContacts)
+    final Function<String, List<CustomerContact>> maintenanceContactsExtractor = (maintenanceContacts) -> {
+      final List<CustomerContact> listOfCustomerContact = new ArrayList<>();
+      final StringTokenizer contactsTokenizer = new StringTokenizer(maintenanceContacts, ";");
+
+      for (int i = 0; contactsTokenizer.hasMoreElements() && i < 10; i++) {
+        String email = contactsTokenizer.nextToken().trim();
+        listOfCustomerContact.add(CustomerContact.builder().email(email).build());
+      }
+      return listOfCustomerContact;
+    };
+
+    createAutonomousDatabaseCloneDetailsBuilder
+            .customerContacts(maintenanceContactsExtractor.apply(contactEmailTextField.getText()));
 
     submitRequest(createAutonomousDatabaseCloneDetailsBuilder);
     close(DialogWrapper.OK_EXIT_CODE);

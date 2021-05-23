@@ -161,9 +161,9 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
         // Given profile is not found. Use the default profile.
         if (profileSet.get(SystemPreferences.DEFAULT_PROFILE_NAME) != null) {
           Messages.showInfoMessage(
-                  String.format("The profile %s isn't found in config file %s. Switching to profile %s.",
+                  String.format("The profile %s isn't found in the config file %s. Switching to %s profile.",
                           givenProfileName, configFile, SystemPreferences.DEFAULT_PROFILE_NAME),
-                  "Oracle Cloud Infrastructure: Profile Switch");
+                  "Oracle Cloud Infrastructure - Profile Switch");
 
           profileNameToSelect = SystemPreferences.DEFAULT_PROFILE_NAME;
         } else {

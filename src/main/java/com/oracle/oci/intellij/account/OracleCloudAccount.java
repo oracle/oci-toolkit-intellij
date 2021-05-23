@@ -61,6 +61,7 @@ public class OracleCloudAccount {
       SystemPreferences.addPropertyChangeListener(databaseClientProxy);
 
       SystemPreferences.setConfigInfo(configFile, profile.getName(), profile.get("region"));
+
     } catch (Exception ioException) {
       final String message = "Oracle Cloud account configuration failed: " + ioException.getMessage();
       UIUtil.fireNotification(NotificationType.ERROR,message);

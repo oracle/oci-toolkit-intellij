@@ -4,9 +4,11 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.ui.ValidationInfo;
 import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails;
+import com.oracle.bmc.database.model.CustomerContact;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
@@ -18,7 +20,8 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CreateAutonomousDatabaseDialog extends DialogWrapper {
@@ -155,6 +158,10 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     deploymentTypeButtonGroup = new ButtonGroup();
     deploymentTypeButtonGroup.add(sharedInfrastructureRadioButton);
     deploymentTypeButtonGroup.add(dedicatedInfrastructureRadioButton);
+    // Add this option in the next release.
+    dedicatedInfrastructureRadioButton.setEnabled(false);
+    databaseVersionLabel.setVisible(false);
+    databaseVersionComboBox.setVisible(false);
 
     // Add access type radio buttons to radio button group.
     accessTypeButtonGroup = new ButtonGroup();
@@ -224,7 +231,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
 
     showOnlyAlwaysFreeCheckBox.addActionListener((event) -> {
       if (showOnlyAlwaysFreeCheckBox.isSelected()) {
-        dedicatedInfrastructureRadioButton.setEnabled(false);
+        //dedicatedInfrastructureRadioButton.setEnabled(false);
         alwaysFreeHelpLabel.setVisible(true);
         alwaysFreeConfigGuidelinesTextPane.setVisible(true);
         ocpuCountSpinner.setEnabled(false);
@@ -236,7 +243,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
         bringYourOwnLicenseRadioButton.setEnabled(false);
         licenseIncludedRadioButton.setSelected(true);
       } else {
-        dedicatedInfrastructureRadioButton.setEnabled(true);
+        //dedicatedInfrastructureRadioButton.setEnabled(true);
         alwaysFreeHelpLabel.setVisible(false);
         alwaysFreeConfigGuidelinesTextPane.setVisible(false);
         ocpuCountSpinner.setEnabled(true);
@@ -262,7 +269,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     // Add action listener for Data Warehouse workload type radio button.
     dataWarehouseRadioButton.addActionListener(actionEvent -> {
       sharedInfrastructureRadioButton.setEnabled(true);
-      dedicatedInfrastructureRadioButton.setEnabled(true);
+      //dedicatedInfrastructureRadioButton.setEnabled(true);
 
       bringYourOwnLicenseRadioButton.setEnabled(true);
       licenseIncludedRadioButton.setEnabled(true);
@@ -271,7 +278,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     // Add action listener for Transaction Processing workload type radio button.
     transactionProcessingRadioButton.addActionListener(actionEvent -> {
       sharedInfrastructureRadioButton.setEnabled(true);
-      dedicatedInfrastructureRadioButton.setEnabled(true);
+      //dedicatedInfrastructureRadioButton.setEnabled(true);
 
       bringYourOwnLicenseRadioButton.setEnabled(true);
       licenseIncludedRadioButton.setEnabled(true);
@@ -281,7 +288,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     jsonRadioButton.addActionListener(actionEvent -> {
       sharedInfrastructureRadioButton.setEnabled(true);
       // Dedicated infrastructure deployment type is not supported.
-      dedicatedInfrastructureRadioButton.setEnabled(false);
+      //dedicatedInfrastructureRadioButton.setEnabled(false);
 
       bringYourOwnLicenseRadioButton.setEnabled(false);
       licenseIncludedRadioButton.setEnabled(true);
@@ -292,36 +299,64 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     apexRadioButton.addActionListener(actionEvent -> {
       sharedInfrastructureRadioButton.setEnabled(true);
       // Dedicated infrastructure deployment type is not supported.
-      dedicatedInfrastructureRadioButton.setEnabled(false);
+      //dedicatedInfrastructureRadioButton.setEnabled(false);
 
       bringYourOwnLicenseRadioButton.setEnabled(false);
       licenseIncludedRadioButton.setEnabled(true);
       licenseIncludedRadioButton.setSelected(true);
     });
 
+    // Removing secure access and private end-point options in this release.
+    networkAccessPanel.setVisible(false);
+    virtualCloudNetworkPanel.setVisible(false);
+    virtCloudNetworkSubnetPanel.setVisible(false);
+    hostNamePrefixPanel.setVisible(false);
+    networkSecurityGroupsPanel.setVisible(false);
+
     // Add action listener for Shared Infrastructure deployment type radio button.
     sharedInfrastructureRadioButton.addActionListener(actionEvent -> {
-      databaseVersionLabel.setVisible(true);
-      databaseVersionComboBox.setVisible(true);
+      //databaseVersionLabel.setVisible(true);
+      //databaseVersionComboBox.setVisible(true);
 
       jsonRadioButton.setEnabled(true);
       apexRadioButton.setEnabled(true);
       autonomousContainerDatabasePanel.setVisible(false);
-      networkAccessPanel.setVisible(true);
+      //networkAccessPanel.setVisible(true);
       licenseTypePanel.setVisible(true);
+
+      alwaysFreeLabel.setVisible(true);
+      showOnlyAlwaysFreeCheckBox.setVisible(true);
+
+      provideTenMaintenanceContactsPanel.setVisible(true);
+      if (jsonRadioButton.isSelected() || apexRadioButton.isSelected()) {
+        bringYourOwnLicenseRadioButton.setEnabled(false);
+      } else {
+        bringYourOwnLicenseRadioButton.setEnabled(true);
+      }
     });
 
     // Add action listener for Dedicated Infrastructure deployment type radio button.
     dedicatedInfrastructureRadioButton.addActionListener(actionEvent -> {
       autonomousDataGuardEnabledCheckBox.setSelected(false);
-      databaseVersionLabel.setVisible(false);
-      databaseVersionComboBox.setVisible(false);
+      //databaseVersionLabel.setVisible(false);
+      //databaseVersionComboBox.setVisible(false);
 
       jsonRadioButton.setEnabled(false);
       apexRadioButton.setEnabled(false);
       autonomousContainerDatabasePanel.setVisible(true);
-      networkAccessPanel.setVisible(false);
+      //networkAccessPanel.setVisible(false);
       licenseTypePanel.setVisible(false);
+
+      alwaysFreeLabel.setVisible(false);
+      showOnlyAlwaysFreeCheckBox.setVisible(false);
+
+      provideTenMaintenanceContactsPanel.setVisible(false);
+
+      if (jsonRadioButton.isSelected() || apexRadioButton.isSelected()) {
+        bringYourOwnLicenseRadioButton.setEnabled(false);
+      } else {
+        bringYourOwnLicenseRadioButton.setEnabled(true);
+      }
     });
 
     secureAccessFromRadioButton.addActionListener(actionEvent -> {
@@ -406,6 +441,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
         }
       }
     });
+    addContactPanel.setVisible(false);
 
     final JBScrollPane jbScrollPane = new JBScrollPane(mainPanel);
     jbScrollPane.createVerticalScrollBar();
@@ -532,7 +568,6 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     createAutonomousDatabaseDetailsBuilder
             .isAutoScalingEnabled(autoScalingCheckBox.isSelected())
             .isDedicated(isDedicatedInfra);
-            //.dbVersion("")  // TODO: populate and build database version.
 
     // Declaration of supplier that returns the license type chosen by user.
     final Supplier<CreateAutonomousDatabaseBase.LicenseModel> licenseModelSupplier = () ->
@@ -558,30 +593,24 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
               .licenseModel(CreateAutonomousDatabaseBase.LicenseModel.LicenseIncluded);
     }
 
-    if (secureAccessFromRadioButton.isSelected()) {
-      // TODO:
-      //createAutonomousDatabaseDetailsBuilder
-              //.arePrimaryWhitelistedIpsUsed(Boolean arePrimaryWhitelistedIpsUsed)
-              //.standbyWhitelistedIps(List<String> standbyWhitelistedIps)
-              //.whitelistedIps(List<String> whitelistedIps)
+    final Function<String, List<CustomerContact>> maintenanceContactsExtractor = (maintenanceContacts) -> {
+      final List<CustomerContact> listOfCustomerContact = new ArrayList<>();
+      final StringTokenizer contactsTokenizer = new StringTokenizer(maintenanceContacts, ";");
 
-    } else if (privateEndPointAccessOnlyRadioButton.isSelected()) {
-      // TODO:
-      //createAutonomousDatabaseDetailsBuilder
-              //.nsgIds(List<String> nsgIds)
-              //.subnetId(String subnetId)
+      for (int i = 0; contactsTokenizer.hasMoreElements() && i < 10; i++) {
+        String email = contactsTokenizer.nextToken().trim();
+        listOfCustomerContact.add(CustomerContact.builder().email(email).build());
+      }
+      return listOfCustomerContact;
+    };
 
-    }
-
-    // TODO:
-    // Provide up to 10 maintenance contacts
-    //createAutonomousDatabaseDetailsBuilder
-            //.customerContacts(List<CustomerContact> customerContacts)
+    createAutonomousDatabaseDetailsBuilder
+            .customerContacts(maintenanceContactsExtractor.apply(contactEmailTextField.getText()));
   }
 
   private void configureParametersForDeploymentInDedicatedInfra(
           final CreateAutonomousDatabaseDetails.Builder createAutonomousDatabaseDetailsBuilder) {
-    createAutonomousDatabaseDetailsBuilder
+      createAutonomousDatabaseDetailsBuilder
             .dataStorageSizeInTBs((Integer) storageSpinner.getValue())
             .isDedicated(true)
             .isDataGuardEnabled(autonomousDataGuardEnabledCheckBox.isSelected())

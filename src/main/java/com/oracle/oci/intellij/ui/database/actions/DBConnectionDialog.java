@@ -232,8 +232,8 @@ public class DBConnectionDialog extends DialogWrapper {
 
     if (aliasName == null || aliasName.trim().equals("")) {
       Messages.showErrorDialog(
-          "Unable to find matching tnsnames alias for the database, make sure wallet location is correct",
-          "Alias name required error");
+          "The tnsnames alias couldn't be mapped to a database. Verify the wallet location.",
+          "Alias couldn't be mapped.");
       return false;
     }
 

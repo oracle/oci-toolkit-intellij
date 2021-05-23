@@ -70,15 +70,12 @@ public class AutonomousDatabaseBasicActions extends AbstractAction {
   public void actionPerformed(ActionEvent e) {
     if (actionType == ActionType.TERMINATE) {
       terminate();
-    }
-    else if(actionType == ActionType.SERVICE_CONSOLE) {
+    } else if(actionType == ActionType.SERVICE_CONSOLE) {
       BrowserUtil.browse(autonomousDatabaseSummary.getServiceConsoleUrl());
-    }
-    else if(actionType == ActionType.CHANGE_WORKLOAD_TYPE) {
+    } else if(actionType == ActionType.CHANGE_WORKLOAD_TYPE) {
       changeWorkloadType();
-    }
-    else {
-      startStopTerminate();
+    } else {
+      startStop();
     }
   }
 
@@ -92,7 +89,7 @@ public class AutonomousDatabaseBasicActions extends AbstractAction {
     }
   }
 
-  private void startStopTerminate() {
+  private void startStop() {
     int result = Messages.showOkCancelDialog(actionType.actionConfirmation,
         actionType.actionName, "Yes", "No", Messages.getQuestionIcon());
 

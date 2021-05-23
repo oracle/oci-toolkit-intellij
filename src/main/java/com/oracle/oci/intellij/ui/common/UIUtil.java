@@ -5,8 +5,8 @@
 
 package com.oracle.oci.intellij.ui.common;
 
-import com.intellij.notification.NotificationDisplayType;
 import com.intellij.notification.NotificationGroup;
+import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
@@ -27,11 +27,9 @@ import java.net.URISyntaxException;
 public class UIUtil {
   private static Project currentProject;
 
-  private static @NlsSafe final String id = "Oracle Cloud Infrastructure";
-  //private static NotificationGroup notificationGroup = NotificationGroupManager.getInstance().getNotificationGroup(id);
-  private static final NotificationGroup notificationGroup =
-          new NotificationGroup("Oracle Cloud Infrastructure",
-                                NotificationDisplayType.BALLOON, true);
+  private static @NlsSafe final String id = "Oracle Cloud Infrastructure Plugin";
+  private static final NotificationGroup NOTIFICATION_GROUP =
+          NotificationGroupManager.getInstance().getNotificationGroup(id);
 
   public static void setCurrentProject(@NotNull Project project) {
     currentProject = project;
@@ -46,14 +44,14 @@ public class UIUtil {
   }
 
   public static void fireNotification(NotificationType notificationType, @NotNull final String msg) {
-    notificationGroup
+    NOTIFICATION_GROUP
             .createNotification(id, "", msg, notificationType)
             .notify(currentProject);
   }
 
   public static void executeAndUpdateUIAsync(@NotNull Runnable action, @Nullable Runnable update) {
     ApplicationManager.getApplication().executeOnPooledThread(() -> {
-      try{
+      try {
         action.run();
       } catch (Throwable th) {
         final String errorMsg = "Action execution failed.";

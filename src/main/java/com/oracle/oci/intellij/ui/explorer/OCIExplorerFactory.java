@@ -36,7 +36,7 @@ public class OCIExplorerFactory implements ToolWindowFactory {
 
   @Override
   public void createToolWindowContent(@NotNull Project project,
-                                      @NotNull ToolWindow toolWindow){
+                                      @NotNull ToolWindow toolWindow) {
 
     UIUtil.setCurrentProject(project);
 

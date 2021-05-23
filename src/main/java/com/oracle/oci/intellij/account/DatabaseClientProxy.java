@@ -327,7 +327,7 @@ public class DatabaseClientProxy implements PropertyChangeListener {
                 regionalWalletResponse.getAutonomousDatabaseWallet();
         walletTypeMap.put(AutonomousDatabaseConstants.REGIONAL_WALLET, regionalWallet);
       } catch (Exception ex) {
-        LogHandler.error("Unable to get Regional Wallet details");
+        LogHandler.error("Failed to fetch Regional Wallet details. " + ex.getMessage());
         throw ex;
       }
 
@@ -340,7 +340,7 @@ public class DatabaseClientProxy implements PropertyChangeListener {
                 .getAutonomousDatabaseWallet();
         walletTypeMap.put(AutonomousDatabaseConstants.INSTANCE_WALLET, instanceWallet);
       } catch (Exception ex) {
-        LogHandler.error("Unable to get Instance Wallet details");
+        LogHandler.error("Failed to fetch wallet details. " + ex.getMessage());
         throw ex;
       }
     }

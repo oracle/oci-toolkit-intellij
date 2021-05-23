@@ -156,70 +156,80 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
     }
 
     if (selectedSummary != null) {
-      if (selectedSummary.getLifecycleState() == LifecycleState.Stopped) {
-        popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(selectedSummary,
-                AutonomousDatabaseBasicActions.ActionType.START)));
-      }
-      else if (selectedSummary.getLifecycleState() == LifecycleState.Available) {
+      if (selectedSummary.getLifecycleState() == LifecycleState.Available) {
         popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(selectedSummary,
                 AutonomousDatabaseBasicActions.ActionType.STOP)));
-      }
 
-      popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(
-              AutonomousDatabaseMoreActions.Action.RESTORE_ADB,
-              selectedSummary, "Restore")));
+        popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(
+                AutonomousDatabaseMoreActions.Action.RESTORE_ADB,
+                selectedSummary, "Restore")));
 
-      popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(
-              AutonomousDatabaseMoreActions.Action.CLONE_DB,
-              selectedSummary, "Create Clone")));
+        popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(
+                AutonomousDatabaseMoreActions.Action.CLONE_DB,
+                selectedSummary, "Create Clone")));
 
-      popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.ADMIN_PWD_CHANGE,
-                      selectedSummary, "Administrator Password")));
+        popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(
+                AutonomousDatabaseMoreActions.Action.ADMIN_PWD_CHANGE,
+                selectedSummary, "Administrator Password")));
 
-      popupMenu.add(new JMenuItem(
-              new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.UPDATE_LICENSE,
-                      selectedSummary, "Update License Type")));
+        popupMenu.add(new JMenuItem(
+                new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.UPDATE_LICENSE,
+                        selectedSummary, "Update License Type")));
 
-      popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(selectedSummary,
-              AutonomousDatabaseBasicActions.ActionType.TERMINATE)));
+        popupMenu.add(new JMenuItem(
+                new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.DOWNLOAD_CREDENTIALS,
+                        selectedSummary,
+                        "Download Client Credentials (Wallet)")));
 
-      if (selectedSummary.getDbWorkload().equals(
-              AutonomousDatabaseSummary.DbWorkload.Ajd)) {
-        popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(
-                        selectedSummary, AutonomousDatabaseBasicActions.ActionType.CHANGE_WORKLOAD_TYPE)));
+        popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.SCALE_ADB,
+                selectedSummary, "Scale Up/Down")));
+
+        popupMenu.add(new JMenuItem(
+                new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.CREATE_CONNECTION,
+                        selectedSummary, "Create Connection")));
+
+        if (selectedSummary.getDbWorkload().equals(
+                AutonomousDatabaseSummary.DbWorkload.Ajd)) {
+          popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(
+                  selectedSummary, AutonomousDatabaseBasicActions.ActionType.CHANGE_WORKLOAD_TYPE)));
+        }
+
+        popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(selectedSummary,
+                AutonomousDatabaseBasicActions.ActionType.TERMINATE)));
+
+        popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(
+                AutonomousDatabaseMoreActions.Action.ADB_INFO,
+                selectedSummary,
+                "Autonomous Database Information")));
+
+        popupMenu.addSeparator();
+      } else if (selectedSummary.getLifecycleState() == LifecycleState.Stopped) {
+        popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(selectedSummary,
+                AutonomousDatabaseBasicActions.ActionType.START)));
+
+        popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(
+                AutonomousDatabaseMoreActions.Action.CLONE_DB,
+                selectedSummary, "Create Clone")));
+
+        popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(selectedSummary,
+                AutonomousDatabaseBasicActions.ActionType.TERMINATE)));
+      } else if (selectedSummary.getLifecycleState() == LifecycleState.Provisioning) {
+        popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(selectedSummary,
+                AutonomousDatabaseBasicActions.ActionType.TERMINATE)));
       }
 
       popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.CREATE_ADB,
-                      selectedSummary, CREATE_ADB)));
-
-      popupMenu.add(new JMenuItem(
-              new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.DOWNLOAD_CREDENTIALS,
-                      selectedSummary,
-                      "Download Client Credentials (Wallet)")));
+              selectedSummary, CREATE_ADB)));
 
       popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(
               selectedSummary, AutonomousDatabaseBasicActions.ActionType.SERVICE_CONSOLE)));
-
-      popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.SCALE_ADB,
-              selectedSummary, "Scale Up/Down")));
-
-      popupMenu.add(new JMenuItem(
-              new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.CREATE_CONNECTION,
-                      selectedSummary, "Create Connection")));
-
-      popupMenu.addSeparator();
-      popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(
-              AutonomousDatabaseMoreActions.Action.ADB_INFO,
-              selectedSummary,
-              "Autonomous Database Information")));
     }
 
     return popupMenu;
   }
 
   public void populateTableData() {
-    final DefaultTableModel model = ((DefaultTableModel) adbInstancesTable.getModel());
-    model.setRowCount(0);
+    ((DefaultTableModel) adbInstancesTable.getModel()).setRowCount(0);
     UIUtil.showInfoInStatusBar("Refreshing Autonomous Databases.");
 
     refreshADBInstancesButton.setEnabled(false);
@@ -260,6 +270,9 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
               return WORKLOAD_ALL;
           }
         };
+
+        final DefaultTableModel model = ((DefaultTableModel) adbInstancesTable.getModel());
+        model.setRowCount(0);
 
         for (AutonomousDatabaseSummary s : autonomousDatabaseInstancesList) {
           final Object[] rowData = new Object[ADB_COLUMN_NAMES.length];
@@ -308,6 +321,8 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
   @Override
   public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
     LogHandler.info("AutonomousDatabasesDashboard: Handling the Event Update : " + propertyChangeEvent.toString());
+    ((DefaultTableModel) adbInstancesTable.getModel()).setRowCount(0);
+
     switch (propertyChangeEvent.getPropertyName()) {
       case SystemPreferences.EVENT_COMPARTMENT_UPDATE:
         compartmentValueLabel.setText(propertyChangeEvent.getNewValue().toString());
