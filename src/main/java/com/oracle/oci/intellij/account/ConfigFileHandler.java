@@ -98,8 +98,7 @@ public final class ConfigFileHandler {
         currentReadingProfileProperties.put(key, value);
       } else {
         throw new IllegalStateException(
-                "Config parse error, attempted to read configuration without specifying a profile: "
-                        + line);
+                "Invalid file format. Profile name is not specified correctly in the config file.");
       }
     }
     return new ProfileSet(mapOfProfiles);

@@ -416,7 +416,7 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
     }
   }
 
-  public String getConfigFile(){
+  public String getConfigFile() {
     return configFileTextField.getText();
   }
 
