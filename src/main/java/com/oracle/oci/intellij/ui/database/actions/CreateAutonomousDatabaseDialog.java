@@ -4,7 +4,6 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.ui.ValidationInfo;
 import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseBase;
 import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails;
@@ -25,42 +24,25 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CreateAutonomousDatabaseDialog extends DialogWrapper {
-  private JPanel basicInfoOfAutonomousDatabasePanel;
   private JTextField displayNameTextField;
-  private JLabel displayNameLabel;
-  private JLabel databaseNameLabel;
   private JTextField databaseNameTextField;
-  private JLabel compartmentLabel;
   private JTextField compartmentTextField;
   private JButton selectCompartmentButton;
   private JRadioButton dataWarehouseRadioButton;
-  private JPanel workloadTypePanel;
   private JRadioButton transactionProcessingRadioButton;
   private JRadioButton jsonRadioButton;
   private JRadioButton apexRadioButton;
-  private JPanel deploymentTypePanel;
   private JRadioButton sharedInfrastructureRadioButton;
   private JRadioButton dedicatedInfrastructureRadioButton;
-  private JPanel configureDatabasePanel;
-  private JComboBox databaseVersionComboBox;
+  private JComboBox<String> databaseVersionComboBox;
   private JLabel databaseVersionLabel;
-  private JLabel ocpuCountLabel;
-  private JLabel storageLabel;
   private JTextField usernameTextField;
   private JPanel adminCredentialsPanel;
-  private JLabel usernameLabel;
-  private JLabel passwordLabel;
-  private JLabel autoScalingLabel;
   private JCheckBox autoScalingCheckBox;
-  private JLabel confirmPasswordLabel;
-  private JPanel networkAccessPanel;
+  private JPanel networkAccessOptionsPanel;
   private JPasswordField passwordField;
   private JPasswordField confirmPasswordField;
-  private JPanel accessTypePanel;
-  private JRadioButton secureAccessFromRadioButton;
-  private JRadioButton privateEndPointAccessOnlyRadioButton;
   private JPanel autonomousContainerDatabasePanel;
-  private JPanel autonomousDataGuardPanel;
   private JCheckBox configureAccessControlRulesCheckBox;
   private JCheckBox autonomousDataGuardEnabledCheckBox;
   private JPanel configureAccessControlRulesPanel;
@@ -75,39 +57,24 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
   private JButton changeCompartmentButton;
   private JTextField autonomousContainerDatabaseTextField;
   private JPanel autonomousDataGuardSubPanel;
-  private JComboBox virtualCloudNetworkSubnetCombo;
-  private JTextField virtualCloudNetworkHostTextField;
   private JPanel networkSecurityGroupsSubPanel;
   private JPanel hostNamePrefixPanel;
   private JPanel anotherNetworkSecurityGroupPanel;
-  private JButton addAnotherNetworkSecurityButton;
-  private JComboBox virtualCloudNetworkComboBox;
   private JButton virtualCloudNetworkChangeCompartmentButton;
   private JButton virtualCloudNetworkSubnetChangeCompartmentButton;
-  private JComboBox networkSecurityGroupChangeComboBox;
   private JButton networkSecurityGroupChangeCompartmentButton;
-  private JComboBox<String> ipNotationTypeComboBox;
-  private JTextField ipNotationTypeTextField;
-  private JPanel ipNotationTypePanel;
-  private JPanel ipNotationValuesPanel;
   private JPanel ipNotationAddEntryPanel;
-  private JButton ipNotationAddAnotherEntryButton;
   private JSpinner ocpuCountSpinner;
   private JSpinner storageSpinner;
   private JPanel provideTenMaintenanceContactsPanel;
-  private JPanel contactEmailPanel;
   private JTextField contactEmailTextField;
-  private JButton addContactButton;
-  private JPanel addContactPanel;
   private JCheckBox showOnlyAlwaysFreeCheckBox;
   private JLabel alwaysFreeLabel;
   private JTextPane alwaysFreeConfigGuidelinesTextPane;
   private JLabel alwaysFreeHelpLabel;
+  private JRadioButton secureAccessFromEverywhereRadioButton;
+  private JRadioButton privateEndPointAccessOnlyRadioButton;
 
-  private final ButtonGroup workloadTypeButtonGroup;
-  private final ButtonGroup deploymentTypeButtonGroup;
-  private final ButtonGroup accessTypeButtonGroup;
-  private final ButtonGroup licenseTypeButtonGroup;
   private Compartment selectedCompartment;
 
   private static final String WINDOW_TITLE = "Create Autonomous Database";
@@ -148,14 +115,14 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     UIUtil.createWebLink(adminCredentialsPanel, pswdHelpWebLink);
 
     // Add workload type radio buttons to radio button group.
-    workloadTypeButtonGroup = new ButtonGroup();
+    final ButtonGroup workloadTypeButtonGroup = new ButtonGroup();
     workloadTypeButtonGroup.add(dataWarehouseRadioButton);
     workloadTypeButtonGroup.add(transactionProcessingRadioButton);
     workloadTypeButtonGroup.add(jsonRadioButton);
     workloadTypeButtonGroup.add(apexRadioButton);
 
     // Add deployment type radio buttons to radio button group.
-    deploymentTypeButtonGroup = new ButtonGroup();
+    final ButtonGroup deploymentTypeButtonGroup = new ButtonGroup();
     deploymentTypeButtonGroup.add(sharedInfrastructureRadioButton);
     deploymentTypeButtonGroup.add(dedicatedInfrastructureRadioButton);
     // Add this option in the next release.
@@ -164,12 +131,12 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     databaseVersionComboBox.setVisible(false);
 
     // Add access type radio buttons to radio button group.
-    accessTypeButtonGroup = new ButtonGroup();
-    accessTypeButtonGroup.add(secureAccessFromRadioButton);
+    final ButtonGroup accessTypeButtonGroup = new ButtonGroup();
+    accessTypeButtonGroup.add(secureAccessFromEverywhereRadioButton);
     accessTypeButtonGroup.add(privateEndPointAccessOnlyRadioButton);
 
     // Add license type radio buttons to radio button group.
-    licenseTypeButtonGroup = new ButtonGroup();
+    final ButtonGroup licenseTypeButtonGroup = new ButtonGroup();
     licenseTypeButtonGroup.add(bringYourOwnLicenseRadioButton);
     licenseTypeButtonGroup.add(licenseIncludedRadioButton);
 
@@ -178,7 +145,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     sharedInfrastructureRadioButton.setSelected(true);
     autonomousContainerDatabasePanel.setVisible(false);
     autoScalingCheckBox.setSelected(true);
-    secureAccessFromRadioButton.setSelected(true);
+    secureAccessFromEverywhereRadioButton.setSelected(true);
     ipNotationPanel.setVisible(false);
 
     virtualCloudNetworkPanel.setVisible(false);
@@ -239,7 +206,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
         storageSpinner.setEnabled(false);
         autoScalingCheckBox.setSelected(false);
         autoScalingCheckBox.setEnabled(false);
-        privateEndPointAccessOnlyRadioButton.setEnabled(false);
+        //privateEndPointAccessOnlyRadioButton.setEnabled(false);
         bringYourOwnLicenseRadioButton.setEnabled(false);
         licenseIncludedRadioButton.setSelected(true);
       } else {
@@ -251,7 +218,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
         storageSpinner.setEnabled(true);
         autoScalingCheckBox.setSelected(true);
         autoScalingCheckBox.setEnabled(true);
-        privateEndPointAccessOnlyRadioButton.setEnabled(true);
+        //privateEndPointAccessOnlyRadioButton.setEnabled(true);
         bringYourOwnLicenseRadioButton.setEnabled(true);
         bringYourOwnLicenseRadioButton.setSelected(false);
         licenseIncludedRadioButton.setSelected(false);
@@ -307,7 +274,10 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     });
 
     // Removing secure access and private end-point options in this release.
-    networkAccessPanel.setVisible(false);
+    secureAccessFromEverywhereRadioButton.setEnabled(false);
+    privateEndPointAccessOnlyRadioButton.setEnabled(false);
+    configureAccessControlRulesCheckBox.setEnabled(false);
+    networkAccessOptionsPanel.setVisible(false);
     virtualCloudNetworkPanel.setVisible(false);
     virtCloudNetworkSubnetPanel.setVisible(false);
     hostNamePrefixPanel.setVisible(false);
@@ -321,18 +291,14 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
       jsonRadioButton.setEnabled(true);
       apexRadioButton.setEnabled(true);
       autonomousContainerDatabasePanel.setVisible(false);
-      //networkAccessPanel.setVisible(true);
+      //networkAccessOptionsPanel.setVisible(true);
       licenseTypePanel.setVisible(true);
 
       alwaysFreeLabel.setVisible(true);
       showOnlyAlwaysFreeCheckBox.setVisible(true);
 
       provideTenMaintenanceContactsPanel.setVisible(true);
-      if (jsonRadioButton.isSelected() || apexRadioButton.isSelected()) {
-        bringYourOwnLicenseRadioButton.setEnabled(false);
-      } else {
-        bringYourOwnLicenseRadioButton.setEnabled(true);
-      }
+      bringYourOwnLicenseRadioButton.setEnabled(!jsonRadioButton.isSelected() && !apexRadioButton.isSelected());
     });
 
     // Add action listener for Dedicated Infrastructure deployment type radio button.
@@ -344,7 +310,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
       jsonRadioButton.setEnabled(false);
       apexRadioButton.setEnabled(false);
       autonomousContainerDatabasePanel.setVisible(true);
-      //networkAccessPanel.setVisible(false);
+      //networkAccessOptionsPanel.setVisible(false);
       licenseTypePanel.setVisible(false);
 
       alwaysFreeLabel.setVisible(false);
@@ -352,14 +318,10 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
 
       provideTenMaintenanceContactsPanel.setVisible(false);
 
-      if (jsonRadioButton.isSelected() || apexRadioButton.isSelected()) {
-        bringYourOwnLicenseRadioButton.setEnabled(false);
-      } else {
-        bringYourOwnLicenseRadioButton.setEnabled(true);
-      }
+      bringYourOwnLicenseRadioButton.setEnabled(!jsonRadioButton.isSelected() && !apexRadioButton.isSelected());
     });
 
-    secureAccessFromRadioButton.addActionListener(actionEvent -> {
+    secureAccessFromEverywhereRadioButton.addActionListener(actionEvent -> {
       configureAccessControlRulesPanel.setVisible(true);
       ipNotationPanel.setVisible(false);
 
@@ -441,7 +403,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
         }
       }
     });
-    addContactPanel.setVisible(false);
+    //addContactPanel.setVisible(false);
 
     final JBScrollPane jbScrollPane = new JBScrollPane(mainPanel);
     jbScrollPane.createVerticalScrollBar();
@@ -464,8 +426,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
         Messages.showErrorDialog("Database name cannot be empty.",
                 "Select a database name");
         return false;
-      } else if (!String.valueOf(passwordField.getPassword())
-              .equals(String.valueOf(confirmPasswordField.getPassword()))) {
+      } else if (!Arrays.equals(passwordField.getPassword(), confirmPasswordField.getPassword())) {
         Messages.showErrorDialog("Password and confirmation must match.",
                 "Passwords mismatch");
         return false;
@@ -474,7 +435,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
       return true;
     };
 
-    if (inputParametersValidator.get() == false) {
+    if (!inputParametersValidator.get()) {
       return;
     }
 

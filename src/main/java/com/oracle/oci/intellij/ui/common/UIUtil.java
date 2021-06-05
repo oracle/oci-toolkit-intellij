@@ -44,9 +44,11 @@ public class UIUtil {
   }
 
   public static void fireNotification(NotificationType notificationType, @NotNull final String msg) {
-    NOTIFICATION_GROUP
-            .createNotification(id, "", msg, notificationType)
-            .notify(currentProject);
+    if (NOTIFICATION_GROUP != null) {
+      NOTIFICATION_GROUP
+              .createNotification(id, "", msg, notificationType)
+              .notify(currentProject);
+    }
   }
 
   public static void executeAndUpdateUIAsync(@NotNull Runnable action, @Nullable Runnable update) {

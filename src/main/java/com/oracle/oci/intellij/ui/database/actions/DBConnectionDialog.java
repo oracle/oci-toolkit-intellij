@@ -34,22 +34,11 @@ import java.util.*;
 
 public class DBConnectionDialog extends DialogWrapper {
 
-  private final String TNS_FILENAME = "tnsnames.ora";
-
   private JPanel mainPanel;
-  private JPanel createNewConnectionPanel;
 
-  private JLabel walletPathLabel;
   private TextFieldWithBrowseButton walletPathTextField;
 
-  private JLabel tnsNameAliasLabel;
-  private JComboBox tnsNameAliasComboBox;
-
-  private JLabel userNameLabel;
-  private JTextField userNameTextField;
-
-  private JLabel passwordLabel;
-  private JPasswordField passwordField;
+  private JComboBox<String> tnsNameAliasComboBox;
 
   private final AutonomousDatabaseSummary autonomousDatabaseSummary;
 
@@ -89,23 +78,19 @@ public class DBConnectionDialog extends DialogWrapper {
     }
   }
 
-  /**
-   *
-   * @param walletPath
-   * @return
-   */
   private Set<String> getTnsEntries(String walletPath) {
     final Set<String> tnsEntries = new LinkedHashSet<>();
     final String dbName = autonomousDatabaseSummary.getDbName();
 
     try {
+      final String TNS_FILENAME = "tnsnames.ora";
       final String tnsnamesFilePath = walletPath + File.separator + TNS_FILENAME;
       final File file = new File(tnsnamesFilePath);
 
       try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
         String line;
         while((line = bufferedReader.readLine()) != null) {
-          if (line != null && line.trim().startsWith(dbName.toLowerCase() + "_")) {
+          if (line.trim().startsWith(dbName.toLowerCase() + "_")) {
             int index = line.indexOf("=");
             if (index != -1) {
               String alias = line.substring(0, index).trim();

@@ -20,54 +20,31 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
-  private static final String WINDOW_TITLE = "Create Autonomous Database Clone";
+  private static final String WINDOW_TITLE = "Create Clone";
   private JPanel mainPanel;
-  private JPanel chooseCloneTypePanel;
   private JPanel cloneSourcePanel;
   private JRadioButton fullCloneRadioButton;
   private JRadioButton refreshableCloneRadioButton;
   private JRadioButton metadataCloneRadioButton;
   private JRadioButton cloneFromDatabaseInstanceRadioButton;
   private JRadioButton cloneFromABackupRadioButton;
-  private JLabel sourceDatabaseNameLabel;
   private JTextField sourceDatabaseNameTextField;
-  private JLabel displayNameLabel;
   private JTextField displayNameTextField;
-  private JLabel databaseNameLabel;
   private JTextField databaseNameTextField;
-  private JLabel chooseDatabaseVersionLabel;
-  private JComboBox chooseDatabaseVersionComboBox;
-  private JPanel configureDatabasePanel;
-  private JLabel ocpuCountLabel;
+  private JComboBox<String> chooseDatabaseVersionComboBox;
   private JSpinner ocpuCountSpinner;
-  private JLabel storageLabel;
   private JSpinner storageSpinner;
   private JCheckBox autoScalingCheckBox;
-  private JPanel createAdministratorCredentialsPanel;
-  private JLabel usernameLabel;
-  private JLabel passwordLabel;
   private JPasswordField passwordField;
   private JPasswordField confirmPasswordField;
   private JTextField usernameTextField;
-  private JLabel confirmPasswordLabel;
-  private JPanel chooseNetworkAccessPanel;
-  private JPanel accessTypePanel;
-  private JRadioButton secureAccessFromEveryWhereRadioButton;
-  private JRadioButton privateEndPointAccessOnlyRadioButton;
-  private JCheckBox configureAccessControlRulesCheckBox;
+  private JPanel chooseNetworkAccessOptionsPanel;
   private JPanel ipNotationTypeOuterPanel;
-  private JPanel ipNotationTypeInnerPanel;
-  private JPanel ipNotationValuesPanel;
-  private JComboBox ipNotationComboBox;
-  private JTextField ipNotationValuesTextField;
   private JRadioButton bringYourOwnLicenseRadioButton;
   private JRadioButton licenseIncludedRadioButton;
   private JPanel virtualCloudNetworkOuterPanel;
@@ -75,31 +52,20 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
   private JButton virtualNetworkChangeCompartmentButton;
   private JPanel subnetPanel;
   private JButton subnetChangeCompartmentButton;
-  private JComboBox subnetComboBox;
-  private JComboBox nsgComboBox;
-  private JPanel nsgOuterPanel;
   private JPanel nsgInnerPanel;
   private JButton nsgChangeCompartmentButton;
-  private JButton anotherNetworkSecurityGroupButton;
-  private JComboBox virtualCloudNetworkComboBox;
-  private JPanel anotherEntrySpacingPanel;
-  private JButton anotherEntryButton;
   private JTextField compartmentTextField;
   private JButton selectCompartmentButton;
-  private JPanel basicInformationPanel;
-  private JPanel createInCompartmentPanel;
   private JTextField contactEmailTextField;
-  private JButton addContactButton;
   private JPanel addContactPanel;
-  private JPanel contactEmailPanel;
-  private JPanel provideTenMaintenanceContactsPanel;
+  private JRadioButton secureAccessFromEverywhereRadioButton;
+  private JRadioButton privateEndpointAccessOnlyRadioButton;
+  private JCheckBox configureAccessControlRulesCheckBox;
   private Compartment selectedCompartment;
 
   private static final String VIRTUAL_CLOUD_NETWORK_PANEL_TEXT = "Virtual cloud network in ";
   private static final String SUBNET_PANEL_TEXT = "Subnet in ";
   private static final String NETWORK_SECURITY_GROUP_PANEL_TEXT = "Network security group in ";
-
-  private static int contactEmailTextFieldsCount = 1;
 
   private final AutonomousDatabaseSummary adbSummary;
 
@@ -127,8 +93,8 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
     cloneFromABackupRadioButton.setVisible(false);
 
     final ButtonGroup accessTypeButtonGroup = new ButtonGroup();
-    accessTypeButtonGroup.add(secureAccessFromEveryWhereRadioButton);
-    accessTypeButtonGroup.add(privateEndPointAccessOnlyRadioButton);
+    accessTypeButtonGroup.add(secureAccessFromEverywhereRadioButton);
+    accessTypeButtonGroup.add(privateEndpointAccessOnlyRadioButton);
 
     final ButtonGroup licenseTypeButtonGroup = new ButtonGroup();
     licenseTypeButtonGroup.add(bringYourOwnLicenseRadioButton);
@@ -166,7 +132,12 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
 
     usernameTextField.setText(AutonomousDatabaseConstants.DATABASE_DEFAULT_USERNAME);
     // Removing secure access and private end-point options in this release.
-    chooseNetworkAccessPanel.setVisible(false);
+    secureAccessFromEverywhereRadioButton.setEnabled(false);
+    secureAccessFromEverywhereRadioButton.setSelected(true);
+    privateEndpointAccessOnlyRadioButton.setEnabled(false);
+    configureAccessControlRulesCheckBox.setEnabled(false);
+    configureAccessControlRulesCheckBox.setSelected(false);
+    chooseNetworkAccessOptionsPanel.setVisible(false);
 
     // Set the initial border title for panels that show compartment name, on selection, in its title.
     Border initialTitleBorder = BorderFactory.createTitledBorder(VIRTUAL_CLOUD_NETWORK_PANEL_TEXT);
@@ -220,30 +191,20 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
     ipNotationTypeOuterPanel.setVisible(false);
     virtualCloudNetworkOuterPanel.setVisible(false);
 
-    fullCloneRadioButton.addActionListener((event) -> {
-      cloneSourcePanel.setVisible(true);
-    });
+    fullCloneRadioButton.addActionListener((event) -> cloneSourcePanel.setVisible(true));
 
-    refreshableCloneRadioButton.addActionListener((event) -> {
-      cloneSourcePanel.setVisible(false);
-    });
+    refreshableCloneRadioButton.addActionListener((event) -> cloneSourcePanel.setVisible(false));
 
-    metadataCloneRadioButton.addActionListener((event) -> {
-      cloneSourcePanel.setVisible(true);
-    });
+    metadataCloneRadioButton.addActionListener((event) -> cloneSourcePanel.setVisible(true));
 
-    secureAccessFromEveryWhereRadioButton.addActionListener((event) -> {
+    secureAccessFromEverywhereRadioButton.addActionListener((event) -> {
       virtualCloudNetworkOuterPanel.setVisible(false);
 
       configureAccessControlRulesCheckBox.setVisible(true);
-      if (configureAccessControlRulesCheckBox.isSelected()) {
-        ipNotationTypeOuterPanel.setVisible(true);
-      } else {
-        ipNotationTypeOuterPanel.setVisible(false);
-      }
+      ipNotationTypeOuterPanel.setVisible(configureAccessControlRulesCheckBox.isSelected());
     });
 
-    privateEndPointAccessOnlyRadioButton.addActionListener((event) -> {
+    privateEndpointAccessOnlyRadioButton.addActionListener((event) -> {
       ipNotationTypeOuterPanel.setVisible(false);
       virtualCloudNetworkOuterPanel.setVisible(true);
       configureAccessControlRulesCheckBox.setVisible(false);
@@ -251,12 +212,7 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
 
     configureAccessControlRulesCheckBox.addActionListener((event) -> {
       virtualCloudNetworkOuterPanel.setVisible(false);
-
-      if (configureAccessControlRulesCheckBox.isSelected()) {
-        ipNotationTypeOuterPanel.setVisible(true);
-      } else {
-        ipNotationTypeOuterPanel.setVisible(false);
-      }
+      ipNotationTypeOuterPanel.setVisible(configureAccessControlRulesCheckBox.isSelected());
     });
     addContactPanel.setVisible(false);
 
@@ -281,8 +237,7 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
         Messages.showErrorDialog("Database name cannot be empty.",
                 "Select a database name");
         return false;
-      } else if (!String.valueOf(passwordField.getPassword())
-              .equals(String.valueOf(confirmPasswordField.getPassword()))) {
+      } else if (!Arrays.equals(passwordField.getPassword(), confirmPasswordField.getPassword())) {
         Messages.showErrorDialog("Password and confirmation must match.",
                 "Passwords mismatch");
         return false;
@@ -291,7 +246,7 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
       return true;
     };
 
-    if (inputParametersValidator.get() == false) {
+    if (!inputParametersValidator.get()) {
       return;
     }
 
@@ -360,7 +315,7 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
       Messages.showErrorDialog(errorMessage, "Select a license type");
       throw new IllegalStateException(errorMessage);
     };
-    
+
     createAutonomousDatabaseCloneDetailsBuilder
             .licenseModel(licenseModelSupplier.get());
 

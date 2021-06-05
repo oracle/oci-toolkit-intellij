@@ -46,7 +46,6 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
   private JLabel profileValueLabel;
   private JLabel compartmentValueLabel;
   private JLabel regionValueLabel;
-  private JPanel tablePanel;
   private JButton createADBInstanceButton;
   private List<AutonomousDatabaseSummary> autonomousDatabaseInstancesList;
 
@@ -139,21 +138,18 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
                       .getModel().getValueAt(adbInstancesTable.getSelectedRow(), 2);
             }
           }
-          popupMenu = getADBActionMenu(selectedSummary, true);
+          popupMenu = getADBActionMenu(selectedSummary);
           popupMenu.show(e.getComponent(), e.getX(), e.getY());
         }
       }
     });
   }
 
-  private JPopupMenu getADBActionMenu(AutonomousDatabaseSummary selectedSummary,
-                                      boolean showRefreshMenu) {
+  private JPopupMenu getADBActionMenu(AutonomousDatabaseSummary selectedSummary) {
     final JPopupMenu popupMenu = new JPopupMenu();
 
-    if (showRefreshMenu) {
-      popupMenu.add(new JMenuItem(new RefreshAction(this, "Refresh")));
-      popupMenu.addSeparator();
-    }
+    popupMenu.add(new JMenuItem(new RefreshAction(this, "Refresh")));
+    popupMenu.addSeparator();
 
     if (selectedSummary != null) {
       if (selectedSummary.getLifecycleState() == LifecycleState.Available) {
@@ -242,11 +238,11 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
       try {
         autonomousDatabaseInstancesList = OracleCloudAccount.getInstance()
                 .getDatabaseClient().getAutonomousDatabaseInstances(workLoadType);
-      } catch (Exception e) {
+      } catch (Exception ex) {
         autonomousDatabaseInstancesList = null;
         final String errorMessage = "Autonomous Databases summary could not be fetched.";
-        UIUtil.fireNotification(NotificationType.ERROR,errorMessage + e.getMessage());
-        LogHandler.error(errorMessage, e);
+        UIUtil.fireNotification(NotificationType.ERROR,errorMessage + ex.getMessage());
+        LogHandler.error(errorMessage, ex);
       }
     };
 

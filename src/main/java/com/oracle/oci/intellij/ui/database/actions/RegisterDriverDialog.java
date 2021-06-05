@@ -12,12 +12,6 @@ import javax.swing.*;
 
 public class RegisterDriverDialog extends DialogWrapper {
     private JPanel panel;
-    private JTextField textField;
-    private JButton browseBtn;
-    private JTextField jdbcJarFileTextField;
-    private JLabel jdbcJarFileLabel;
-    private JPanel jdbcJarFilePanel;
-    private JPanel registerJdbcDriverPanel;
 
     protected RegisterDriverDialog() {
         super(true);

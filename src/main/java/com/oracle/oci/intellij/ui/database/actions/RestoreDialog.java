@@ -25,8 +25,6 @@ public class RestoreDialog extends DialogWrapper {
   private static final String[] RESTORE_COLUMN_NAMES = new String[] {
       "Backup Name", "State", "Type" };
   private JPanel mainPanel;
-  private JPanel datePanel;
-  private JPanel tablePanel;
   private JTable backupListTable;
   private JSpinner spinner1;
   private JSpinner spinner2;
@@ -94,7 +92,7 @@ public class RestoreDialog extends DialogWrapper {
       if (backup.getDisplayName().equalsIgnoreCase(backupName))
         return backup.getTimeEnded();
     }
-    return null;
+    throw new IllegalStateException("Fatal error: Selected row is invalid");
   }
 
   private void fetchRestoreList() {

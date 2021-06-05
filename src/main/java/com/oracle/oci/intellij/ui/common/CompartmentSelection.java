@@ -9,6 +9,7 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.util.LogHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,9 +30,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class CompartmentSelection extends DialogWrapper {
   private JPanel mainPanel;
   private JTree compartmentTree;
-  private JPanel secondPane;
-  private JPanel compartmentTreePanel;
-  private JScrollPane compartmentTreeScrollPane;
 
   private Compartment selectedCompartment = null;
   private DefaultMutableTreeNode rootTreeNode = null;
@@ -173,6 +171,16 @@ public class CompartmentSelection extends DialogWrapper {
       compartmentTree.repaint();
       lock.unlock();
     }
+  }
+
+  @Override
+  public boolean showAndGet() {
+    try {
+      return super.showAndGet();
+    } catch (Exception ex) {
+      LogHandler.warn(ex.getMessage());
+    }
+    return false;
   }
 
   @Override

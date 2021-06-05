@@ -27,19 +27,13 @@ import java.util.function.Function;
 
 public class DownloadCredentialsDialog extends DialogWrapper {
   private JPanel mainPanel;
-  private JPanel descriptionPanel;
-  private JPanel centerPanel;
   private JPasswordField passwordField;
   private JPasswordField confirmPasswordField;
   private JTextField walletLocationTextField;
   private JButton browseButton;
-  private JLabel walletTypeLabel;
   private JComboBox<String> walletTypeComboBox;
   private JButton rotateWalletButton;
   private JLabel rotateWalletLabel;
-  private JPanel level1Panel;
-  private JPanel level2Panel;
-  private JPanel level3Panel;
   private JPanel walletLocationPanel;
   private JPanel downloadWalletPanel;
   private JCheckBox downloadWalletCheckBox;
@@ -165,11 +159,10 @@ public class DownloadCredentialsDialog extends DialogWrapper {
     walletTypeComboBox.addItem(AutonomousDatabaseConstants.REGIONAL_WALLET);
 
     walletTypeComboBox.addItemListener((e) -> {
-      final String selectedWalletType = (String) walletTypeComboBox
-          .getSelectedItem();
+      final String selectedWalletType = (String) walletTypeComboBox.getSelectedItem();
 
       String rotationTimeStr;
-      if (selectedWalletType.equals(AutonomousDatabaseConstants.INSTANCE_WALLET)) {
+      if (selectedWalletType !=null && selectedWalletType.equals(AutonomousDatabaseConstants.INSTANCE_WALLET)) {
         rotationTimeStr = (instanceWallet != null
                 && instanceWallet.getTimeRotated() != null) ?
                 instanceWallet.getTimeRotated().toString() :
@@ -196,7 +189,7 @@ public class DownloadCredentialsDialog extends DialogWrapper {
           .getSelectedItem();
 
       final String msg;
-      if (selectedWalletType.equals(AutonomousDatabaseConstants.INSTANCE_WALLET)) {
+      if (selectedWalletType != null && selectedWalletType.equals(AutonomousDatabaseConstants.INSTANCE_WALLET)) {
         msg = rotationMsgInstanceWallet + String
                 .format(rotationMsg1, autonomousDatabaseSummary.getDbName(),
                         selectedWalletType);

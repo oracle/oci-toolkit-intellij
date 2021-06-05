@@ -120,4 +120,74 @@ public class OracleCloudAccountTest {
     });
   }
 
+  //@Test
+  @Order(6)
+  public void test_6() {
+    final OracleCloudAccount.IdentityClientProxy identityClient =
+            OracleCloudAccount.getInstance().getIdentityClient();
+
+    final List<Compartment> childCompartments =
+            identityClient.getCompartmentList(identityClient.getRootCompartment());
+
+    for(Compartment childCompartment: childCompartments) {
+      createSubCompartmentsTree(identityClient, childCompartment, 100);
+    }
+  }
+
+  private void createSubCompartmentsTree(OracleCloudAccount.IdentityClientProxy identityClientProxy,
+                                         Compartment compartment, int depth) {
+    if (depth > 0) {
+      try {
+        final Compartment subCompartment =
+                identityClientProxy.createCompartment(compartment.getId(), "childCompartment_"+depth, "A new compartment");
+        System.out.println("Created a new compartment: " + "childCompartment_"+depth);
+        Thread.sleep(3000);
+        createSubCompartmentsTree(identityClientProxy, subCompartment, depth-1);
+      } catch (Exception ex) {
+        System.out.println(String.format("Failed to create new compartment under %s. The error is %s ", compartment.getName(), ex.getMessage()));
+      }
+    }
+  }
+
+  //@Test
+  @Order(7)
+  public void test_7() {
+    final OracleCloudAccount.IdentityClientProxy identityClientProxy =
+            OracleCloudAccount.getInstance().getIdentityClient();
+
+    deleteSubCompartments(identityClientProxy, identityClientProxy.getRootCompartment(), "childCompartment_");
+  }
+
+  private void deleteSubCompartments(OracleCloudAccount.IdentityClientProxy identityClientProxy,
+                                     Compartment compartment, String matchingPattern) {
+    final List<Compartment> childCompartments =
+            identityClientProxy.getCompartmentList(compartment);
+
+    for(Compartment childCompartment: childCompartments) {
+      deleteSubCompartments(identityClientProxy, childCompartment, matchingPattern);
+    }
+
+    while (true) {
+      try {
+        if (compartment.getName().contains(matchingPattern)) {
+          identityClientProxy.deleteCompartment(compartment.getId());
+          System.out.println(String.format("Deleted compartment %s successfully.", compartment.getName()));
+        } else {
+          break;
+        }
+      } catch (Exception ex) {
+        if (ex.getMessage().contains("Tenant has been throttled. Too Many Requests")) {
+          System.out.println("Tenant has been throttled. Waiting for 3 seconds before retry...");
+          // Wait 3 seconds and retry.
+          try {
+            Thread.sleep(3000);
+          } catch (InterruptedException e) {}
+        } else {
+          System.out.println(String.format("Failed to delete compartment under %s. The error is %s ",
+                  compartment.getName(), ex.getMessage()));
+          break;
+        }
+      }
+    }
+  }
 }

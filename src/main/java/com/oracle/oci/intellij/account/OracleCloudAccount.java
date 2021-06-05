@@ -9,9 +9,14 @@ import com.oracle.bmc.database.requests.*;
 import com.oracle.bmc.database.responses.*;
 import com.oracle.bmc.identity.IdentityClient;
 import com.oracle.bmc.identity.model.Compartment;
+import com.oracle.bmc.identity.model.CreateCompartmentDetails;
 import com.oracle.bmc.identity.model.RegionSubscription;
+import com.oracle.bmc.identity.requests.CreateCompartmentRequest;
+import com.oracle.bmc.identity.requests.DeleteCompartmentRequest;
 import com.oracle.bmc.identity.requests.ListCompartmentsRequest;
 import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
+import com.oracle.bmc.identity.responses.CreateCompartmentResponse;
+import com.oracle.bmc.identity.responses.DeleteCompartmentResponse;
 import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
 import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
@@ -133,6 +138,39 @@ public class OracleCloudAccount {
       reset();
       identityClient = new IdentityClient(authenticationDetailsProvider);
       identityClient.setRegion(region);
+    }
+
+    /**
+     * Creates a new compartment under the given parent compartment.
+     * @param parentCompartmentId the id of parent compartment
+     * @param compartmentName the name to be given to new compartment.
+     * @param description the description of new compartment.
+     * @return the new compartment.
+     */
+    public Compartment createCompartment(String parentCompartmentId, String compartmentName, String description) {
+      final CreateCompartmentRequest.Builder createCompartmentRequestBuilder =
+              CreateCompartmentRequest.builder();
+
+      createCompartmentRequestBuilder.createCompartmentDetails(CreateCompartmentDetails.builder()
+              .compartmentId(parentCompartmentId)
+              .name(compartmentName)
+              .description(description)
+              .build()
+      );
+      final CreateCompartmentResponse createCompartmentResponse =
+              identityClient.createCompartment(createCompartmentRequestBuilder.build());
+
+      return createCompartmentResponse.getCompartment();
+    }
+
+    /**
+     * Deletes the given compartment.
+     * @param compartmentId the id of compartment to be deleted.
+     */
+    public void deleteCompartment(String compartmentId) {
+      final DeleteCompartmentResponse deleteCompartmentResponse =
+              identityClient.deleteCompartment(DeleteCompartmentRequest.builder()
+                      .compartmentId(compartmentId).build());
     }
 
     /**

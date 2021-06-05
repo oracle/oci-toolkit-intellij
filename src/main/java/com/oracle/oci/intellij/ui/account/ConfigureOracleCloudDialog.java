@@ -39,8 +39,6 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
 
   private JPanel mainPanel;
   private TextFieldWithBrowseButton configFileTextField;
-  private JPanel configPanel;
-  private JPanel parametersPanel;
   private JComboBox<String> selectProfileComboBox;
   private JComboBox<String> regionCombo;
   private JTextField ocidTextField;
@@ -53,8 +51,6 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
   private JLabel profileNameLabel;
   private JLabel exampleConfigurationLabel;
   private JLabel ociFreeTrialLabel;
-  private JPanel configurationFilePanel;
-  private JPanel signupPanel;
   private final JFileChooser fileChooser = new JFileChooser();
   private final JFileChooser pemFileChooser = new JFileChooser();
 
@@ -133,10 +129,7 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
       Messages.showErrorDialog("Invalid region", "Error");
     } else {
       close(DialogWrapper.OK_EXIT_CODE);
-      if (!configFile.equals(SystemPreferences.getConfigFilePath()) ||
-              !profileName.equals(SystemPreferences.getProfileName())) {
-        OracleCloudAccount.getInstance().configure(configFile, profileName);
-      }
+      OracleCloudAccount.getInstance().configure(configFile, profileName);
     }
   }
 
@@ -202,8 +195,8 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
       if (selectProfileComboBox.getSelectedIndex() > 1) {
         onProfileChange();
       }
-    } catch (Exception ioEx) {
-      UIUtil.fireNotification(NotificationType.ERROR, ioEx.getMessage());
+    } catch (Exception ex) {
+      UIUtil.fireNotification(NotificationType.ERROR, ex.getMessage());
     }
   }
 

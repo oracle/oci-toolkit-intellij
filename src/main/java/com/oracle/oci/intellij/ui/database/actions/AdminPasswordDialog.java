@@ -24,9 +24,7 @@ public class AdminPasswordDialog extends DialogWrapper {
   private JTextField userNameTextField;
   private JPasswordField pwdTxt;
   private JPasswordField confirmPwdTxt;
-  private JLabel usernameLabel;
   private JLabel passwordHelpLabel;
-  private JPanel passwordFieldsPanel;
 
   private final AutonomousDatabaseSummary autonomousDatabaseSummary;
 
