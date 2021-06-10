@@ -116,7 +116,7 @@ public class DownloadCredentialsDialog extends DialogWrapper {
       }
     });
 
-    downloadWalletCheckBox.addItemListener((event) ->{
+    downloadWalletCheckBox.addItemListener((event) -> {
       boolean isSelected = (event.getStateChange() == ItemEvent.SELECTED);
 
       walletLocationPanel.setEnabled(isSelected);

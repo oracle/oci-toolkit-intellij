@@ -16,8 +16,8 @@ import java.awt.event.ActionEvent;
 public class AutonomousDatabaseMoreActions extends AbstractAction {
 
   public enum Action {
-    ADB_INFO, ADMIN_PWD_CHANGE, CLONE_DB, CREATE_ADB, CREATE_CONNECTION,
-    DOWNLOAD_CREDENTIALS, RESTORE_ADB, SCALE_ADB, UPDATE_LICENSE
+    ADB_INFO, ADMIN_PWD_CHANGE, CLONE_DB, CREATE_ADB, DOWNLOAD_CREDENTIALS,
+    RESTORE_ADB, SCALE_ADB, UPDATE_LICENSE
   }
   private final Action action;
   private final AutonomousDatabaseSummary adbSummary;
@@ -58,8 +58,6 @@ public class AutonomousDatabaseMoreActions extends AbstractAction {
       return new UpdateLicenseDialog(adbSummary);
     case ADMIN_PWD_CHANGE:
       return new AdminPasswordDialog(adbSummary);
-    case CREATE_CONNECTION:
-      return new DBConnectionDialog(adbSummary);
     case DOWNLOAD_CREDENTIALS:
       return new DownloadCredentialsDialog(adbSummary);
     default:

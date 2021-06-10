@@ -90,7 +90,6 @@ public class ConfigFileHandlerTest {
             assertThrows(IllegalStateException.class, ()->ConfigFileHandler.parse(file.getPath()));
     final String expected = "Invalid file format. Profile name is not specified correctly in the config file.";
     assertEquals(expected, exception.getMessage());
-
     assertEquals(true, (new File(invalidConfigFileName).delete()));
   }
 
@@ -100,12 +99,7 @@ public class ConfigFileHandlerTest {
    */
   @Test
   public void parseFile_4() {
-    try {
-      ConfigFileHandler.parse(SystemPreferences.getConfigFilePath());
-      assert(true);
-    } catch (IOException ioException) {
-      assert(false);
-    }
+    assertDoesNotThrow(()->{ConfigFileHandler.parse(SystemPreferences.getConfigFilePath());});
   }
 
   /**
@@ -119,7 +113,7 @@ public class ConfigFileHandlerTest {
   public void saveProfile_1() {
     final String newConfigFileName = "new_config_file";
 
-    try {
+    assertDoesNotThrow(() -> {
       final ConfigFileHandler.ProfileSet profileSet =
               ConfigFileHandler.parse(SystemPreferences.getConfigFilePath());
 
@@ -128,24 +122,12 @@ public class ConfigFileHandlerTest {
         final Iterator<String> iterator = profileSet.getProfileNames().iterator();
         iterator.forEachRemaining((profileName) -> {
           final ConfigFileHandler.Profile profile = profileSet.get(profileName);
-          try {
-            ConfigFileHandler.save(newFile.getAbsolutePath(), profile);
-          } catch (IOException ioException) {
-            assert(false);
-          }
+          assertDoesNotThrow(() -> {ConfigFileHandler.save(newFile.getAbsolutePath(), profile);});
         });
       }
-
-      try {
-        ConfigFileHandler.parse((new File(newConfigFileName).getPath()));
-        assert(true);
-      } catch (IOException ioException) {
-        assert(false);
-      }
+      assertDoesNotThrow(()->{ConfigFileHandler.parse((new File(newConfigFileName).getPath()));});
       assertEquals(true, (new File(newConfigFileName).delete()));
-    } catch (IOException ioException) {
-      assert(false);
-    }
+    });
   }
 
 }

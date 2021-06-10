@@ -9,23 +9,19 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.util.LogHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.*;
 import java.awt.*;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class CompartmentSelection extends DialogWrapper {
   private JPanel mainPanel;
@@ -33,9 +29,7 @@ public class CompartmentSelection extends DialogWrapper {
 
   private Compartment selectedCompartment = null;
   private DefaultMutableTreeNode rootTreeNode = null;
-  private DefaultTreeModel treeModel = null;
   private final List<Thread> liveThreadsList = Collections.synchronizedList(new LinkedList<>());
-  private final Lock lock = new ReentrantLock();
   private final AtomicInteger liveTasksCount = new AtomicInteger();
 
   public static CompartmentSelection newInstance() {
@@ -50,53 +44,72 @@ public class CompartmentSelection extends DialogWrapper {
   }
 
   private void buildCompartmentsAsync() {
-    compartmentTree.setEnabled(false);
-    getOKAction().setEnabled(false);
-    getOKAction().putValue(Action.NAME, "Loading...");
+    beforeCompartmentsLoading();
 
     final Compartment rootCompartment = OracleCloudAccount.getInstance()
             .getIdentityClient().getRootCompartment();
     rootTreeNode = new DefaultMutableTreeNode(rootCompartment);
     initCompartmentTree(rootTreeNode);
+    runAsync(new CompartmentsTreeBuilder(rootTreeNode, 1));
+  }
 
-    runAsync(new CompartmentsTreeBuilder(rootCompartment, rootTreeNode, Integer.MAX_VALUE /*any depth*/));
+  private void beforeCompartmentsLoading() {
+    compartmentTree.setEnabled(false);
+    getOKAction().setEnabled(false);
+    getOKAction().putValue(Action.NAME, "Loading...");
+  }
+
+  private void afterCompartmentsLoading() {
+    compartmentTree.expandPath(new TreePath(rootTreeNode.getPath()));
+    getOKAction().putValue(Action.NAME, "Select");
+    getOKAction().setEnabled(true);
+    compartmentTree.setEnabled(true);
   }
 
   private class CompartmentsTreeBuilder implements Runnable {
-    private final Compartment givenCompartment;
-    private final DefaultMutableTreeNode treeNode;
+    private final DefaultMutableTreeNode givenNode;
     private final int treeDepth;
 
-    public CompartmentsTreeBuilder(Compartment compartment, DefaultMutableTreeNode parentNode, int treeDepth) {
-      givenCompartment = compartment;
-      treeNode = parentNode;
+    public CompartmentsTreeBuilder(DefaultMutableTreeNode node, int treeDepth) {
+      givenNode = node;
       this.treeDepth = treeDepth;
     }
 
     @Override
     public void run() {
-      final List<Compartment> childCompartments =
-              OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(givenCompartment);
+      final Compartment givenCompartment = (Compartment) givenNode.getUserObject();
 
-      for(Compartment childCompartment: childCompartments) {
-        final DefaultMutableTreeNode childTreeNode = new DefaultMutableTreeNode(childCompartment);
-        treeNode.add(childTreeNode);
+      if (givenNode.getChildCount() > 0) {
+        final Iterator<TreeNode> treeNodeIterator = givenNode.children().asIterator();
+        treeNodeIterator.forEachRemaining((treeNode) -> {
+          if (treeDepth > 0) {
+            runAsync(new CompartmentsTreeBuilder((DefaultMutableTreeNode) treeNode, treeDepth-1));
+          }
+        });
+      } else {
+        final List<Compartment> childCompartments =
+                OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(givenCompartment);
 
-        if (treeDepth > 0) {
-          runAsync(new CompartmentsTreeBuilder(childCompartment, childTreeNode, treeDepth-1));
+        for(Compartment childCompartment: childCompartments) {
+          final DefaultMutableTreeNode childTreeNode = new DefaultMutableTreeNode(childCompartment);
+          givenNode.add(childTreeNode);
+
+          if (treeDepth > 0) {
+            runAsync(new CompartmentsTreeBuilder(childTreeNode, treeDepth-1));
+          }
         }
       }
     }
   }
 
   private void initCompartmentTree(DefaultMutableTreeNode treeNode) {
-    treeModel = new DefaultTreeModel(treeNode);
+    final DefaultTreeModel treeModel = new DefaultTreeModel(treeNode);
     compartmentTree.setModel(treeModel);
 
     compartmentTree.getSelectionModel().addTreeSelectionListener(event -> selectedCompartment =
             compartmentTree.getLastSelectedPathComponent() == null ? null :
-            ((Compartment) ((DefaultMutableTreeNode) compartmentTree.getLastSelectedPathComponent()).getUserObject())
-    );
+                    ((Compartment) ((DefaultMutableTreeNode) compartmentTree.getLastSelectedPathComponent()).getUserObject()));
+
     compartmentTree.setCellRenderer(new DefaultTreeCellRenderer() {
       @Override
       public Component getTreeCellRendererComponent(JTree tree, Object value,
@@ -106,22 +119,19 @@ public class CompartmentSelection extends DialogWrapper {
       }
     });
 
-    // Not used, intentionally.
     final TreeExpansionListener treeExpansionListener = new TreeExpansionListener() {
       @Override
       public void treeExpanded(TreeExpansionEvent event) {
-        final DefaultMutableTreeNode lastPathTreeNode = (DefaultMutableTreeNode) event.getPath().getLastPathComponent();
-        final Compartment lastPathCompartment = (Compartment) lastPathTreeNode.getUserObject();
 
-        // root
+        final DefaultMutableTreeNode lastPathTreeNode =
+                (DefaultMutableTreeNode) event.getPath().getLastPathComponent();
         final DefaultMutableTreeNode lastPathParentTreeNode = (DefaultMutableTreeNode) lastPathTreeNode.getParent();
-        if (lastPathParentTreeNode != null) {
-          lastPathParentTreeNode.remove(lastPathTreeNode);
 
-          // create a new tree node for last path component.
-          final DefaultMutableTreeNode lastPathTreeNewNode = new DefaultMutableTreeNode(lastPathCompartment);
-          lastPathParentTreeNode.add(lastPathTreeNewNode);
-          runAsync(new CompartmentsTreeBuilder(lastPathCompartment, lastPathTreeNewNode, Integer.MAX_VALUE /*any depth*/));
+        // The null parent node indicates that user expanded the 'root' node.
+        // Expanding 'root' node should be a no-op because we have fetched all children of root already.
+        if (lastPathParentTreeNode != null) {
+          beforeCompartmentsLoading();
+          runAsync(new CompartmentsTreeBuilder(lastPathTreeNode, 2));
         }
       }
 
@@ -130,13 +140,7 @@ public class CompartmentSelection extends DialogWrapper {
         // Do nothing.
       }
     };
-    /**
-     * The present implementation fetches all sub compartments of any depth.
-     * If the implementation needs to have sub compartments fetched only on
-     * tree expand event, then the following needs to be enabled and tree
-     * should be built with the required depth only, initially.
-     */
-    //compartmentTree.addTreeExpansionListener(treeExpansionListener);
+    compartmentTree.addTreeExpansionListener(treeExpansionListener);
   }
 
   private void runAsync(Runnable givenRunnable) {
@@ -147,11 +151,8 @@ public class CompartmentSelection extends DialogWrapper {
       givenRunnable.run();
 
       if(liveTasksCount.decrementAndGet() == 0) {
-        getOKAction().putValue(Action.NAME, "Select");
-        getOKAction().setEnabled(true);
-        compartmentTree.setEnabled(true);
+        afterCompartmentsLoading();
       }
-      repaintTree();
       liveThreadsList.remove(Thread.currentThread());
     });
   }
@@ -163,24 +164,6 @@ public class CompartmentSelection extends DialogWrapper {
               .getIdentityClient().getRootCompartment();
     }
     return selectedCompartment;
-  }
-
-  private void repaintTree() {
-    if(lock.tryLock()) {
-      treeModel.setRoot(rootTreeNode);
-      compartmentTree.repaint();
-      lock.unlock();
-    }
-  }
-
-  @Override
-  public boolean showAndGet() {
-    try {
-      return super.showAndGet();
-    } catch (Exception ex) {
-      LogHandler.warn(ex.getMessage());
-    }
-    return false;
   }
 
   @Override

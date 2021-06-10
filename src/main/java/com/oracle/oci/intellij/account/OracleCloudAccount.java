@@ -16,7 +16,6 @@ import com.oracle.bmc.identity.requests.DeleteCompartmentRequest;
 import com.oracle.bmc.identity.requests.ListCompartmentsRequest;
 import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
 import com.oracle.bmc.identity.responses.CreateCompartmentResponse;
-import com.oracle.bmc.identity.responses.DeleteCompartmentResponse;
 import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
 import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
@@ -168,8 +167,8 @@ public class OracleCloudAccount {
      * @param compartmentId the id of compartment to be deleted.
      */
     public void deleteCompartment(String compartmentId) {
-      final DeleteCompartmentResponse deleteCompartmentResponse =
-              identityClient.deleteCompartment(DeleteCompartmentRequest.builder()
+      identityClient.deleteCompartment(
+              DeleteCompartmentRequest.builder()
                       .compartmentId(compartmentId).build());
     }
 
@@ -193,6 +192,7 @@ public class OracleCloudAccount {
       final ListCompartmentsResponse response = identityClient.listCompartments(
               ListCompartmentsRequest.builder()
                       .compartmentId(compartment.getId())
+                      .lifecycleState(Compartment.LifecycleState.Active)
                       .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible)
                       .build());
 
@@ -220,10 +220,9 @@ public class OracleCloudAccount {
     @Override
     public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
       LogHandler.info("IdentityClientProxy: Handling the event update : " + propertyChangeEvent.toString());
-      switch (propertyChangeEvent.getPropertyName()) {
-        case SystemPreferences.EVENT_REGION_UPDATE:
-          identityClient.setRegion(propertyChangeEvent.getNewValue().toString());
-          break;
+      if (propertyChangeEvent.getPropertyName()
+              .equals(SystemPreferences.EVENT_REGION_UPDATE)) {
+        identityClient.setRegion(propertyChangeEvent.getNewValue().toString());
       }
     }
 
@@ -258,10 +257,8 @@ public class OracleCloudAccount {
     public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
       LogHandler.info("DatabaseClientProxy: Handling the event update : " + propertyChangeEvent.toString());
 
-      switch (propertyChangeEvent.getPropertyName()) {
-        case SystemPreferences.EVENT_REGION_UPDATE:
-          databaseClient.setRegion(propertyChangeEvent.getNewValue().toString());
-          break;
+      if (propertyChangeEvent.getPropertyName().equals(SystemPreferences.EVENT_REGION_UPDATE)) {
+        databaseClient.setRegion(propertyChangeEvent.getNewValue().toString());
       }
     }
 
@@ -387,8 +384,8 @@ public class OracleCloudAccount {
 
     public void createInstance(final CreateAutonomousDatabaseDetails request) {
       LogHandler.info("Creating Autonomous Database instance");
-      final CreateAutonomousDatabaseResponse response = databaseClient
-              .createAutonomousDatabase(CreateAutonomousDatabaseRequest.builder()
+      databaseClient.createAutonomousDatabase(
+              CreateAutonomousDatabaseRequest.builder()
                       .createAutonomousDatabaseDetails(request).build());
       LogHandler.info("Autonomous Database created successfully.");
     }
@@ -559,6 +556,18 @@ public class OracleCloudAccount {
       }
 
       return walletTypeMap;
+    }
+
+    public List<DbVersionSummary> getDatabaseVersions(String compartmentId) {
+      final ListDbVersionsRequest listDbVersionsRequest =
+              ListDbVersionsRequest.builder()
+                      .compartmentId(compartmentId)
+                      .build();
+
+      ListDbVersionsResponse listDbVersionsResponse =
+              databaseClient.listDbVersions(listDbVersionsRequest);
+
+      return listDbVersionsResponse.getItems();
     }
 
     public AutonomousDatabaseSummary getAutonomousDatabaseSummary(String instanceId) {

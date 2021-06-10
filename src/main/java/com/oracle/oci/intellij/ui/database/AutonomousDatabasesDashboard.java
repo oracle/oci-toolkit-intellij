@@ -180,10 +180,6 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
         popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.SCALE_ADB,
                 selectedSummary, "Scale Up/Down")));
 
-        popupMenu.add(new JMenuItem(
-                new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.CREATE_CONNECTION,
-                        selectedSummary, "Create Connection")));
-
         if (selectedSummary.getDbWorkload().equals(
                 AutonomousDatabaseSummary.DbWorkload.Ajd)) {
           popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(
@@ -321,7 +317,7 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
 
     switch (propertyChangeEvent.getPropertyName()) {
       case SystemPreferences.EVENT_COMPARTMENT_UPDATE:
-        compartmentValueLabel.setText(propertyChangeEvent.getNewValue().toString());
+        compartmentValueLabel.setText(SystemPreferences.getCompartmentName());
         break;
 
       case SystemPreferences.EVENT_REGION_UPDATE:

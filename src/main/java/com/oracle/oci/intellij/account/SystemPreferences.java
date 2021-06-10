@@ -50,11 +50,11 @@ public class SystemPreferences {
     propertyChangeSupport.firePropertyChange(EVENT_SETTINGS_UPDATE, "", configFilePath);
   }
 
-  public static void setCompartment(Compartment selectedCompartment) {
-    currentCompartment = selectedCompartment;
+  public static void setCompartment(Compartment compartment) {
+    currentCompartment = compartment;
 
-    LogHandler.info("Setting the compartment name with : "+ selectedCompartment.getName());
-    propertyChangeSupport.firePropertyChange(EVENT_COMPARTMENT_UPDATE, "", selectedCompartment.getName());
+    LogHandler.info("Setting the compartment name with : "+ compartment.getName());
+    propertyChangeSupport.firePropertyChange(EVENT_COMPARTMENT_UPDATE, "", compartment.getName());
   }
 
   public static void setRegionName(String regionName) {
