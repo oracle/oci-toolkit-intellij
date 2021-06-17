@@ -10,7 +10,6 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.ui.Messages;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 
 import javax.swing.*;
@@ -84,8 +83,7 @@ public class AutonomousDatabaseBasicActions extends AbstractAction {
         actionType.actionName, "Change", "Cancel", Messages.getQuestionIcon());
     if (result == Messages.OK) {
       OracleCloudAccount.getInstance().getDatabaseClient().changeWorkloadTypeToOLTP(autonomousDatabaseSummary.getId());
-      UIUtil.fireNotification(NotificationType.INFORMATION, actionType.actionSuccessMessage);
-      SystemPreferences.fireADBInstanceUpdateEvent(actionType.name());
+      UIUtil.fireNotification(NotificationType.INFORMATION, actionType.actionSuccessMessage, actionType.name());
     }
   }
 
@@ -100,8 +98,7 @@ public class AutonomousDatabaseBasicActions extends AbstractAction {
       else {
         OracleCloudAccount.getInstance().getDatabaseClient().stopInstance(autonomousDatabaseSummary);
       }
-      UIUtil.fireNotification(NotificationType.INFORMATION, actionType.actionSuccessMessage);
-      SystemPreferences.fireADBInstanceUpdateEvent(actionType.name());
+      UIUtil.fireNotification(NotificationType.INFORMATION, actionType.actionSuccessMessage, actionType.name());
     }
   }
 
@@ -119,8 +116,7 @@ public class AutonomousDatabaseBasicActions extends AbstractAction {
     if (userInput != null) {
       if (userInput.equals(autonomousDatabaseSummary.getDbName())) {
         OracleCloudAccount.getInstance().getDatabaseClient().terminate(autonomousDatabaseSummary.getId());
-        UIUtil.fireNotification(NotificationType.INFORMATION,userInput + " terminated successfully.");
-        SystemPreferences.fireADBInstanceUpdateEvent(actionType.name());
+        UIUtil.fireNotification(NotificationType.INFORMATION,userInput + " terminated successfully.", actionType.name());
       }
       else {
         Messages.showErrorDialog(

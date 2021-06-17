@@ -5,14 +5,13 @@
 
 package com.oracle.oci.intellij.ui.common;
 
-import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.openapi.wm.WindowManager;
-import com.oracle.oci.intellij.util.LogHandler;
+import com.oracle.oci.intellij.account.SystemPreferences;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,9 +26,7 @@ import java.net.URISyntaxException;
 public class UIUtil {
   private static Project currentProject;
 
-  private static @NlsSafe final String id = "Oracle Cloud Infrastructure Plugin";
-  private static final NotificationGroup NOTIFICATION_GROUP =
-          NotificationGroupManager.getInstance().getNotificationGroup(id);
+  private static @NlsSafe final String NOTIFICATION_GROUP_ID = "Oracle Cloud Infrastructure";
 
   public static void setCurrentProject(@NotNull Project project) {
     currentProject = project;
@@ -43,28 +40,28 @@ public class UIUtil {
     }
   }
 
-  public static void fireNotification(NotificationType notificationType, @NotNull final String msg) {
-    if (NOTIFICATION_GROUP != null) {
-      NOTIFICATION_GROUP
-              .createNotification(id, "", msg, notificationType)
+  public static void fireNotification(NotificationType notificationType, @NotNull final String msg, String eventName) {
+    invokeLater(() -> {
+      NotificationGroupManager.getInstance().getNotificationGroup(NOTIFICATION_GROUP_ID)
+              .createNotification(NOTIFICATION_GROUP_ID, "", msg, notificationType)
               .notify(currentProject);
-    }
+
+      if (eventName != null) {
+        SystemPreferences.fireADBInstanceUpdateEvent(eventName);
+      }});
   }
 
   public static void executeAndUpdateUIAsync(@NotNull Runnable action, @Nullable Runnable update) {
     ApplicationManager.getApplication().executeOnPooledThread(() -> {
-      try {
-        action.run();
-      } catch (Throwable th) {
-        final String errorMsg = "Action execution failed.";
-        LogHandler.error(errorMsg, th);
-        fireNotification(NotificationType.ERROR, errorMsg + th.getMessage());
-      }
-      /* Schedule the UI update after fetching the data in background thread. */
+      action.run();
       if (update != null) {
-        ApplicationManager.getApplication().invokeLater(update);
+        invokeLater(update);
       }
     });
+  }
+
+  public static void invokeLater(Runnable runnable) {
+    ApplicationManager.getApplication().invokeLater(runnable);
   }
 
   public static void createWebLink(JComponent component, String uri) {

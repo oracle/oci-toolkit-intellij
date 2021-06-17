@@ -17,8 +17,8 @@ import java.util.*;
 import static com.oracle.bmc.util.internal.FileUtils.expandUserHome;
 
 /**
- * Implementation to read OCI configuration file. Note, config files MUST contain
- * a "DEFAULT" profile,else validation fails. Additional profiles are optional.
+ * Implementation to read OCI configuration file. The config files MUST contain
+ * a "DEFAULT" profile, else validation fails. Additional profiles are optional.
  */
 public final class ConfigFileHandler {
   /**
@@ -213,6 +213,9 @@ public final class ConfigFileHandler {
     }
   }
 
+  /**
+   * The profile name and properties key-value pair.
+   */
   public static class Profile {
     private final String name;
     private final Properties entries;
@@ -227,19 +230,38 @@ public final class ConfigFileHandler {
       this.entries = entries;
     }
 
+    /**
+     * Adds new parameter name-value pair to the profile.
+     * @param key
+     * @param value
+     * @return The updated profile
+     */
     public Profile add(String key, String value) {
       entries.put(key, value);
       return this;
     }
 
+    /**
+     * Return the name of the profile.
+     * @return name
+     */
     public String getName() {
       return name;
     }
 
+    /**
+     * Returns the profile parameters.
+     * @return profile parameters.
+     */
     public Properties getEntries() {
       return entries;
     }
 
+    /**
+     * Returns the parameter value for the given key.
+     * @param key
+     * @return parameter value.
+     */
     public String get(String key) {
       return (String) entries.get(key);
     }

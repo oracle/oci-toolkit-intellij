@@ -7,6 +7,7 @@ package com.oracle.oci.intellij.ui.common;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import org.jetbrains.annotations.NotNull;
@@ -23,19 +24,31 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * The compartment selection dialog implementation.
+ */
 public class CompartmentSelection extends DialogWrapper {
   private JPanel mainPanel;
   private JTree compartmentTree;
 
+  // The user selected compartment.
   private Compartment selectedCompartment = null;
   private DefaultMutableTreeNode rootTreeNode = null;
   private final List<Thread> liveThreadsList = Collections.synchronizedList(new LinkedList<>());
   private final AtomicInteger liveTasksCount = new AtomicInteger();
 
+  /**
+   * Factory method for new instance.
+   * @return
+   */
   public static CompartmentSelection newInstance() {
     return new CompartmentSelection();
   }
 
+  /**
+   * The constructor. Builds the first two levels under
+   * the root compartment.
+   */
   private CompartmentSelection() {
     super(true);
     setTitle("Compartment");
@@ -43,6 +56,10 @@ public class CompartmentSelection extends DialogWrapper {
     buildCompartmentsAsync();
   }
 
+  /**
+   * Initialises and asynchronously builds the
+   * first two levels under the root.
+   */
   private void buildCompartmentsAsync() {
     beforeCompartmentsLoading();
 
@@ -53,12 +70,18 @@ public class CompartmentSelection extends DialogWrapper {
     runAsync(new CompartmentsTreeBuilder(rootTreeNode, 1));
   }
 
+  /**
+   * Disables the UI components before loading the compartments.
+   */
   private void beforeCompartmentsLoading() {
     compartmentTree.setEnabled(false);
     getOKAction().setEnabled(false);
     getOKAction().putValue(Action.NAME, "Loading...");
   }
 
+  /**
+   * Enables the UI components after loading the compartments.
+   */
   private void afterCompartmentsLoading() {
     compartmentTree.expandPath(new TreePath(rootTreeNode.getPath()));
     getOKAction().putValue(Action.NAME, "Select");
@@ -66,6 +89,10 @@ public class CompartmentSelection extends DialogWrapper {
     compartmentTree.setEnabled(true);
   }
 
+  /**
+   * The runnable that builds the sub compartments at given depth
+   * under the given compartment node.
+   */
   private class CompartmentsTreeBuilder implements Runnable {
     private final DefaultMutableTreeNode givenNode;
     private final int treeDepth;
@@ -79,6 +106,11 @@ public class CompartmentSelection extends DialogWrapper {
     public void run() {
       final Compartment givenCompartment = (Compartment) givenNode.getUserObject();
 
+      /**
+       * If the sub compartments are already in place for the given compartment,
+       * just iterate up to the requested level. Fetch only the missing
+       * compartments, if any.
+       */
       if (givenNode.getChildCount() > 0) {
         final Iterator<TreeNode> treeNodeIterator = givenNode.children().asIterator();
         treeNodeIterator.forEachRemaining((treeNode) -> {
@@ -102,6 +134,10 @@ public class CompartmentSelection extends DialogWrapper {
     }
   }
 
+  /**
+   * Initializes the UI components before building the compartments tree.
+   * @param treeNode
+   */
   private void initCompartmentTree(DefaultMutableTreeNode treeNode) {
     final DefaultTreeModel treeModel = new DefaultTreeModel(treeNode);
     compartmentTree.setModel(treeModel);
@@ -143,20 +179,30 @@ public class CompartmentSelection extends DialogWrapper {
     compartmentTree.addTreeExpansionListener(treeExpansionListener);
   }
 
+  /**
+   * Uses the application manager's thread to complete task asynchronously.
+   * @param givenRunnable
+   */
   private void runAsync(Runnable givenRunnable) {
     liveTasksCount.incrementAndGet();
 
     ApplicationManager.getApplication().executeOnPooledThread(() -> {
       liveThreadsList.add(Thread.currentThread());
-      givenRunnable.run();
-
-      if(liveTasksCount.decrementAndGet() == 0) {
-        afterCompartmentsLoading();
+      try {
+        givenRunnable.run();
+      } finally {
+        if(liveTasksCount.decrementAndGet() == 0) {
+          afterCompartmentsLoading();
+        }
+        liveThreadsList.remove(Thread.currentThread());
       }
-      liveThreadsList.remove(Thread.currentThread());
     });
   }
 
+  /**
+   * Returns the user selected compartment.
+   * @return compartment
+   */
   public Compartment getSelectedCompartment() {
     // Return root if no compartment is selected.
     if (selectedCompartment == null) {
@@ -175,6 +221,10 @@ public class CompartmentSelection extends DialogWrapper {
     }
   }
 
+  /**
+   * Interrupt the running asynchronous tasks, if any,
+   * before closing the dialog.
+   */
   @Override
   public void doCancelAction() {
     // Interrupt all live threads on cancel action.
@@ -188,7 +238,7 @@ public class CompartmentSelection extends DialogWrapper {
   @Override
   protected JComponent createCenterPanel() {
     mainPanel.setPreferredSize(new Dimension(450, 300));
-    return mainPanel;
+    return new JBScrollPane(mainPanel);
   }
 
   @NotNull

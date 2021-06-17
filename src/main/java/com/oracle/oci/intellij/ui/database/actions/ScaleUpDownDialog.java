@@ -6,11 +6,10 @@
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import org.jetbrains.annotations.Nullable;
@@ -68,14 +67,10 @@ public class ScaleUpDownDialog extends DialogWrapper {
         OracleCloudAccount.getInstance().getDatabaseClient().scaleUpDownInstance(autonomousDatabaseSummary,
                 (int) cpuCountSpinner.getValue(), (int) storageSpinner.getValue(),
                 autoScalingChkBox.isSelected());
-
-        ApplicationManager.getApplication().invokeLater(() ->
-                UIUtil.fireNotification(NotificationType.INFORMATION, "Scale up or scale down completed successfully."));
-        SystemPreferences.fireADBInstanceUpdateEvent("Scale");
+        UIUtil.fireNotification(NotificationType.INFORMATION, "Scale up / down completed successfully.", "Scale");
       }
       catch (Exception e) {
-        ApplicationManager.getApplication()
-            .invokeLater(() -> UIUtil.fireNotification(NotificationType.ERROR, "Scale up or scale down failed : " + e.getMessage()));
+        UIUtil.fireNotification(NotificationType.ERROR, "Scale up / down failed : " + e.getMessage(), null);
       }
     };
 
@@ -87,6 +82,6 @@ public class ScaleUpDownDialog extends DialogWrapper {
   @Nullable
   @Override
   protected JComponent createCenterPanel() {
-    return mainPanel;
+    return new JBScrollPane(mainPanel);
   }
 }

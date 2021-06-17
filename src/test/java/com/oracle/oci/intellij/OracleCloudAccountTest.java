@@ -11,8 +11,10 @@ import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.util.LogHandler;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -23,8 +25,15 @@ public class OracleCloudAccountTest {
   @BeforeAll
   @Test
   public void before() {
-    OracleCloudAccount.getInstance()
-            .configure(SystemPreferences.getConfigFilePath(), SystemPreferences.getProfileName());
+    try {
+      OracleCloudAccount.getInstance()
+              .configure(SystemPreferences.getConfigFilePath(), SystemPreferences.getProfileName());
+    } catch (Exception ioException) {
+      /*
+      Configuring cloud account is sufficient for testing the APIs. Since
+      the UI isn't instantiated, any exception thrown from UI is discarded.
+      */
+    }
   }
 
   @Test
@@ -47,7 +56,6 @@ public class OracleCloudAccountTest {
       });
     });
   }
-
   @Test
   @Order(2)
   public void test_2() {
@@ -137,6 +145,7 @@ public class OracleCloudAccountTest {
 
   //@Test
   @Order(7)
+  @Disabled
   public void test_7() {
     final OracleCloudAccount.IdentityClientProxy identityClient =
             OracleCloudAccount.getInstance().getIdentityClient();
@@ -164,6 +173,7 @@ public class OracleCloudAccountTest {
 
   //@Test
   @Order(8)
+  @Disabled
   public void test_8() {
     final OracleCloudAccount.IdentityClientProxy identityClientProxy =
             OracleCloudAccount.getInstance().getIdentityClient();

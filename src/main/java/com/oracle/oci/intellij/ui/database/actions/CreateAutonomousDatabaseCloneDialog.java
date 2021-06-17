@@ -1,7 +1,6 @@
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.components.JBScrollPane;
@@ -81,16 +80,17 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
     cloneTypeButtonGroup.add(refreshableCloneRadioButton);
     cloneTypeButtonGroup.add(metadataCloneRadioButton);
 
-    // CreateAutonomousDatabaseCloneDetails.CloneType does not have
-    // "Refreshable clone" type. So removed from UI.
-    refreshableCloneRadioButton.setVisible(false);
-
     final ButtonGroup cloneSourceButtonGroup = new ButtonGroup();
     cloneSourceButtonGroup.add(cloneFromDatabaseInstanceRadioButton);
     cloneSourceButtonGroup.add(cloneFromABackupRadioButton);
 
+    // CreateAutonomousDatabaseCloneDetails.CloneType does not have
+    // "Refreshable clone" type. So removed from UI.
+    refreshableCloneRadioButton.setEnabled(false);
+    fullCloneRadioButton.setSelected(true);
+    cloneFromDatabaseInstanceRadioButton.setSelected(true);
     // Support this option in the next release.
-    cloneFromABackupRadioButton.setVisible(false);
+    cloneFromABackupRadioButton.setEnabled(false);
 
     final ButtonGroup accessTypeButtonGroup = new ButtonGroup();
     accessTypeButtonGroup.add(secureAccessFromEverywhereRadioButton);
@@ -99,6 +99,9 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
     final ButtonGroup licenseTypeButtonGroup = new ButtonGroup();
     licenseTypeButtonGroup.add(bringYourOwnLicenseRadioButton);
     licenseTypeButtonGroup.add(licenseIncludedRadioButton);
+
+    bringYourOwnLicenseRadioButton.setSelected(false);
+    licenseIncludedRadioButton.setSelected(false);
 
     selectCompartmentButton.addActionListener(actionEvent -> {
       final CompartmentSelection compartmentSelection = CompartmentSelection.newInstance();
@@ -215,11 +218,6 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
       ipNotationTypeOuterPanel.setVisible(configureAccessControlRulesCheckBox.isSelected());
     });
     addContactPanel.setVisible(false);
-
-    final JBScrollPane jbScrollPane = new JBScrollPane(mainPanel);
-    jbScrollPane.createVerticalScrollBar();
-    jbScrollPane.createHorizontalScrollBar();
-    getContentPane().add(jbScrollPane);
   }
 
   @Override
@@ -237,9 +235,19 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
         Messages.showErrorDialog("Database name cannot be empty.",
                 "Select a database name");
         return false;
+      } else if ((passwordField.getPassword() == null || passwordField.getPassword().length == 0) ||
+              (confirmPasswordField.getPassword() == null || confirmPasswordField.getPassword().length == 0)) {
+        Messages.showErrorDialog("Password cannot be empty.",
+                "Password required");
+        return false;
       } else if (!Arrays.equals(passwordField.getPassword(), confirmPasswordField.getPassword())) {
         Messages.showErrorDialog("Password and confirmation must match.",
                 "Passwords mismatch");
+        return false;
+      } else if(!bringYourOwnLicenseRadioButton.isSelected() &&
+              !licenseIncludedRadioButton.isSelected()) {
+        final String errorMessage = "Select a license type.";
+        Messages.showErrorDialog(errorMessage, "License type");
         return false;
       }
 
@@ -307,13 +315,9 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
     final Supplier<CreateAutonomousDatabaseBase.LicenseModel> licenseModelSupplier = () -> {
       if (bringYourOwnLicenseRadioButton.isSelected()) {
         return CreateAutonomousDatabaseBase.LicenseModel.BringYourOwnLicense;
-      } else if (licenseIncludedRadioButton.isSelected()) {
+      } else {
         return CreateAutonomousDatabaseBase.LicenseModel.LicenseIncluded;
       }
-
-      final String errorMessage = "No license type is selected.";
-      Messages.showErrorDialog(errorMessage, "Select a license type");
-      throw new IllegalStateException(errorMessage);
     };
 
     createAutonomousDatabaseCloneDetailsBuilder
@@ -321,10 +325,10 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
 
     final Function<String, List<CustomerContact>> maintenanceContactsExtractor = (maintenanceContacts) -> {
       final List<CustomerContact> listOfCustomerContact = new ArrayList<>();
-      final StringTokenizer contactsTokenizer = new StringTokenizer(maintenanceContacts, ";");
+      final StringTokenizer contactsTokenizer = new StringTokenizer(maintenanceContacts.trim(), ";");
 
       for (int i = 0; contactsTokenizer.hasMoreElements() && i < 10; i++) {
-        String email = contactsTokenizer.nextToken().trim();
+        final String email = contactsTokenizer.nextToken().trim();
         listOfCustomerContact.add(CustomerContact.builder().email(email).build());
       }
       return listOfCustomerContact;
@@ -342,13 +346,9 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
     final Runnable createAtpDbRequestRunnable = () -> {
       try {
         OracleCloudAccount.getInstance().getDatabaseClient().createClone(createAutonomousDatabaseCloneDetailsBuilder.build());
-        ApplicationManager.getApplication().invokeLater(() -> {
-          UIUtil.fireNotification(NotificationType.INFORMATION,"Autonomous Database instance cloned successfully.");
-          SystemPreferences.fireADBInstanceUpdateEvent("Clone");
-        });
+        UIUtil.fireNotification(NotificationType.INFORMATION,"Autonomous Database instance cloned successfully.", "Clone");
       } catch (Exception e) {
-        ApplicationManager.getApplication().invokeLater(
-                () -> UIUtil.fireNotification(NotificationType.ERROR, "Failed to clone Autonomous Database instance : " + e.getMessage()));
+        UIUtil.fireNotification(NotificationType.ERROR, "Failed to clone Autonomous Database instance : " + e.getMessage(), null);
       }
     };
 
@@ -359,6 +359,6 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
   @Nullable
   @Override
   protected JComponent createCenterPanel(){
-    return mainPanel;
+    return new JBScrollPane(mainPanel);
   }
 }

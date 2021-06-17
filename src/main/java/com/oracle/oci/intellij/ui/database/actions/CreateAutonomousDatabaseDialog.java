@@ -1,7 +1,6 @@
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.components.JBScrollPane;
@@ -10,7 +9,6 @@ import com.oracle.bmc.database.model.CreateAutonomousDatabaseDetails;
 import com.oracle.bmc.database.model.CustomerContact;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.common.CompartmentSelection;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
@@ -177,16 +175,11 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     final String databaseNameDefault = "DB" + presentDateTime;
     databaseNameTextField.setText(databaseNameDefault);
 
-    alwaysFreeConfigGuidelinesTextPane.setEditable(false);
-    alwaysFreeConfigGuidelinesTextPane.setEnabled(false);
-    alwaysFreeConfigGuidelinesTextPane.setVisible(false);
-    alwaysFreeHelpLabel.setVisible(false);
-
     // Always free help web link.
     final String alwaysFreeHelpWebLink =
             "https://docs.cloud.oracle.com/iaas/Content/Database/Concepts/adbfreeoverview.htm#LifecycleforAlwaysFreeAutonomousDatabases";
-    final String alwaysFreeHelpText = "<html> Free Tier " +
-            "<a href=" + "\"" + alwaysFreeHelpWebLink + "\"" + ">HELP</a></html";
+    final String alwaysFreeHelpText = "<html>" +
+            "<a href=" + "\"" + alwaysFreeHelpWebLink + "\"" + ">Free Tier HELP</a></html";
     alwaysFreeHelpLabel.setText(alwaysFreeHelpText);
     UIUtil.createWebLink(alwaysFreeHelpLabel, alwaysFreeHelpWebLink);
 
@@ -199,8 +192,6 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     showOnlyAlwaysFreeCheckBox.addActionListener((event) -> {
       if (showOnlyAlwaysFreeCheckBox.isSelected()) {
         //dedicatedInfrastructureRadioButton.setEnabled(false);
-        alwaysFreeHelpLabel.setVisible(true);
-        alwaysFreeConfigGuidelinesTextPane.setVisible(true);
         ocpuCountSpinner.setEnabled(false);
         storageSpinnerNumberModel.setValue(AutonomousDatabaseConstants.STORAGE_IN_TB_FREE_TIER_DEFAULT);
         storageSpinner.setEnabled(false);
@@ -211,8 +202,6 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
         licenseIncludedRadioButton.setSelected(true);
       } else {
         //dedicatedInfrastructureRadioButton.setEnabled(true);
-        alwaysFreeHelpLabel.setVisible(false);
-        alwaysFreeConfigGuidelinesTextPane.setVisible(false);
         ocpuCountSpinner.setEnabled(true);
         storageSpinnerNumberModel.setValue(AutonomousDatabaseConstants.STORAGE_IN_TB_DEFAULT);
         storageSpinner.setEnabled(true);
@@ -239,7 +228,9 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
       //dedicatedInfrastructureRadioButton.setEnabled(true);
 
       bringYourOwnLicenseRadioButton.setEnabled(true);
+      bringYourOwnLicenseRadioButton.setSelected(false);
       licenseIncludedRadioButton.setEnabled(true);
+      licenseIncludedRadioButton.setSelected(false);
     });
 
     // Add action listener for Transaction Processing workload type radio button.
@@ -248,7 +239,9 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
       //dedicatedInfrastructureRadioButton.setEnabled(true);
 
       bringYourOwnLicenseRadioButton.setEnabled(true);
+      bringYourOwnLicenseRadioButton.setSelected(false);
       licenseIncludedRadioButton.setEnabled(true);
+      licenseIncludedRadioButton.setSelected(false);
     });
 
     // Add action listener for JSON workload type radio button.
@@ -404,11 +397,6 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
       }
     });
     //addContactPanel.setVisible(false);
-
-    final JBScrollPane jbScrollPane = new JBScrollPane(mainPanel);
-    jbScrollPane.createVerticalScrollBar();
-    jbScrollPane.createHorizontalScrollBar();
-    getContentPane().add(jbScrollPane);
   }
 
   @Override
@@ -426,9 +414,19 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
         Messages.showErrorDialog("Database name cannot be empty.",
                 "Select a database name");
         return false;
+      } else if ((passwordField.getPassword() == null || passwordField.getPassword().length == 0) ||
+              (confirmPasswordField.getPassword() == null || confirmPasswordField.getPassword().length == 0)) {
+        Messages.showErrorDialog("Password cannot be empty.",
+                "Password required");
+        return false;
       } else if (!Arrays.equals(passwordField.getPassword(), confirmPasswordField.getPassword())) {
         Messages.showErrorDialog("Password and confirmation must match.",
                 "Passwords mismatch");
+        return false;
+      } else if(!bringYourOwnLicenseRadioButton.isSelected() &&
+              !licenseIncludedRadioButton.isSelected()) {
+        final String errorMessage = "Select a license type.";
+        Messages.showErrorDialog(errorMessage, "License type");
         return false;
       }
 
@@ -505,14 +503,9 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
       try {
         OracleCloudAccount.getInstance()
                 .getDatabaseClient().createInstance(createAutonomousDatabaseDetailsBuilder.build());
-
-        ApplicationManager.getApplication().invokeLater(() -> {
-          UIUtil.fireNotification(NotificationType.INFORMATION, "Autonomous Database instance creation successful.");
-          SystemPreferences.fireADBInstanceUpdateEvent("Create");
-        });
+        UIUtil.fireNotification(NotificationType.INFORMATION, "Autonomous Database instance created successfully.", "Create");
       } catch (Exception ex) {
-        ApplicationManager.getApplication().invokeLater(() ->
-                UIUtil.fireNotification(NotificationType.ERROR,"Autonomous Database instance creation failed : " + ex.getMessage()));
+        UIUtil.fireNotification(NotificationType.ERROR,"Autonomous Database instance creation failed : " + ex.getMessage(), null);
       }
     };
 
@@ -535,13 +528,9 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
     {
       if (bringYourOwnLicenseRadioButton.isSelected()) {
         return CreateAutonomousDatabaseBase.LicenseModel.BringYourOwnLicense;
-      } else if (licenseIncludedRadioButton.isSelected()) {
+      } else {
         return CreateAutonomousDatabaseBase.LicenseModel.LicenseIncluded;
       }
-
-      final String errorMessage = "No license type is selected.";
-      Messages.showErrorDialog(errorMessage, "Select a license type");
-      throw new IllegalStateException(errorMessage);
     };
 
     if (dataWarehouseRadioButton.isSelected() ||
@@ -556,10 +545,10 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
 
     final Function<String, List<CustomerContact>> maintenanceContactsExtractor = (maintenanceContacts) -> {
       final List<CustomerContact> listOfCustomerContact = new ArrayList<>();
-      final StringTokenizer contactsTokenizer = new StringTokenizer(maintenanceContacts, ";");
+      final StringTokenizer contactsTokenizer = new StringTokenizer(maintenanceContacts.trim(), ";");
 
       for (int i = 0; contactsTokenizer.hasMoreElements() && i < 10; i++) {
-        String email = contactsTokenizer.nextToken().trim();
+        final String email = contactsTokenizer.nextToken().trim();
         listOfCustomerContact.add(CustomerContact.builder().email(email).build());
       }
       return listOfCustomerContact;
@@ -580,6 +569,6 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
 
   @Override
   protected @Nullable JComponent createCenterPanel() {
-    return mainPanel;
+      return new JBScrollPane(mainPanel);
   }
 }

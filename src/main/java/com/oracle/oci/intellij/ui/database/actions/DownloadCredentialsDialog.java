@@ -6,9 +6,9 @@
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseWallet;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
@@ -55,11 +55,6 @@ public class DownloadCredentialsDialog extends DialogWrapper {
             +"Certificate keys associated with the existing wallets in the region will be invalidated. All connections"+"\n"
             +"to databases in the region that use the existing regional wallet will be terminated over a period of time."+"\n"
             +"If you need to terminate all existing connections to a database immediately, stop and restart the database."+"\n\n";
-
-  private final String rotationInProgressMsg =
-        "The wallet rotation process takes a few minutes. During the wallet rotation, a new wallet is generated."
-            + "\n" + "You cannot perform a wallet download during the rotation process. Existing connections to database"
-            + "\n" + "will be terminated, and will need to be reestablished using the new wallet. Please try after sometime.";
 
   private final String rotationMsg1 = "Enter the currently selected database name (%s) to confirm the %s rotation";
 
@@ -151,6 +146,9 @@ public class DownloadCredentialsDialog extends DialogWrapper {
 
     if (isWalletRotating.apply(regionalWallet) ||
             isWalletRotating.apply(instanceWallet)) {
+      final String rotationInProgressMsg = "The wallet rotation process takes a few minutes. During the wallet rotation, a new wallet is generated."
+              + "\n" + "You cannot perform a wallet download during the rotation process. Existing connections to database"
+              + "\n" + "will be terminated, and will need to be reestablished using the new wallet. Please try after sometime.";
       Messages.showInfoMessage(rotationInProgressMsg, "Wallet Rotation in Progress");
       close(DialogWrapper.CLOSE_EXIT_CODE);
     }
@@ -225,7 +223,6 @@ public class DownloadCredentialsDialog extends DialogWrapper {
       return;
     }
 
-    final char[] adminPassword = passwordField.getPassword();
     final String selectedWalletType = (String) walletTypeComboBox.getSelectedItem();
     final String walletDirectory = dirPath + File.separator + "Wallet_"
             + autonomousDatabaseSummary.getDbName();
@@ -233,15 +230,12 @@ public class DownloadCredentialsDialog extends DialogWrapper {
     final Runnable nonblockingDownload = () -> {
       try {
         OracleCloudAccount.getInstance().getDatabaseClient()
-                .downloadWallet(autonomousDatabaseSummary, selectedWalletType, new String(adminPassword), walletDirectory);
-        Arrays.fill(adminPassword, ' ');
-        ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireNotification(NotificationType.INFORMATION,
-                "<html>Wallet downloaded successfully.</html>"));
+                .downloadWallet(autonomousDatabaseSummary, selectedWalletType, new String(passwordField.getPassword()), walletDirectory);
+        UIUtil.fireNotification(NotificationType.INFORMATION,
+                        "<html>Wallet downloaded successfully.</html>", "Wallet download");
       }
       catch (Exception e) {
-        ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireNotification(NotificationType.ERROR,"Wallet download failed : " + e.getMessage()));
+        UIUtil.fireNotification(NotificationType.ERROR,"Wallet download failed : " + e.getMessage(), null);
       }
     };
 
@@ -279,6 +273,6 @@ public class DownloadCredentialsDialog extends DialogWrapper {
   @Nullable
   @Override
   protected JComponent createCenterPanel() {
-    return mainPanel;
+    return new JBScrollPane(mainPanel);
   }
 }

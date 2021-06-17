@@ -6,9 +6,9 @@
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.ui.common.UIUtil;
@@ -22,8 +22,8 @@ public class AdminPasswordDialog extends DialogWrapper {
   private JPanel mainPanel;
   private JPanel passwordMainPanel;
   private JTextField userNameTextField;
-  private JPasswordField pwdTxt;
-  private JPasswordField confirmPwdTxt;
+  private JPasswordField passwordTextField;
+  private JPasswordField confirmPasswordText;
   private JLabel passwordHelpLabel;
 
   private final AutonomousDatabaseSummary autonomousDatabaseSummary;
@@ -43,7 +43,8 @@ public class AdminPasswordDialog extends DialogWrapper {
   }
 
   @Override protected void doOKAction() {
-    if (!Arrays.equals(pwdTxt.getPassword(),confirmPwdTxt.getPassword())) {
+    if (!Arrays.equals(passwordTextField.getPassword(),
+            confirmPasswordText.getPassword())) {
       Messages.showErrorDialog("Error. Password mismatch",
               "Confirmation must match password.");
       return;
@@ -51,16 +52,12 @@ public class AdminPasswordDialog extends DialogWrapper {
 
     Runnable nonblockingUpdate = () -> {
       try {
-        final char[] pwd = pwdTxt.getPassword();
         OracleCloudAccount.getInstance().getDatabaseClient()
-                .changeAdminPassword(autonomousDatabaseSummary, new String(pwd));
-        Arrays.fill(pwd, ' ');
-        ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireNotification(NotificationType.INFORMATION, "Admin Password Update Successful."));
+                .changeAdminPassword(autonomousDatabaseSummary, new String(passwordTextField.getPassword()));
+        UIUtil.fireNotification(NotificationType.INFORMATION, "Admin Password Updated Successfully.", "Admin password");
       }
       catch (Exception e) {
-        ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireNotification(NotificationType.ERROR, "Failed to update Admin Password : " + e.getMessage()));
+        UIUtil.fireNotification(NotificationType.ERROR, "Failed to update Admin Password : " + e.getMessage(), null);
       }
     };
 
@@ -72,6 +69,6 @@ public class AdminPasswordDialog extends DialogWrapper {
   @Nullable
   @Override
   protected JComponent createCenterPanel() {
-    return mainPanel;
+    return new JBScrollPane(mainPanel);
   }
 }

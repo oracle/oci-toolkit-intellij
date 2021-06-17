@@ -17,7 +17,7 @@ import javax.swing.*;
 public class ConfigureAction extends AnAction {
 
   public ConfigureAction() {
-    super("Configure", "Oracle Cloud Infrastructure configuration",
+    super("Oracle Cloud Infrastructure configuration", "Oracle Cloud Infrastructure configuration",
         new ImageIcon(ConfigureAction
             .class.getResource("/icons/toolbar-login.png")));
   }

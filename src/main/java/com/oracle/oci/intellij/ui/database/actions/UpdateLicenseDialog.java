@@ -8,6 +8,7 @@ package com.oracle.oci.intellij.ui.database.actions;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LicenseModel;
 import com.oracle.bmc.database.model.UpdateAutonomousDatabaseDetails;
@@ -69,12 +70,9 @@ public class UpdateLicenseDialog extends DialogWrapper {
       try {
         OracleCloudAccount.getInstance().getDatabaseClient()
                 .updateLicenseType(autonomousDatabaseSummary, licenseModel);
-
-        ApplicationManager.getApplication().invokeLater(() -> UIUtil
-                .fireNotification(NotificationType.INFORMATION, "License model update successful."));
+        UIUtil.fireNotification(NotificationType.INFORMATION, "License model updated successfully.", "License");
       } catch (Exception ex) {
-        ApplicationManager.getApplication().invokeLater(
-                () -> UIUtil.fireNotification(NotificationType.ERROR, "Failed to update license model : " + ex.getMessage()));
+        UIUtil.fireNotification(NotificationType.ERROR, "Failed to update license model : " + ex.getMessage(), null);
       }
     };
 
@@ -86,6 +84,6 @@ public class UpdateLicenseDialog extends DialogWrapper {
   @Nullable
   @Override
   protected JComponent createCenterPanel(){
-    return chooseLicenseTypePanel;
+    return new JBScrollPane(chooseLicenseTypePanel);
   }
 }

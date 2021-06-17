@@ -5,6 +5,7 @@
 
 package com.oracle.oci.intellij.ui.explorer;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -19,19 +20,23 @@ import com.oracle.oci.intellij.ui.account.ConfigureAction;
 import com.oracle.oci.intellij.ui.account.RegionAction;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
+import com.oracle.oci.intellij.util.LogHandler;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
 public class OCIExplorerFactory implements ToolWindowFactory {
 
-  private final AutonomousDatabasesDashboard autonomousDatabasesDashboard;
-
   public OCIExplorerFactory() {
-    OracleCloudAccount.getInstance().configure(SystemPreferences.getConfigFilePath(),
-            SystemPreferences.getProfileName());
-    autonomousDatabasesDashboard = new AutonomousDatabasesDashboard();
-    SystemPreferences.addPropertyChangeListener(autonomousDatabasesDashboard);
+    try {
+      OracleCloudAccount.getInstance().configure(SystemPreferences.getConfigFilePath(),
+              SystemPreferences.getProfileName());
+      AutonomousDatabasesDashboard.getInstance().populateTableData();
+    } catch (Exception ex) {
+      final String message = "Oracle Cloud account configuration failed: " + ex.getMessage();
+      LogHandler.warn(message);
+      UIUtil.fireNotification(NotificationType.ERROR, message, null);
+    }
   }
 
   @Override
@@ -47,7 +52,7 @@ public class OCIExplorerFactory implements ToolWindowFactory {
     actionGroup.add(new CompartmentAction());
     toolWindow.setTitleActions(Arrays.asList(actionGroup));
 
-    final TabbedExplorer ociTabbedToolBar = new TabbedExplorer(toolWindow, autonomousDatabasesDashboard);
+    final TabbedExplorer ociTabbedToolBar = new TabbedExplorer(toolWindow, AutonomousDatabasesDashboard.getInstance());
     final ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
     final Content ociTabbedToolBarContent = contentFactory
             .createContent(ociTabbedToolBar.getContent(), "", false);

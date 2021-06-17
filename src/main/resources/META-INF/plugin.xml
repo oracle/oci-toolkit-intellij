@@ -14,7 +14,7 @@
         <toolWindow id="Oracle Cloud Infrastructure Explorer" secondary="true"  anchor="bottom"
                     factoryClass="com.oracle.oci.intellij.ui.explorer.OCIExplorerFactory"
                     icon="/icons/toolbar-login.png"  />
-        <notificationGroup id="Oracle Cloud Infrastructure Plugin" displayType="BALLOON"/>
+        <notificationGroup id="Oracle Cloud Infrastructure" displayType="BALLOON"/>
     </extensions>
     
     <actions>

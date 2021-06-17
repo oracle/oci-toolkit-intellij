@@ -1,6 +1,5 @@
 package com.oracle.oci.intellij.account;
 
-import com.intellij.notification.NotificationType;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
 import com.oracle.bmc.database.DatabaseClient;
@@ -19,7 +18,7 @@ import com.oracle.bmc.identity.responses.CreateCompartmentResponse;
 import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
 import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
-import com.oracle.oci.intellij.ui.common.UIUtil;
+import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.LogHandler;
 import org.apache.commons.io.FileUtils;
 
@@ -49,61 +48,55 @@ public class OracleCloudAccount {
   private final DatabaseClientProxy databaseClientProxy = new DatabaseClientProxy();
 
   private OracleCloudAccount() {
+    // Add the property change listeners in the order they have to be notified.
+    SystemPreferences.addPropertyChangeListener(identityClientProxy);
+    SystemPreferences.addPropertyChangeListener(databaseClientProxy);
+    SystemPreferences.addPropertyChangeListener(AutonomousDatabasesDashboard.getInstance());
   }
 
+  /**
+   * The singleton instance.
+   * @return singleton instance.
+   */
   public static OracleCloudAccount getInstance() {
     return ORACLE_CLOUD_ACCOUNT_INSTANCE;
   }
 
-  public void configure(String configFile, String givenProfile) {
+  public void configure(String configFile, String givenProfile) throws IOException {
     reset();
 
     final String fallbackProfileName = SystemPreferences.DEFAULT_PROFILE_NAME;
-    try {
-      final ConfigFileHandler.ProfileSet profileSet = ConfigFileHandler.parse(configFile);
+    final ConfigFileHandler.ProfileSet profileSet = ConfigFileHandler.parse(configFile);
 
-      ConfigFileHandler.Profile profile;
-      if (profileSet.containsKey(givenProfile)) {
-        profile = profileSet.get(givenProfile);
-        authenticationDetailsProvider = new ConfigFileAuthenticationDetailsProvider(configFile, givenProfile);
+    ConfigFileHandler.Profile profile;
+    if (profileSet.containsKey(givenProfile)) {
+      profile = profileSet.get(givenProfile);
+      authenticationDetailsProvider = new ConfigFileAuthenticationDetailsProvider(configFile, givenProfile);
+    } else {
+      // Last used profile is not found. Use the default profile.
+      if (profileSet.containsKey(fallbackProfileName)) {
+        LogHandler.warn(String.format("The profile %s isn't found in config file %s. Switched to profile %s.",
+                givenProfile,
+                configFile,
+                fallbackProfileName));
+        profile = profileSet.get(fallbackProfileName);
+        authenticationDetailsProvider = new ConfigFileAuthenticationDetailsProvider(configFile, fallbackProfileName);
       } else {
-        // Last used profile is not found. Use the default profile.
-        if (profileSet.containsKey(fallbackProfileName)) {
-          LogHandler.warn(String.format("The profile %s isn't found in config file %s. Switched to profile %s.",
-                  givenProfile,
-                  configFile,
-                  fallbackProfileName));
-          profile = profileSet.get(fallbackProfileName);
-          authenticationDetailsProvider = new ConfigFileAuthenticationDetailsProvider(configFile, fallbackProfileName);
-        } else {
-          // Even the default profile is not found in the given config.
-          throw new IllegalStateException(
-                  String.format("The profile %s isn't found in the config file %s.", givenProfile, configFile));
-        }
+        // Even the default profile is not found in the given config.
+        throw new IllegalStateException(
+                String.format("The profile %s isn't found in the config file %s.", givenProfile, configFile));
       }
-      setClientUserAgent(getUserAgent());
-
-      identityClientProxy.init(profile.get("region"));
-      SystemPreferences.addPropertyChangeListener(identityClientProxy);
-
-      databaseClientProxy.init(profile.get("region"));
-      SystemPreferences.addPropertyChangeListener(databaseClientProxy);
-
-      SystemPreferences.setConfigInfo(configFile, profile.getName(), profile.get("region"));
-
-    } catch (Exception ioException) {
-      final String message = "Oracle Cloud account configuration failed: " + ioException.getMessage();
-      UIUtil.fireNotification(NotificationType.ERROR,message);
-      LogHandler.error(message);
     }
+    setClientUserAgent(getUserAgent());
+
+    identityClientProxy.init(profile.get("region"));
+    databaseClientProxy.init(profile.get("region"));
+    SystemPreferences.setConfigInfo(configFile, profile.getName(), profile.get("region"));
   }
 
   private void validate() {
     if (authenticationDetailsProvider == null) {
-      final String message = "Configure Oracle Cloud account first.";
-      UIUtil.fireNotification(NotificationType.ERROR,message);
-      LogHandler.error(message);
-      throw new IllegalStateException(message);
+      throw new IllegalStateException("Configure Oracle Cloud account first.");
     }
   }
 
@@ -387,6 +380,7 @@ public class OracleCloudAccount {
       databaseClient.createAutonomousDatabase(
               CreateAutonomousDatabaseRequest.builder()
                       .createAutonomousDatabaseDetails(request).build());
+
       LogHandler.info("Autonomous Database created successfully.");
     }
 

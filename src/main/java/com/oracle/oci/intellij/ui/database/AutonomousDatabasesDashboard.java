@@ -49,11 +49,17 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
   private JButton createADBInstanceButton;
   private List<AutonomousDatabaseSummary> autonomousDatabaseInstancesList;
 
-  public AutonomousDatabasesDashboard() {
+  private static final AutonomousDatabasesDashboard INSTANCE =
+          new AutonomousDatabasesDashboard();
+
+  public static AutonomousDatabasesDashboard getInstance() {
+    return INSTANCE;
+  }
+
+  private AutonomousDatabasesDashboard() {
     initializeWorkLoadTypeFilter();
     initializeTableStructure();
     initializeLabels();
-    populateTableData();
 
     refreshADBInstancesButton.setAction(new RefreshAction(this, "Refresh"));
     createADBInstanceButton.setAction(new CreateAction("Create Autonomous Database"));
@@ -228,24 +234,21 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
     workloadCombo.setEnabled(false);
 
     final Runnable fetchData = () -> {
-      String selectedType = (String) workloadCombo.getSelectedItem();
-      AutonomousDatabaseSummary.DbWorkload workLoadType = getWorkLoadType(selectedType);
-
       try {
+        final AutonomousDatabaseSummary.DbWorkload workLoadType =
+                getWorkLoadType((String) workloadCombo.getSelectedItem());
+
         autonomousDatabaseInstancesList = OracleCloudAccount.getInstance()
                 .getDatabaseClient().getAutonomousDatabaseInstances(workLoadType);
-      } catch (Exception ex) {
+      } catch (Exception exception) {
         autonomousDatabaseInstancesList = null;
-        final String errorMessage = "Autonomous Databases summary could not be fetched.";
-        UIUtil.fireNotification(NotificationType.ERROR,errorMessage + ex.getMessage());
-        LogHandler.error(errorMessage, ex);
+        UIUtil.fireNotification(NotificationType.ERROR, exception.getMessage(), null);
+        LogHandler.error(exception.getMessage(), exception);
       }
     };
 
     final Runnable updateUI = () -> {
-      if (autonomousDatabaseInstancesList == null) {
-        UIUtil.fireNotification(NotificationType.ERROR,"Failed to get details of database instance. Check configuration.");
-      } else {
+      if (autonomousDatabaseInstancesList != null) {
         UIUtil.showInfoInStatusBar((autonomousDatabaseInstancesList.size()) + " Autonomous Databases found.");
 
         final Function<AutonomousDatabaseSummary.DbWorkload, String> valueFunction = (workload) -> {

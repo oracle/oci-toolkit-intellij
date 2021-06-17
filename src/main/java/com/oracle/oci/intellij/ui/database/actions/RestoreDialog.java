@@ -6,9 +6,9 @@
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.database.model.AutonomousDatabaseBackupSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
@@ -72,12 +72,10 @@ public class RestoreDialog extends DialogWrapper {
       try {
         OracleCloudAccount.getInstance().getDatabaseClient()
                 .restore(autonomousDatabaseSummary.getId(), restoreTimestamp);
-        ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireNotification(NotificationType.INFORMATION,"Autonomous Database Instance restored successfully."));
+        UIUtil.fireNotification(NotificationType.INFORMATION,"Autonomous Database Instance restored successfully.", "Restore");
       }
       catch (Exception e) {
-        ApplicationManager.getApplication().invokeLater(() -> UIUtil
-            .fireNotification(NotificationType.ERROR, "Failed to restore : " + e.getMessage()));
+        UIUtil.fireNotification(NotificationType.ERROR, "Failed to restore : " + e.getMessage(), null);
       }
     };
 
@@ -142,6 +140,6 @@ public class RestoreDialog extends DialogWrapper {
   @Override
   protected JComponent createCenterPanel() {
     fetchRestoreList();
-    return mainPanel;
+    return new JBScrollPane(mainPanel);
   }
 }

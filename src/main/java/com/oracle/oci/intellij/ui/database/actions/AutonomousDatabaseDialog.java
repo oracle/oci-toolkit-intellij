@@ -6,6 +6,7 @@
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import org.jetbrains.annotations.NotNull;
@@ -16,8 +17,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
 public class AutonomousDatabaseDialog extends DialogWrapper {
-    private JPanel panel1;
-    private JTable table1;
+    private JPanel mainPanel;
+    private JTable table;
 
     protected AutonomousDatabaseDialog(AutonomousDatabaseSummary autonomousDatabaseSummary) {
         super(true);
@@ -26,7 +27,7 @@ public class AutonomousDatabaseDialog extends DialogWrapper {
         init();
 
         final DefaultTableModel model = new DefaultTableModel(new String[]{"Key", "Value"},0);
-        table1.setModel(model);
+        table.setModel(model);
         model.addRow(new String[]{"Display Name", autonomousDatabaseSummary.getDisplayName()});
         model.addRow(new String[]{"Database Name", autonomousDatabaseSummary.getDbName()});
         model.addRow(new String[]{"Lifecycle State", autonomousDatabaseSummary.getLifecycleState().getValue()});
@@ -65,7 +66,7 @@ public class AutonomousDatabaseDialog extends DialogWrapper {
     @Nullable
     @Override
     protected JComponent createCenterPanel() {
-        panel1.setPreferredSize(new Dimension(650,420));
-        return panel1;
+        mainPanel.setPreferredSize(new Dimension(650,420));
+        return new JBScrollPane(mainPanel);
     }
 }

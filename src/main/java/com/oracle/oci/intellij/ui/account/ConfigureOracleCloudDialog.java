@@ -9,6 +9,7 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.Region;
 import com.oracle.oci.intellij.account.ConfigFileHandler;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
@@ -129,16 +130,19 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
       Messages.showErrorDialog("Invalid region", "Error");
     } else {
       close(DialogWrapper.OK_EXIT_CODE);
-      OracleCloudAccount.getInstance().configure(configFile, profileName);
+      try {
+        OracleCloudAccount.getInstance().configure(configFile, profileName);
+      } catch (IOException ioException) {
+        UIUtil.fireNotification(NotificationType.ERROR, ioException.getMessage(), null);
+      }
     }
   }
 
   @Nullable
   @Override
   protected JComponent createCenterPanel() {
-    final JPanel panel = (JPanel) createPanel();
-    panel.setPreferredSize(new Dimension(800, 500));
-    return panel;
+    mainPanel.setPreferredSize(new Dimension(800, 500));
+    return new JBScrollPane(mainPanel);
   }
 
   private void onConfigFileChange(String configFile, String givenProfileName) {
@@ -156,14 +160,20 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
           Messages.showInfoMessage(
                   String.format("The profile %s isn't found in the config file %s. Switching to %s profile.",
                           givenProfileName, configFile, SystemPreferences.DEFAULT_PROFILE_NAME),
-                  "Oracle Cloud Infrastructure - Profile Switch");
+                  "Oracle Cloud Infrastructure configuration");
 
           profileNameToSelect = SystemPreferences.DEFAULT_PROFILE_NAME;
         } else {
           // Even the default profile is not found in the given config.
-          throw new IllegalStateException(
-                  String.format("The profile %s and fall back profile %s aren't found in the config file %s.",
-                          givenProfileName, SystemPreferences.DEFAULT_PROFILE_NAME, configFile));
+          final String message;
+          if (givenProfileName.equals(SystemPreferences.DEFAULT_PROFILE_NAME)) {
+            message = String.format("The profile %s isn't found in the config file %s.",
+                    givenProfileName, configFile);
+          } else {
+            message = String.format("The profile %s and fall back profile %s aren't found in the config file %s.",
+                    givenProfileName, SystemPreferences.DEFAULT_PROFILE_NAME, configFile);
+          }
+          throw new IllegalStateException(message);
         }
       }
 
@@ -196,7 +206,7 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
         onProfileChange();
       }
     } catch (Exception ex) {
-      UIUtil.fireNotification(NotificationType.ERROR, ex.getMessage());
+      Messages.showErrorDialog(ex.getMessage(), "Oracle Cloud Infrastructure configuration");
     }
   }
 
@@ -274,7 +284,7 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
       saveProfileButton.setEnabled(false);
       myOKAction.setEnabled(true);
     } catch (IOException ioEx) {
-      UIUtil.fireNotification(NotificationType.ERROR, ioEx.getMessage());
+      UIUtil.fireNotification(NotificationType.ERROR, ioEx.getMessage(), null);
     }
   }
 
@@ -304,10 +314,6 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
     }
 
     return result;
-  }
-
-  public JComponent createPanel(){
-    return mainPanel;
   }
 
   private void saveProfile() {
