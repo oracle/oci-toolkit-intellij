@@ -24,7 +24,7 @@ For details on contributions, questions, or feedback, see [Contact Us](https://d
 
 ## Changes
 
-See [CHANGELOG](/CHANGELOG.md).
+See [CHANGELOG](./CHANGELOG.md).
 
 ## Contributing
 
