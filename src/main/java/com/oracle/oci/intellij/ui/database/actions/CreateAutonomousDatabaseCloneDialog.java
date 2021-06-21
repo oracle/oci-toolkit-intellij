@@ -1,3 +1,7 @@
+/*
+  Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+  Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+ */
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.notification.NotificationType;
@@ -10,7 +14,6 @@ import com.oracle.bmc.database.model.CreateAutonomousDatabaseCloneDetails;
 import com.oracle.bmc.database.model.CustomerContact;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.common.CompartmentSelection;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
@@ -108,9 +111,7 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
 
       if(compartmentSelection.showAndGet()) {
         selectedCompartment = compartmentSelection.getSelectedCompartment();
-        if(selectedCompartment != null) {
-          compartmentTextField.setText(selectedCompartment.getName());
-        }
+        compartmentTextField.setText(selectedCompartment.getName());
       }
     });
 
@@ -151,11 +152,9 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
 
       if(compartmentSelection.showAndGet()) {
         final Compartment selectedCompartment = compartmentSelection.getSelectedCompartment();
-        if(selectedCompartment != null) {
-          final Border newTitleBorder = BorderFactory
-                  .createTitledBorder(VIRTUAL_CLOUD_NETWORK_PANEL_TEXT + selectedCompartment.getName());
-          virtualCloudNetworkInnerPanel.setBorder(newTitleBorder);
-        }
+        final Border newTitleBorder = BorderFactory
+                .createTitledBorder(VIRTUAL_CLOUD_NETWORK_PANEL_TEXT + selectedCompartment.getName());
+        virtualCloudNetworkInnerPanel.setBorder(newTitleBorder);
       }
     });
 
@@ -167,11 +166,9 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
 
       if(compartmentSelection.showAndGet()) {
         final Compartment selectedCompartment = compartmentSelection.getSelectedCompartment();
-        if(selectedCompartment != null) {
-          final Border newTitleBorder = BorderFactory
-                  .createTitledBorder(SUBNET_PANEL_TEXT + selectedCompartment.getName());
-          subnetPanel.setBorder(newTitleBorder);
-        }
+        final Border newTitleBorder = BorderFactory
+                .createTitledBorder(SUBNET_PANEL_TEXT + selectedCompartment.getName());
+        subnetPanel.setBorder(newTitleBorder);
       }
     });
 
@@ -183,11 +180,9 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
 
       if(compartmentSelection.showAndGet()) {
         final Compartment selectedCompartment = compartmentSelection.getSelectedCompartment();
-        if(selectedCompartment != null) {
-          final Border newTitleBorder = BorderFactory
-                  .createTitledBorder(NETWORK_SECURITY_GROUP_PANEL_TEXT + selectedCompartment.getName());
-          nsgInnerPanel.setBorder(newTitleBorder);
-        }
+        final Border newTitleBorder = BorderFactory
+                .createTitledBorder(NETWORK_SECURITY_GROUP_PANEL_TEXT + selectedCompartment.getName());
+        nsgInnerPanel.setBorder(newTitleBorder);
       }
     });
 

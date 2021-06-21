@@ -1,6 +1,6 @@
-/**
- * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
- * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+/*
+  Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+  Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
 package com.oracle.oci.intellij.account;
 
@@ -232,8 +232,8 @@ public final class ConfigFileHandler {
 
     /**
      * Adds new parameter name-value pair to the profile.
-     * @param key
-     * @param value
+     * @param key the parameter key
+     * @param value the parameter value
      * @return The updated profile
      */
     public Profile add(String key, String value) {
@@ -259,7 +259,7 @@ public final class ConfigFileHandler {
 
     /**
      * Returns the parameter value for the given key.
-     * @param key
+     * @param key the parameter key
      * @return parameter value.
      */
     public String get(String key) {

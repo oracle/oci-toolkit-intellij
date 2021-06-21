@@ -1,8 +1,7 @@
-/**
- * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
- * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+/*
+  Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+  Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
-
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.notification.NotificationType;
@@ -230,7 +229,7 @@ public class DownloadCredentialsDialog extends DialogWrapper {
     final Runnable nonblockingDownload = () -> {
       try {
         OracleCloudAccount.getInstance().getDatabaseClient()
-                .downloadWallet(autonomousDatabaseSummary, selectedWalletType, new String(passwordField.getPassword()), walletDirectory);
+                .downloadWallet(autonomousDatabaseSummary, selectedWalletType, String.valueOf(passwordField.getPassword()), walletDirectory);
         UIUtil.fireNotification(NotificationType.INFORMATION,
                         "<html>Wallet downloaded successfully.</html>", "Wallet download");
       }

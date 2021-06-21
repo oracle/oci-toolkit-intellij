@@ -1,8 +1,7 @@
-/**
- * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
- * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+/*
+  Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+  Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
-
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.notification.NotificationType;
@@ -53,7 +52,7 @@ public class AdminPasswordDialog extends DialogWrapper {
     Runnable nonblockingUpdate = () -> {
       try {
         OracleCloudAccount.getInstance().getDatabaseClient()
-                .changeAdminPassword(autonomousDatabaseSummary, new String(passwordTextField.getPassword()));
+                .changeAdminPassword(autonomousDatabaseSummary, String.valueOf(passwordTextField.getPassword()));
         UIUtil.fireNotification(NotificationType.INFORMATION, "Admin Password Updated Successfully.", "Admin password");
       }
       catch (Exception e) {

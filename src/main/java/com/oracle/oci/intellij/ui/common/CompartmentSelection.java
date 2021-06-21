@@ -1,6 +1,6 @@
-/**
- * Copyright (c) 2020, Oracle and/or its affiliates. All rights reserved.
- * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+/*
+  Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+  Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
  */
 package com.oracle.oci.intellij.ui.common;
 
@@ -39,7 +39,7 @@ public class CompartmentSelection extends DialogWrapper {
 
   /**
    * Factory method for new instance.
-   * @return
+   * @return a new instance
    */
   public static CompartmentSelection newInstance() {
     return new CompartmentSelection();

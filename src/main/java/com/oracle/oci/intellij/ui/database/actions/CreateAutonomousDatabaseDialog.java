@@ -1,3 +1,7 @@
+/*
+  Copyright (c) 2021, Oracle and/or its affiliates. All rights reserved.
+  Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+ */
 package com.oracle.oci.intellij.ui.database.actions;
 
 import com.intellij.notification.NotificationType;
@@ -159,9 +163,7 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
 
       if(compartmentSelection.showAndGet()) {
         selectedCompartment = compartmentSelection.getSelectedCompartment();
-        if(selectedCompartment != null) {
-          compartmentTextField.setText(selectedCompartment.getName());
-        }
+        compartmentTextField.setText(selectedCompartment.getName());
       }
     });
 
@@ -350,11 +352,9 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
 
       if(compartmentSelection.showAndGet()) {
         final Compartment selectedCompartment = compartmentSelection.getSelectedCompartment();
-        if(selectedCompartment != null) {
-          final Border newTitleBorder = BorderFactory
-                  .createTitledBorder(AUTONOMOUS_DATA_GUARD_SUB_PANEL_TEXT + selectedCompartment.getName());
-          autonomousDataGuardSubPanel.setBorder(newTitleBorder);
-        }
+        final Border newTitleBorder = BorderFactory
+                .createTitledBorder(AUTONOMOUS_DATA_GUARD_SUB_PANEL_TEXT + selectedCompartment.getName());
+        autonomousDataGuardSubPanel.setBorder(newTitleBorder);
       }
     });
 
@@ -363,11 +363,9 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
 
       if(compartmentSelection.showAndGet()) {
         final Compartment selectedCompartment = compartmentSelection.getSelectedCompartment();
-        if(selectedCompartment != null) {
-          final Border newTitleBorder = BorderFactory
-                  .createTitledBorder(VIRTUAL_CLOUD_NETWORK_PANEL_TEXT + selectedCompartment.getName());
-          virtualCloudNetworkPanel.setBorder(newTitleBorder);
-        }
+        final Border newTitleBorder = BorderFactory
+                .createTitledBorder(VIRTUAL_CLOUD_NETWORK_PANEL_TEXT + selectedCompartment.getName());
+        virtualCloudNetworkPanel.setBorder(newTitleBorder);
       }
     });
 
@@ -376,11 +374,9 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
 
       if(compartmentSelection.showAndGet()) {
         final Compartment selectedCompartment = compartmentSelection.getSelectedCompartment();
-        if(selectedCompartment != null) {
-          final Border newTitleBorder = BorderFactory
-                  .createTitledBorder(VIRTUAL_CLOUD_SUBNET_PANEL_TEXT + selectedCompartment.getName());
-          virtCloudNetworkSubnetPanel.setBorder(newTitleBorder);
-        }
+        final Border newTitleBorder = BorderFactory
+                .createTitledBorder(VIRTUAL_CLOUD_SUBNET_PANEL_TEXT + selectedCompartment.getName());
+        virtCloudNetworkSubnetPanel.setBorder(newTitleBorder);
       }
     });
 
@@ -389,11 +385,9 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
 
       if(compartmentSelection.showAndGet()) {
         final Compartment selectedCompartment = compartmentSelection.getSelectedCompartment();
-        if(selectedCompartment != null) {
-          final Border newTitleBorder = BorderFactory
-                  .createTitledBorder(NETWORK_SECURITY_GROUP_SUB_PANEL_TEXT + selectedCompartment.getName());
-          networkSecurityGroupsSubPanel.setBorder(newTitleBorder);
-        }
+        final Border newTitleBorder = BorderFactory
+                .createTitledBorder(NETWORK_SECURITY_GROUP_SUB_PANEL_TEXT + selectedCompartment.getName());
+        networkSecurityGroupsSubPanel.setBorder(newTitleBorder);
       }
     });
     //addContactPanel.setVisible(false);
