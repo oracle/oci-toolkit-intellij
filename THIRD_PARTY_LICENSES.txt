@@ -1,41 +1,62 @@
-Java SDK for Oracle Cloud Infrastructure
+Oracle Cloud Infrastructure SDK version 2.0.2 for Java
 Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
 
 
-This software is dual-licensed to you under the Universal Permissive License (UPL) 1.0 or Apache License 2.0. See below for license terms. You may choose either license.
+This software is dual-licensed to you under the Universal Permissive
+License (UPL) 1.0 or Apache License 2.0. See below for license terms.
+You may choose either license.
 
 ____________________________________
 
 The Universal Permissive License (UPL), Version 1.0
 Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
 
-Subject to the condition set forth below, permission is hereby granted to any person obtaining a copy of this software, associated documentation and/or data (collectively the "Software"), 
-free of charge and under any and all copyright rights in the Software, and any and all patent rights owned or freely licensable by each licensor hereunder covering either (i) the unmodified 
-Software as contributed to or provided by such licensor, or (ii) the Larger Works (as defined below), to deal in both
+Subject to the condition set forth below, permission is hereby granted to any
+person obtaining a copy of this software, associated documentation and/or data
+(collectively the "Software"), free of charge and under any and all copyright
+rights in the Software, and any and all patent rights owned or freely
+licensable by each licensor hereunder covering either (i) the unmodified
+Software as contributed to or provided by such licensor, or (ii) the Larger
+Works (as defined below), to deal in both
 
 (a) the Software, and
-(b) any piece of software and/or hardware listed in the lrgrwrks.txt file if one is included with the Software (each a "Larger Work" to which the Software is contributed by such licensors),
+(b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
+one is included with the Software (each a "Larger Work" to which the Software
+is contributed by such licensors),
 
-without restriction, including without limitation the rights to copy, create derivative works of, display, perform, and distribute the Software and make, use, sell, offer for sale, import, 
-export, have made, and have sold the Software and the Larger Work(s), and to sublicense the foregoing rights on either these or other terms.
+without restriction, including without limitation the rights to copy, create
+derivative works of, display, perform, and distribute the Software and make,
+use, sell, offer for sale, import, export, have made, and have sold the
+Software and the Larger Work(s), and to sublicense the foregoing rights on
+either these or other terms.
 
 This license is subject to the following condition:
 
-The above copyright notice and either this complete permission notice or at a minimum a reference to the UPL must be included in all copies or substantial portions of the Software.
+The above copyright notice and either this complete permission notice or at
+a minimum a reference to the UPL must be included in all copies or substantial
+portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 
 -------------------------------------
 
 The Apache Software License, Version 2.0
 Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
 
-Licensed under the Apache License, Version 2.0 (the "License"); You may not use this product except in compliance with the License.  
-You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0.  A copy of the license is also reproduced below.  
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the specific language governing permissions and  limitations under the License.
+Licensed under the Apache License, Version 2.0 (the "License"); You may not
+use this product except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0.  A copy of the
+license is also reproduced below. Unless required by applicable law or agreed
+to in writing, software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+or implied.  See the License for the specific language governing permissions
+and  limitations under the License.
 
                                  Apache License
                            Version 2.0, January 2004
@@ -331,14 +352,17 @@ Apache commons-io
 nimbus-jose-jwt Copyright 2012 - 2018, Connect2id Ltd.
 com.github.stephenc.jcip ª jcip-annotations 1.0-1
 COPYRIGHT: Copyright 2013 Stephen Connolly.
-net.minidev ª json-smart 1.3.1, 2.3 COPYRIGHT: Copyright 2011 JSON-SMART authors
+net.minidev ª json-smart 1.3.1, 2.3 COPYRIGHT: Copyright 2011
+JSON-SMART authors
 resteasy 3.6.3.FINAL COPYRIGHT:   ~ JBoss, Home of Professional Open Source.
   ~ Copyright 2011, Red Hat, Inc., and individual contributors
 org.jboss.logging.jboss-logging 
-COPYRIGHT: JBoss, Home of Professional Open Source. Copyright 2010 Red Hat, Inc.
+COPYRIGHT: JBoss, Home of Professional Open Source. Copyright 2010
+Red Hat, Inc.
 org.jboss.logging.jboss-logging-annotations 2.1.0.Final
 org.jboss.logging.jboss-logging-processor2.1.0.Final
-COPYRIGHT: JBoss, Home of Professional Open Source. Copyright 2016, Red Hat, Inc., and individual contributors
+COPYRIGHT: JBoss, Home of Professional Open Source. Copyright 2016,
+Red Hat, Inc., and individual contributors
 org.apache.httpcomponents.httpclient 4.5.4
 COPYRIGHT: Copyright 1999-2017 The Apache Software Foundation
 org.apache.httpcomponents.httpasyncclient 4.1.3
@@ -351,7 +375,8 @@ COPYRIGHT:  Copyright 2013 Stephen Connolly.
 Licensed under the Apache 2.0 License
 
 
-Hamcrest Core (org.hamcrest:hamcrest-core:1.3 - https://github.com/hamcrest/JavaHamcrest/hamcrest-core)
+Hamcrest Core (org.hamcrest:hamcrest-core:1.3 -
+https://github.com/hamcrest/JavaHamcrest/hamcrest-core)
 
 BSD License
 
@@ -361,28 +386,31 @@ All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
-Redistributions of source code must retain the above copyright notice, this list of
-conditions and the following disclaimer. Redistributions in binary form must reproduce
-the above copyright notice, this list of conditions and the following disclaimer in
-the documentation and/or other materials provided with the distribution.
+Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer. Redistributions in binary
+form must reproduce the above copyright notice, this list of conditions and
+the following disclaimer in the documentation and/or other materials provided
+with the distribution.
 
-Neither the name of Hamcrest nor the names of its contributors may be used to endorse
-or promote products derived from this software without specific prior written
-permission.
+Neither the name of Hamcrest nor the names of its contributors may be used to
+endorse or promote products derived from this software without specific prior
+written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
-EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
-SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
-WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
-DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 
 Bouncy Castle crypto API
-Copyright (c) 2000 - 2018 The Legion Of The Bouncy Castle (http://www.bouncycastle.org)
+Copyright (c) 2000 - 2018 The Legion Of The Bouncy Castle
+(http://www.bouncycastle.org)
 
 Permission is hereby granted, free of charge, to any person obtaining a 
 copy of this software and associated documentation files (the 
@@ -409,7 +437,8 @@ org.jboss.spec.javax.servlet.jboss-servlet-api_4.0_spec 1.0.0.Final
 org.jboss.spec.javax.ws.rs ª jboss-jaxrs-api_2.1_spec 1.0.2.Final
 org.jboss.spec.javax.xml.bind-api_2.3_spec 1.0.1.Final
 
-COPYRIGHT: JBoss, Home of Professional Open Source. Copyright 2013, Red Hat Middleware LLC, and individual contributors by the @authors tag.
+COPYRIGHT: JBoss, Home of Professional Open Source. Copyright 2013, Red Hat
+Middleware LLC, and individual contributors by the @authors tag.
 Licensed under GPL 2 with special linking exception
 
 The GNU General Public License (GPL) Version 2, June 1991
@@ -715,7 +744,8 @@ the exclusion of warranty; and each file should have at least the
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335 USA
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1335 USA
 
 Also add information on how to contact you by electronic and paper mail.
 
@@ -805,10 +835,12 @@ exception to your version of the library, but you are not obligated to
 do so.  If you do not wish to do so, delete this exception statement
 from your version.
 
-Oracle licenses the following module to you solely under the license(s) set forth below.
+Oracle licenses the following module to you solely under the license(s) set
+forth below.
 Jersey 2.27
 COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.1
-Except as noted below, this software is dual-licensed to you by Oracle under the Universal Permissive License (UPL) 1.0 
+Except as noted below, this software is dual-licensed to you by Oracle under
+the Universal Permissive License (UPL) 1.0
 or Apache License 2.0. See below for license terms. You may choose either license.
 
 1. Definitions.
@@ -1477,7 +1509,8 @@ the exclusion of warranty; and each file should have at least the
 
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1335 USA
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+    MA 02110-1335 USA
 
 Also add information on how to contact you by electronic and paper mail.
 
@@ -1569,15 +1602,16 @@ exception to your version of the library, but you are not obligated to
 do so.  If you do not wish to do so, delete this exception statement
 from your version.
 
-This content is produced and maintained by Oracle and/or its affiliates. All rights reserved.
+This content is produced and maintained by Oracle and/or its affiliates.
+All rights reserved.
 
 * Project home: https://jersey.github.io
 
 == Declared Project Licenses
 
-This program and the accompanying materials are made available under the terms of dual license of
-- COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL - Version 1.1) available at
-https://oss.oracle.com/licenses/CDDL+GPL-1.1
+This program and the accompanying materials are made available under the
+terms of dual license of - COMMON DEVELOPMENT AND DISTRIBUTION LICENSE
+(CDDL - Version 1.1) available at https://oss.oracle.com/licenses/CDDL+GPL-1.1
 
 
 == Source Code
@@ -1601,7 +1635,8 @@ aopalliance Version 1
 CDI API Version 1.1
 * License: Apache License, 2.0
 * Project: http://www.seamframework.org/Weld
-* Copyright 2010, Red Hat, Inc., and individual contributors by the @authors tag.
+* Copyright 2010, Red Hat, Inc., and individual contributors by the
+  @authors tag.
 
 Google Guava Version 18.0
 * License: Apache License, 2.0
@@ -1618,7 +1653,8 @@ Javassist Version 3.22.0-CR2
 
 Java(TM) EE Interceptors 1.1 API Version 1.0.0.Beta1
 * License: LGPL 2.1
-* Copyright 2005, JBoss Inc., and individual contributors as indicated by the @authors tag.
+* Copyright 2005, JBoss Inc., and individual contributors as indicated by the
+  @authors tag.
 
 JSR-166 Extension - JEP 266
 * License: CC0
@@ -1846,9 +1882,11 @@ limitations under the License.
  Use of any of this software is governed by the terms of the license below:
 
 
-Jackson is dual-licensed under two alternative popular Open Source licenses: Apache (AL 2.0) and Gnu Lesser GPL (LGPL 2.1). 
-You choose one or the other, as necessary (if you want to redistribute the code ø for use, you do not need license), and abide 
-by the license rules as defined by the respective license agreement (and only that one).
+Jackson is dual-licensed under two alternative popular Open Source licenses:
+Apache (AL 2.0) and Gnu Lesser GPL (LGPL 2.1). You choose one or the other,
+as necessary (if you want to redistribute the code ø for use, you do not need
+license), and abide by the license rules as defined by the respective license
+agreement (and only that one).
 
 This distribution elects to distribute under the Apache 2.0 license
 
