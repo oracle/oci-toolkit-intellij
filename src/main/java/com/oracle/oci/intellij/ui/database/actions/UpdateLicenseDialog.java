@@ -27,14 +27,14 @@ public class UpdateLicenseDialog extends DialogWrapper {
   private final AutonomousDatabaseSummary autonomousDatabaseSummary;
 
   protected UpdateLicenseDialog(
-          AutonomousDatabaseSummary autonomousDatabaseSummary){
+          AutonomousDatabaseSummary autonomousDatabaseSummary) {
     super(true);
     this.autonomousDatabaseSummary = autonomousDatabaseSummary;
 
     init();
     setTitle("Update License Type");
     setOKButtonText("Save Changes");
-    chooseLicenseTypePanel.setPreferredSize(new Dimension(300, 65));
+    chooseLicenseTypePanel.setPreferredSize(new Dimension(450, 65));
 
     // Set the border line text for scale panel.
     final String licenseHelpWebLink =
