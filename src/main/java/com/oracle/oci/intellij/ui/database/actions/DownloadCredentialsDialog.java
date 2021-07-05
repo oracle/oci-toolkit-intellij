@@ -98,15 +98,20 @@ public class DownloadCredentialsDialog extends DialogWrapper {
     }
 
     browseButton.addActionListener((e) -> {
-      JFileChooser fileChooser = new JFileChooser();
+      final JFileChooser fileChooser = new JFileChooser();
       fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
       fileChooser.setAcceptAllFileFilterUsed(false);
       fileChooser.setMultiSelectionEnabled(false);
-      fileChooser.setDialogTitle("Select a folder to download the wallet");
-      if (fileChooser.showOpenDialog(mainPanel)
+      fileChooser.setDialogTitle("Choose a directory to download wallet");
+
+      if (fileChooser.showDialog(mainPanel, "Save")
           == JFileChooser.APPROVE_OPTION) {
-        File downloadFolder = fileChooser.getSelectedFile();
-        walletLocationTextField.setText(downloadFolder.getAbsolutePath());
+        final File selectedFile = fileChooser.getSelectedFile();
+        if (selectedFile.isDirectory()) {
+          walletLocationTextField.setText(selectedFile.getAbsolutePath());
+        } else {
+          walletLocationTextField.setText(fileChooser.getCurrentDirectory().getPath());
+        }
       }
     });
 
@@ -252,7 +257,7 @@ public class DownloadCredentialsDialog extends DialogWrapper {
       return false;
     }
     else if (!Arrays.equals(password, confirmPassword)) {
-      Messages.showErrorDialog("Confirmation must match wallet password", "Error");
+      Messages.showErrorDialog("Confirmation must match password", "Error");
       return false;
     }
     Arrays.fill(password,' ');

@@ -1,4 +1,4 @@
-Oracle Cloud Infrastructure SDK version 2.0.2 for Java
+Oracle Cloud Infrastructure SDK version 2.1.0 for Java
 Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
 
 

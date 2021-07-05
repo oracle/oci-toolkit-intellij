@@ -51,7 +51,6 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
   private JLabel profileNameLabel;
   private JLabel exampleConfigurationLabel;
   private JLabel ociFreeTrialLabel;
-  private final JFileChooser fileChooser = new JFileChooser();
   private final JFileChooser pemFileChooser = new JFileChooser();
 
   public static ConfigureOracleCloudDialog newInstance() {
@@ -66,10 +65,12 @@ public class ConfigureOracleCloudDialog extends DialogWrapper {
     mainPanel.setPreferredSize(new Dimension(650, 430));
 
     configFileTextField.addActionListener(event -> {
+      final JFileChooser fileChooser = new JFileChooser();
       fileChooser.setSelectedFile(new File(SystemPreferences.getConfigFilePath()));
       fileChooser.setFileHidingEnabled(false);
+      fileChooser.setDialogTitle("Select Config File");
 
-      int state = fileChooser.showDialog(mainPanel, "Select Config File");
+      int state = fileChooser.showDialog(mainPanel, "Select");
       if (state == JFileChooser.APPROVE_OPTION) {
         String configFile = fileChooser.getSelectedFile().getAbsolutePath();
         configFileTextField.setText(configFile);

@@ -11,19 +11,17 @@ repositories {
 }
 
 dependencies {
-    compile files('lib/sdk/oci-java-sdk-full-2.0.2.jar')
-
-    compile files('lib/thirdparty/javax.ws.rs-api-2.1.jar')
+    compile files('lib/sdk/oci-java-sdk-full-2.1.0.jar')
     compile files('lib/thirdparty/resilience4j-circuitbreaker-1.2.0.jar')
 
-    compile files('lib/thirdparty/jersey-client-2.27.jar')
-    compile files('lib/thirdparty/jersey-common-2.27.jar')
-    compile files('lib/thirdparty/jersey-hk2-2.27.jar')
-    compile files('lib/thirdparty/jersey-media-json-jackson-2.27.jar')
-
-    compile files('lib/thirdparty/hk2-api-2.5.0-b42.jar')
-    compile files('lib/thirdparty/hk2-locator-2.5.0-b42.jar')
-    compile files('lib/thirdparty/hk2-utils-2.5.0-b42.jar')
+    implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1'
+    implementation group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.27'
+    implementation group: 'org.glassfish.jersey.core', name: 'jersey-common', version: '2.27'
+    implementation group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.27'
+    implementation group: 'org.glassfish.jersey.media', name: 'jersey-media-json-jackson', version: '2.27'
+    implementation group: 'org.glassfish.hk2', name: 'hk2-api', version: '2.5.0-b42'
+    implementation group: 'org.glassfish.hk2', name: 'hk2-locator', version: '2.5.0-b42'
+    implementation group: 'org.glassfish.hk2', name: 'hk2-utils', version: '2.5.0-b42'
 
     testImplementation(platform('org.junit:junit-bom:5.7.1'))
     testImplementation('org.junit.jupiter:junit-jupiter')
