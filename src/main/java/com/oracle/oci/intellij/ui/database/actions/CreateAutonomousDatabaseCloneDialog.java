@@ -236,7 +236,7 @@ public class CreateAutonomousDatabaseCloneDialog extends DialogWrapper {
                 "Password required");
         return false;
       } else if (!Arrays.equals(passwordField.getPassword(), confirmPasswordField.getPassword())) {
-        Messages.showErrorDialog("Password and confirmation must match.",
+        Messages.showErrorDialog("ADMIN passwords don't match.",
                 "Passwords mismatch");
         return false;
       } else if(!bringYourOwnLicenseRadioButton.isSelected() &&

@@ -44,8 +44,8 @@ public class AdminPasswordDialog extends DialogWrapper {
   @Override protected void doOKAction() {
     if (!Arrays.equals(passwordTextField.getPassword(),
             confirmPasswordText.getPassword())) {
-      Messages.showErrorDialog("Error. Password mismatch",
-              "Confirmation must match password.");
+      Messages.showErrorDialog("ADMIN passwords don't match.",
+              "Passwords mismatch");
       return;
     }
 

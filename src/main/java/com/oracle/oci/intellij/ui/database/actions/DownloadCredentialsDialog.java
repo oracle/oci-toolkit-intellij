@@ -253,11 +253,11 @@ public class DownloadCredentialsDialog extends DialogWrapper {
     final char[] confirmPassword = confirmPasswordField.getPassword();
 
     if (password == null || password.length == 0) {
-      Messages.showErrorDialog("Wallet password cannot be empty", " Error");
+      Messages.showErrorDialog("Wallet password cannot be empty. ", " Password empty");
       return false;
     }
     else if (!Arrays.equals(password, confirmPassword)) {
-      Messages.showErrorDialog("Confirmation must match password", "Error");
+      Messages.showErrorDialog("Wallet passwords don't match.", "Passwords mismatch");
       return false;
     }
     Arrays.fill(password,' ');
@@ -267,7 +267,7 @@ public class DownloadCredentialsDialog extends DialogWrapper {
 
   private boolean isValidWalletDir(final String dirPath) {
     if (dirPath == null || dirPath.trim().equals("")) {
-      Messages.showErrorDialog("Wallet location cannot be empty", "Error");
+      Messages.showErrorDialog("Wallet location cannot be empty. ", "Error");
       return false;
     }
 

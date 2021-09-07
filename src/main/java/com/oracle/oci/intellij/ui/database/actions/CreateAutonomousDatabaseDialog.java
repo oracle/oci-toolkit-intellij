@@ -410,12 +410,10 @@ public class CreateAutonomousDatabaseDialog extends DialogWrapper {
         return false;
       } else if ((passwordField.getPassword() == null || passwordField.getPassword().length == 0) ||
               (confirmPasswordField.getPassword() == null || confirmPasswordField.getPassword().length == 0)) {
-        Messages.showErrorDialog("Password cannot be empty.",
-                "Password required");
+        Messages.showErrorDialog("Password cannot be empty.","Password required");
         return false;
       } else if (!Arrays.equals(passwordField.getPassword(), confirmPasswordField.getPassword())) {
-        Messages.showErrorDialog("Password and confirmation must match.",
-                "Passwords mismatch");
+        Messages.showErrorDialog("ADMIN passwords don't match.","Passwords mismatch");
         return false;
       } else if(!bringYourOwnLicenseRadioButton.isSelected() &&
               !licenseIncludedRadioButton.isSelected()) {
