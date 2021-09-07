@@ -42,11 +42,11 @@ public class SystemPreferences {
   // Dispatcher that notifies the property change event to all listeners.
   private final static PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(new Object());
 
-  public static void setConfigInfo(String configFilePath, String profileName, String regionName) {
+  public static void setConfigInfo(String configFilePath, String profileName, String regionName, Compartment compartment) {
     preferences.put(LAST_READ_CONFIG_FILE_PATH_KEY, configFilePath);
     preferences.put(LAST_READ_PROFILE_NAME_KEY, profileName);
     currentRegionName = regionName;
-    currentCompartment = null;
+    currentCompartment = compartment;
 
     propertyChangeSupport.firePropertyChange(EVENT_SETTINGS_UPDATE, "", configFilePath);
   }

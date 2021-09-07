@@ -181,6 +181,10 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
                 new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.DOWNLOAD_CREDENTIALS,
                         selectedSummary, "Download Client Credentials (Wallet)")));
 
+        popupMenu.add(new JMenuItem(
+                new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.UPDATE_NETWORK_ACCESS,
+                        selectedSummary, "Update Network Access")));
+
         popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(AutonomousDatabaseMoreActions.Action.SCALE_ADB,
                 selectedSummary, "Scale Up/Down")));
 

@@ -16,7 +16,7 @@ public class AutonomousDatabaseMoreActions extends AbstractAction {
 
   public enum Action {
     ADB_INFO, ADMIN_PWD_CHANGE, CLONE_DB, CREATE_ADB, DOWNLOAD_CREDENTIALS,
-    RESTORE_ADB, SCALE_ADB, UPDATE_LICENSE
+    RESTORE_ADB, SCALE_ADB, UPDATE_LICENSE, UPDATE_NETWORK_ACCESS
   }
   private final Action action;
   private final AutonomousDatabaseSummary adbSummary;
@@ -59,6 +59,8 @@ public class AutonomousDatabaseMoreActions extends AbstractAction {
       return new AdminPasswordDialog(adbSummary);
     case DOWNLOAD_CREDENTIALS:
       return new DownloadCredentialsDialog(adbSummary);
+    case UPDATE_NETWORK_ACCESS:
+      return new UpdateNetworkAccessDialog(adbSummary);
     default:
       return null;
     }
