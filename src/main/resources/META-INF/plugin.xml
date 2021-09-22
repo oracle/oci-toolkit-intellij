@@ -1,0 +1,29 @@
+<!--*
+  * Copyright (c) 2021, Oracle and/or its affiliates.
+  * Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
+  -->
+
+<idea-plugin>
+    <id>com.oracle.ocidbtest</id>
+    <name>OCI Toolkit</name>
+    <vendor email="support@oracle.com" url="http://www.oracle.com">Oracle</vendor>
+
+    <description><![CDATA[ Oracle Cloud Infrastructure Plugin for IntelliJ IDEA]]></description>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Oracle Cloud Infrastructure Explorer" secondary="true"  anchor="bottom"
+                    factoryClass="com.oracle.oci.intellij.ui.explorer.OCIExplorerFactory"
+                    icon="/icons/toolbar-login.png"  />
+        <notificationGroup id="Oracle Cloud Infrastructure" displayType="BALLOON"/>
+    </extensions>
+    
+    <actions>
+        <group id="com.oracle.oci.intellij.ui.account.OCIExplorerActionGroup" class="com.intellij.openapi.actionSystem.DefaultActionGroup"
+               text="Oracle Cloud Infrastructure" description="Oracle Cloud Infrastructure Settings">
+            <action class="com.oracle.oci.intellij.ui.account.ConfigureAction"
+                    id="com.oracle.oci.intellij.ui.account.ConfigureAction" text="OCISettings" description="Configure OCI Settings"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="MainToolBarSettings" anchor="last"/>
+        </group>
+    </actions>
+</idea-plugin>
