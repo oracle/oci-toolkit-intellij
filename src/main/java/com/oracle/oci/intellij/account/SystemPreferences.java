@@ -17,7 +17,7 @@ import java.util.prefs.Preferences;
  */
 public class SystemPreferences {
 
-  private final static String VERSION = "1.0.0";
+  private final static String VERSION = "0.1.0";
   private static final Preferences preferences =
           Preferences.userRoot().node("oci-intellij-preferences");
   private static final String DEFAULT_CONFIG_FILE_PATH =
