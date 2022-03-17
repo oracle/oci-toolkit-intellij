@@ -40,6 +40,7 @@
                 <properties>
                   <text value="Private endpoint access only"/>
                   <toolTipText value="Restrict access to a private endpoint within an OCI VCN."/>
+                  <visible value="false"/>
                 </properties>
               </component>
             </children>
