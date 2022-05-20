@@ -4,17 +4,24 @@
  */
 package com.oracle.oci.intellij.ui.database.actions;
 
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+
 import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.account.OracleCloudAccount.DatabaseClientProxy;
 import com.oracle.oci.intellij.util.LogHandler;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
 
 public class AutonomousDatabaseMoreActions extends AbstractAction {
 
-  public enum Action {
+  /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+public enum Action {
     ADB_INFO, ADMIN_PWD_CHANGE, CLONE_DB, CREATE_ADB, DOWNLOAD_CREDENTIALS,
     RESTORE_ADB, SCALE_ADB, UPDATE_LICENSE, UPDATE_NETWORK_ACCESS
   }
@@ -39,6 +46,7 @@ public class AutonomousDatabaseMoreActions extends AbstractAction {
   }
 
   private DialogWrapper createWizard(Action action) {
+    updateAdbSummary();
     switch (action) {
     case ADB_INFO:
       final AutonomousDatabaseSummary autonomousDatabaseSummary =
@@ -64,6 +72,12 @@ public class AutonomousDatabaseMoreActions extends AbstractAction {
     default:
       return null;
     }
+  }
+
+  private void updateAdbSummary() {
+      DatabaseClientProxy databaseClient = OracleCloudAccount.getInstance().getDatabaseClient();
+      // for some reason, unknownenumvalue == "ALL"
+      databaseClient.getAutonomousDatabaseInstances(AutonomousDatabaseSummary.DbWorkload.UnknownEnumValue);
   }
 
 }

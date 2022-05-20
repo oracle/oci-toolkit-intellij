@@ -29,7 +29,7 @@ dependencies {
    implementation(files("lib/sdk/oci-java-sdk-full-2.13.1.jar"))
     implementation(fileTree("lib/thirdparty") { include("*.jar") })
     //fileTree("lib/sdk") { include("*.jar") })
-/*    implementation(files("lib/sdk/oci-java-sdk-common-2.13.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-common-2.13.0.jar"))
     implementation(files("lib/sdk/oci-java-sdk-objectstorage-2.13.0.jar"))
     implementation(files("lib/sdk/oci-java-sdk-circuitbreaker-2.13.0.jar"))
     implementation(files("lib/sdk/oci-java-sdk-objectstorage-extensions-2.13.0.jar"))
@@ -42,7 +42,7 @@ dependencies {
     implementation(files("lib/sdk/oci-java-sdk-secrets-2.13.0.jar"))
     implementation(files("lib/sdk/oci-java-sdk-objectstorage-generated-2.13.0.jar"))
     implementation(files("lib/sdk/oci-java-sdk-containerengine-2.13.0.jar"))
-    */
+    
 
     implementation(files("lib/thirdparty/resilience4j-circuitbreaker-1.2.0.jar"))
 

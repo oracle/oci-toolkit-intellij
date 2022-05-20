@@ -10,9 +10,11 @@ import com.oracle.bmc.core.VirtualNetworkClient;
 import com.oracle.bmc.core.model.NetworkSecurityGroup;
 import com.oracle.bmc.core.model.Subnet;
 import com.oracle.bmc.core.model.Vcn;
+import com.oracle.bmc.core.requests.GetVcnRequest;
 import com.oracle.bmc.core.requests.ListNetworkSecurityGroupsRequest;
 import com.oracle.bmc.core.requests.ListSubnetsRequest;
 import com.oracle.bmc.core.requests.ListVcnsRequest;
+import com.oracle.bmc.core.responses.GetVcnResponse;
 import com.oracle.bmc.core.responses.ListNetworkSecurityGroupsResponse;
 import com.oracle.bmc.core.responses.ListSubnetsResponse;
 import com.oracle.bmc.core.responses.ListVcnsResponse;
@@ -320,6 +322,13 @@ public class OracleCloudAccount {
       return instances;
     }
 
+    public AutonomousDatabase getDatabaseInfo(final AutonomousDatabaseSummary instance) {
+        GetAutonomousDatabaseRequest request = GetAutonomousDatabaseRequest.builder().
+                autonomousDatabaseId(instance.getId()).build();
+        GetAutonomousDatabaseResponse autonomousDatabase = databaseClient.getAutonomousDatabase(request);
+        return autonomousDatabase.getAutonomousDatabase();
+    }
+
     public void startInstance(final AutonomousDatabaseSummary instance) {
       LogHandler.info("Starting the Autonomous Database instance : " + instance.getId());
       databaseClient.startAutonomousDatabase(StartAutonomousDatabaseRequest.builder()
@@ -591,6 +600,28 @@ public class OracleCloudAccount {
       return listDbVersionsResponse.getItems();
     }
 
+    public void updateRequiresMTLS(AutonomousDatabaseSummary autonomousDatabaseSummary, boolean requireMTLS) {
+        UpdateAutonomousDatabaseDetails updateRequest = 
+                UpdateAutonomousDatabaseDetails.builder().isMtlsConnectionRequired(Boolean.valueOf(requireMTLS))
+                    .build();
+        databaseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
+                .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(autonomousDatabaseSummary.getId()).build());
+    }
+
+    public void updateAcl(AutonomousDatabaseSummary autonomousDatabaseSummary, List<String> whitelistIps) {
+        // Per UpdateAutonomousDatabaseDetails.whitelistedIps, if you want to clear all
+        // then set a single empty string.
+        if (whitelistIps.isEmpty())
+        {
+            whitelistIps = new ArrayList<>();
+            whitelistIps.add("");
+        }
+        UpdateAutonomousDatabaseDetails updateRequest = UpdateAutonomousDatabaseDetails.builder()
+            .whitelistedIps(whitelistIps).build();
+        databaseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
+                .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(autonomousDatabaseSummary.getId()).build());
+    }
+
     public AutonomousDatabaseSummary getAutonomousDatabaseSummary(String instanceId) {
       return instancesMap.get(instanceId);
     }
@@ -626,6 +657,28 @@ public class OracleCloudAccount {
                       .build();
       final ListVcnsResponse listVcnsResponse = virtualNetworkClient.listVcns(listVcnsRequest);
       return listVcnsResponse.getItems();
+    }
+    
+    public Vcn getVcn(String vcnId)
+    {
+        if (virtualNetworkClient == null)
+        {
+            return null;
+        }
+        GetVcnRequest request = GetVcnRequest.builder().vcnId(vcnId).build();
+        
+        GetVcnResponse response = null;
+        try {
+            response = this.virtualNetworkClient.getVcn(request);
+        } catch(Throwable e) {
+            // To handle forbidden error
+            // TODO: ErrorHandler.logError("Unable to list Autonomous Databases: "+e.getMessage());
+        }
+
+        if (response == null) {
+            return null;
+        }
+        return response.getVcn();
     }
 
     public List<Subnet> listSubnets(String compartmentId) {

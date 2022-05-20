@@ -102,7 +102,12 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
 
   private void initializeTableStructure() {
     adbInstancesTable.setModel(new DefaultTableModel(ADB_COLUMN_NAMES, 0) {
-      @Override
+      /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
+    @Override
       public boolean isCellEditable(int row, int column){
         return false;
       }
@@ -340,6 +345,10 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
   }
 
   private static class RefreshAction extends AbstractAction {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private final AutonomousDatabasesDashboard adbDetails;
 
     public RefreshAction(AutonomousDatabasesDashboard adbDetails, String actionName) {
@@ -354,6 +363,11 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
   }
 
   private static class CreateAction extends AbstractAction {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public CreateAction(String actionName) {
       super(actionName);
     }
