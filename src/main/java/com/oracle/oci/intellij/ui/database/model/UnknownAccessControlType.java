@@ -10,7 +10,7 @@ public class UnknownAccessControlType extends IPBasedAccessControlType {
 
     @Override
     public String getValue() {
-        return rawValue;
+        return this.rawValue;
     }
 
     @Override
@@ -20,6 +20,6 @@ public class UnknownAccessControlType extends IPBasedAccessControlType {
 
     @Override
     public String isValueValid() {
-        return "Unknown ACL value: "+rawValue;
+        return "Unknown ACL value: "+this.rawValue;
     }
 }

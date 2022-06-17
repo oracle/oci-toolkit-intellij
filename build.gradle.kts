@@ -26,25 +26,25 @@ repositories {
 }
 
 dependencies {
-   implementation(files("lib/sdk/oci-java-sdk-full-2.13.1.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-full-2.29.0.jar"))
     implementation(fileTree("lib/thirdparty") { include("*.jar") })
     //fileTree("lib/sdk") { include("*.jar") })
-    implementation(files("lib/sdk/oci-java-sdk-common-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-objectstorage-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-circuitbreaker-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-objectstorage-extensions-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-vault-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-core-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-keymanagement-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-database-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-workrequests-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-identity-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-secrets-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-objectstorage-generated-2.13.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-containerengine-2.13.0.jar"))
-    
+    //implementation(files("lib/sdk/oci-java-sdk-common-2.29.0.jar"))
+    //implementation(files("lib/sdk/oci-java-sdk-objectstorage-2.29.0.jar"))
+    /* implementation(files("lib/sdk/oci-java-sdk-circuitbreaker-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-objectstorage-extensions-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-vault-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-core-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-keymanagement-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-database-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-workrequests-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-identity-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-secrets-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-objectstorage-generated-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-containerengine-2.29.0.jar"))
+   */ 
 
-    implementation(files("lib/thirdparty/resilience4j-circuitbreaker-1.2.0.jar"))
+    //implementation(files("lib/thirdparty/resilience4j-circuitbreaker-1.2.0.jar"))
 
     //implementation("org.slf4j:org.slf4j-api:1.7.29")
     //implementation("com.oracle.oci.sdk:oci-java-sdk-common:2.17.0")

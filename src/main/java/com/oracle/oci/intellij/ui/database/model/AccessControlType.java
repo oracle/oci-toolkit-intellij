@@ -1,5 +1,7 @@
 package com.oracle.oci.intellij.ui.database.model;
 
+import static com.oracle.oci.intellij.ui.database.model.CIDRBlockType.CIDR_BLOCK_PATTERN;
+
 import java.util.regex.Matcher;
 
 public abstract class AccessControlType extends EventSource {
@@ -7,7 +9,7 @@ public abstract class AccessControlType extends EventSource {
         IP_BASED, VCN_BASED;
     }
     public enum Types {
-        IP("IP Address"), CIDR("CIDR Block"),  VCN_BY_OCID("VCN By OCID"), Unknown("Unknown ACL Type");
+        IP("IP Address"), CIDR("CIDR Block"),  VCN_BY_OCID("VCN By OCID"), Unknown("Unknown ACL Type"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         private String label;
 
@@ -24,21 +26,19 @@ public abstract class AccessControlType extends EventSource {
     private final Types type;
 
     public static AccessControlType parseAcl(String aclStr) {
-        if (aclStr.startsWith("ocid"))
+        if (aclStr.startsWith("ocid")) //$NON-NLS-1$
         {
             return OcidBasedAccessControlType.parseOcidAcl(aclStr);
         }
         Matcher matcher = IPAddressType.IP_ADDR_PATTERN.matcher(aclStr);
         if (matcher.matches()) {
             return new IPAddressType(aclStr);
-        } else {
-            matcher = CIDRBlockType.CIDR_BLOCK_PATTERN.matcher(aclStr);
-            if (matcher.matches()) {
-                return new CIDRBlockType(aclStr);
-            } else {
-                return new UnknownAccessControlType(aclStr);
-            }
         }
+        matcher = CIDR_BLOCK_PATTERN.matcher(aclStr);
+        if (matcher.matches()) {
+            return new CIDRBlockType(aclStr);
+        }
+        return new UnknownAccessControlType(aclStr);
     }
 
     protected AccessControlType(Category category, Types type)
@@ -48,11 +48,11 @@ public abstract class AccessControlType extends EventSource {
     }
 
     public Category getCategory() {
-        return category;
+        return this.category;
     }
     
     public Types getType() {
-        return type;
+        return this.type;
     }
 
     public final void setValue(String value) {
@@ -60,7 +60,7 @@ public abstract class AccessControlType extends EventSource {
         doSetValue(value);
         String newValue = getValue();
         if (!oldValue.equals(newValue)) {
-            this.pcs.firePropertyChange("value", oldValue, newValue);
+            this.pcs.firePropertyChange("value", oldValue, newValue); //$NON-NLS-1$
         }
     }
 

@@ -17,7 +17,7 @@ public class IPAddressType extends IPBasedAccessControlType {
 
     @Override
     public String getValue() {
-        return strValue;
+        return this.strValue;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class IPAddressType extends IPBasedAccessControlType {
             {
                 try
                 {
-                    Integer octal = Integer.valueOf(octalStr);
+                    int octal = Integer.valueOf(octalStr).intValue();
                     if (octal < 0 || octal > 255)
                     {
                         break OCTAL_LOOP;

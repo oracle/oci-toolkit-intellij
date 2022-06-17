@@ -14,7 +14,7 @@ public class PropertyListeningArrayList<E extends EventSource> extends AbstractL
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        pcs.firePropertyChange(evt);
+        this.pcs.firePropertyChange(evt);
     }
 
     @Override
@@ -32,7 +32,7 @@ public class PropertyListeningArrayList<E extends EventSource> extends AbstractL
         int curIndex = this.wrapped.size();
         if (this.wrapped.add(e)) {
             e.addPropertyChangeListener(this);
-            this.pcs.fireIndexedPropertyChange("acl", curIndex, null, e);
+            this.pcs.fireIndexedPropertyChange("acl", curIndex, null, e); //$NON-NLS-1$
             return true;
         }
         return false;
@@ -44,7 +44,7 @@ public class PropertyListeningArrayList<E extends EventSource> extends AbstractL
         if (oldValue != null) {
             oldValue.removePropertyChangeListener(this);
         }
-        this.pcs.fireIndexedPropertyChange("acl", index, oldValue, element);
+        this.pcs.fireIndexedPropertyChange("acl", index, oldValue, element); //$NON-NLS-1$
         return oldValue;
     }
 
@@ -54,7 +54,7 @@ public class PropertyListeningArrayList<E extends EventSource> extends AbstractL
         if (oldValue != null) {
             oldValue.removePropertyChangeListener(this);
         }
-        this.pcs.fireIndexedPropertyChange("acl", index, oldValue, null);
+        this.pcs.fireIndexedPropertyChange("acl", index, oldValue, null); //$NON-NLS-1$
         return oldValue;
     }
 

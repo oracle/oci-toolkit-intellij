@@ -32,11 +32,11 @@ public class OCIModelWrappers {
         }
 
         public final String toString() {
-            return this.strFunction.apply(ociObject);
+            return this.strFunction.apply(this.ociObject);
         }
         
         public OCIType getValue() {
-            return ociObject;
+            return this.ociObject;
         }
     }
     

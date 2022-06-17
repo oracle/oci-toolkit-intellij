@@ -23,29 +23,29 @@ public class AccessControlRowHolder extends EventSource implements PropertyChang
         oldAclType.removePropertyChangeListener(this);
         this.aclType = newType;
         this.aclType.addPropertyChangeListener(this);
-        this.pcs.firePropertyChange("aclType", oldAclType, this.aclType);
+        this.pcs.firePropertyChange("aclType", oldAclType, this.aclType); //$NON-NLS-1$
     }
 
     public AccessControlType getAclType() {
-        return aclType;
+        return this.aclType;
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        if ("value".equals(evt.getPropertyName())) {
-            this.pcs.firePropertyChange("value", evt.getOldValue(), evt.getNewValue());
+        if ("value".equals(evt.getPropertyName())) { //$NON-NLS-1$
+            this.pcs.firePropertyChange("value", evt.getOldValue(), evt.getNewValue()); //$NON-NLS-1$
         }
     }
 
     public boolean isFullyLoaded() {
-        return isFullyLoaded;
+        return this.isFullyLoaded;
     }
 
     public void setFullyLoaded(boolean isFullyLoaded) {
         boolean oldValue = this.isFullyLoaded;
         this.isFullyLoaded = isFullyLoaded;
         if (oldValue != this.isFullyLoaded) {
-            this.pcs.firePropertyChange("fullyLoaded", oldValue, this.isFullyLoaded);
+            this.pcs.firePropertyChange("fullyLoaded", oldValue, this.isFullyLoaded); //$NON-NLS-1$
         }
     }
 
