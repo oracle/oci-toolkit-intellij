@@ -64,6 +64,8 @@
 
 # Attempt to set APP_HOME
 
+set -x
+
 # Resolve links: $0 may be a link
 app_path=$0
 
