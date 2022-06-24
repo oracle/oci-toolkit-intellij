@@ -4,13 +4,14 @@
  */
 package com.oracle.oci.intellij.account;
 
-import com.oracle.bmc.identity.model.Compartment;
-import com.oracle.oci.intellij.util.LogHandler;
-
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+
+import com.oracle.bmc.identity.model.Compartment;
+import com.oracle.oci.intellij.util.LogHandler;
 
 /**
  * Container of system and live preferences.
@@ -113,5 +114,14 @@ public class SystemPreferences {
 
   public static void fireADBInstanceUpdateEvent(String updateType){
     propertyChangeSupport.firePropertyChange(EVENT_ADB_INSTANCE_UPDATE, "", updateType);
+  }
+  
+  public static void clearUserPreferences() {
+      try {
+          preferences.clear();
+      }
+      catch (BackingStoreException bse) {
+          bse.printStackTrace();
+      }
   }
 }

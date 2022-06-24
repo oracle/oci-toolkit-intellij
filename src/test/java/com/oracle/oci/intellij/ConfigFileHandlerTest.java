@@ -4,9 +4,9 @@
  */
 package com.oracle.oci.intellij;
 
-import com.oracle.oci.intellij.account.ConfigFileHandler;
-import com.oracle.oci.intellij.account.SystemPreferences;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,10 +14,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+
+import com.oracle.oci.intellij.account.ConfigFileHandler;
+import com.oracle.oci.intellij.account.SystemPreferences;
 
 public class ConfigFileHandlerTest {
 
+    @BeforeAll
+    public void before() {
+        SystemPreferences.clearUserPreferences();
+    }
   /**
    * Negative test.
    * Tests ConfigFileHandler.parse(String) method by supplying an empty config file name.
