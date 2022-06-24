@@ -24,11 +24,12 @@ import com.oracle.oci.intellij.account.SystemPreferences;
 
 public class ConfigFileHandlerTest {
 
+  private static File configFile = new File("./tests/resources/internal/config");
+  
   @BeforeAll
   public void before() {
       SystemPreferences.clearUserPreferences();
       try {
-        File configFile = new File("./tests/resources/internal/config");
         assertTrue(configFile.exists());
         OracleCloudAccount.getInstance()
                 .configure(configFile.getAbsolutePath()
@@ -126,7 +127,7 @@ public class ConfigFileHandlerTest {
    */
   @Test
   public void parseFile_4() {
-    assertDoesNotThrow(()->{ConfigFileHandler.parse(SystemPreferences.getConfigFilePath());});
+    assertDoesNotThrow(()->{ConfigFileHandler.parse(configFile.getAbsolutePath());});
   }
 
   /**
@@ -142,7 +143,7 @@ public class ConfigFileHandlerTest {
 
     assertDoesNotThrow(() -> {
       final ConfigFileHandler.ProfileSet profileSet =
-              ConfigFileHandler.parse(SystemPreferences.getConfigFilePath());
+              ConfigFileHandler.parse(configFile.getAbsolutePath());
 
       final File newFile = new File(newConfigFileName);
       if (newFile.createNewFile()) {
