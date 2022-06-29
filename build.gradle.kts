@@ -26,50 +26,9 @@ repositories {
 }
 
 dependencies {
-    implementation(files("lib/sdk/oci-java-sdk-full-2.29.0.jar"))
+    implementation(files("lib/sdk/oci-java-sdk-full-2.34.0.jar"))
     implementation(fileTree("lib/thirdparty") { include("*.jar") })
-    //fileTree("lib/sdk") { include("*.jar") })
-    //implementation(files("lib/sdk/oci-java-sdk-common-2.29.0.jar"))
-    //implementation(files("lib/sdk/oci-java-sdk-objectstorage-2.29.0.jar"))
-    /* implementation(files("lib/sdk/oci-java-sdk-circuitbreaker-2.29.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-objectstorage-extensions-2.29.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-vault-2.29.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-core-2.29.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-keymanagement-2.29.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-database-2.29.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-workrequests-2.29.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-identity-2.29.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-secrets-2.29.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-objectstorage-generated-2.29.0.jar"))
-    implementation(files("lib/sdk/oci-java-sdk-containerengine-2.29.0.jar"))
-   */ 
-
-    //implementation(files("lib/thirdparty/resilience4j-circuitbreaker-1.2.0.jar"))
-
-    //implementation("org.slf4j:org.slf4j-api:1.7.29")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-common:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-objectstorage:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-objectstorage-extensions:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-vault:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-core:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-keymanagement:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-database:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-workrequests:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-identity:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-secrets:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-objectstorage-generated:2.17.0")
-    //implementation("com.oracle.oci.sdk:oci-java-sdk-containerengine:2.17.0")
-
-    implementation("javax.ws.rs:javax.ws.rs-api:2.1")
-    implementation("org.glassfish.jersey.core:jersey-client:2.27")
-    implementation("org.glassfish.jersey.core:jersey-common:2.27")
-    implementation("org.glassfish.jersey.inject:jersey-hk2:2.27")
-    implementation("org.glassfish.jersey.media:jersey-media-json-jackson:2.27")
-    implementation("org.glassfish.hk2:hk2-api:2.5.0-b42")
-    implementation("org.glassfish.hk2:hk2-locator:2.5.0-b42")
-    implementation("org.glassfish.hk2:hk2-utils:2.5.0-b4")
-
+    
     testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
