@@ -14,7 +14,6 @@
 ^pom\.xml$
 
 ^src/.*
-^tests/.*
 ^resources/.*
 
 
