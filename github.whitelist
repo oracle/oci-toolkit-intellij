@@ -12,8 +12,11 @@
 ^oci-intellij-plugin\.iml$
 ^settings\.gradle\.kts$
 ^pom\.xml$
+^gradlew\.bat$
+^gradlew$
 
 ^src/.*
 ^resources/.*
+^gradle/.*
 
 
