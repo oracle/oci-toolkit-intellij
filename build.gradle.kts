@@ -38,8 +38,6 @@ intellij {
     version.set(properties("platformVersion"))
     type.set(properties("platformType"))
     //downloadSources.set(!isCI)
-//    sinceBuild.set(properties("pluginSinceBuild"))
-//    untilBuild.set(properties("pluginUpdateBuild"))
     updateSinceUntilBuild.set(false)
     //instrumentCode.set(false)
     //ideaDependencyCachePath.set(dependencyCachePath)
@@ -47,6 +45,8 @@ intellij {
     plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
     //sandboxDir.set("$buildDir/$baseIDE-sandbox-$platformVersion")
 }
+
+pluginSinceBuild = properties("pluginSinceBuild")
 
 tasks {
     runIde {
@@ -56,5 +56,11 @@ tasks {
             "-Xmx2048m",
             "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1044",
         )
+    }
+
+    patchPluginXml {
+        version.set("${project.version}")
+        sinceBuild.set("${project.pluginSinceBuild}")
+//        untilBuild.set("221.*")
     }
 }

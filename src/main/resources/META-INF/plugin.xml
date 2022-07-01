@@ -7,7 +7,7 @@
     <id>com.oracle.ocidbtest</id>
     <name>OCI Toolkit</name>
     <vendor email="support@oracle.com" url="http://www.oracle.com">Oracle</vendor>
-    <idea-version since-build="211" until-build="213.*"/>
+    <idea-version since-build="211" />
     <description><![CDATA[ Oracle Cloud Infrastructure Plugin for IntelliJ IDEA]]></description>
 
     <extensions defaultExtensionNs="com.intellij">
