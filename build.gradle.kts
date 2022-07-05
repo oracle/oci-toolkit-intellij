@@ -19,6 +19,7 @@ plugins {
 
 group = properties("pluginGroup")
 version = properties("pluginVersion")
+val sinceBuildVersion = properties("pluginSinceBuild")
 
 // Configure project's dependencies
 repositories {
@@ -46,7 +47,6 @@ intellij {
     //sandboxDir.set("$buildDir/$baseIDE-sandbox-$platformVersion")
 }
 
-pluginSinceBuild = properties("pluginSinceBuild")
 
 tasks {
     runIde {
@@ -60,7 +60,6 @@ tasks {
 
     patchPluginXml {
         version.set("${project.version}")
-        sinceBuild.set("${project.pluginSinceBuild}")
-//        untilBuild.set("221.*")
+        sinceBuild.set(sinceBuildVersion)
     }
 }
