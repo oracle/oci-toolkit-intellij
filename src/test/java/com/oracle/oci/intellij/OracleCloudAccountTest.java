@@ -4,6 +4,17 @@
  */
 package com.oracle.oci.intellij;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Order;
+
 import com.oracle.bmc.database.model.AutonomousDatabaseBackupSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseWallet;
@@ -13,25 +24,22 @@ import com.oracle.bmc.identity.model.RegionSubscription;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.util.LogHandler;
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Order;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class OracleCloudAccountTest {
 
+  public static final String COMPARTMENT_ID = "ocid1.compartment.oc1..aaaaaaaasrbmmnzhuhtcutbfnn52pswbxwao5n7x7zkpg52eklahfcgbtw6q"; 
+
+  @SuppressWarnings("static-method")
   @BeforeAll
   @Test
   public void before() {
+    SystemPreferences.clearUserPreferences();
     try {
+      File configFile = new File("./tests/resources/internal/config");
+      assertTrue(configFile.exists());
       OracleCloudAccount.getInstance()
-              .configure(SystemPreferences.getConfigFilePath(), SystemPreferences.getProfileName());
+              .configure(configFile.getAbsolutePath()
+                         , SystemPreferences.getProfileName());
     } catch (Exception ioException) {
       /*
       Configuring cloud account is sufficient for testing the APIs. Since
@@ -40,8 +48,8 @@ public class OracleCloudAccountTest {
     }
   }
 
-  @Test
-  @Order(1)
+//  @Test
+//  @Order(1)
   public void test_1() {
     assertDoesNotThrow(() -> {
       final Compartment rootCompartment =
@@ -132,8 +140,8 @@ public class OracleCloudAccountTest {
     });
   }
 
-  @Test
-  @Order(6)
+//  @Test
+//  @Order(6)
   public void test_6() {
     final OracleCloudAccount.DatabaseClientProxy databaseClientProxy =
             OracleCloudAccount.getInstance().getDatabaseClient();
