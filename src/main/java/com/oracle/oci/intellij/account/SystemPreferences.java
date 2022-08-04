@@ -4,13 +4,14 @@
  */
 package com.oracle.oci.intellij.account;
 
-import com.oracle.bmc.identity.model.Compartment;
-import com.oracle.oci.intellij.util.LogHandler;
-
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+
+import com.oracle.bmc.identity.model.Compartment;
+import com.oracle.oci.intellij.util.LogHandler;
 
 /**
  * Container of system and live preferences.
@@ -42,11 +43,11 @@ public class SystemPreferences {
   // Dispatcher that notifies the property change event to all listeners.
   private final static PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(new Object());
 
-  public static void setConfigInfo(String configFilePath, String profileName, String regionName) {
+  public static void setConfigInfo(String configFilePath, String profileName, String regionName, Compartment compartment) {
     preferences.put(LAST_READ_CONFIG_FILE_PATH_KEY, configFilePath);
     preferences.put(LAST_READ_PROFILE_NAME_KEY, profileName);
     currentRegionName = regionName;
-    currentCompartment = null;
+    currentCompartment = compartment;
 
     propertyChangeSupport.firePropertyChange(EVENT_SETTINGS_UPDATE, "", configFilePath);
   }
@@ -113,5 +114,14 @@ public class SystemPreferences {
 
   public static void fireADBInstanceUpdateEvent(String updateType){
     propertyChangeSupport.firePropertyChange(EVENT_ADB_INSTANCE_UPDATE, "", updateType);
+  }
+  
+  public static void clearUserPreferences() {
+      try {
+          preferences.clear();
+      }
+      catch (BackingStoreException bse) {
+          bse.printStackTrace();
+      }
   }
 }
