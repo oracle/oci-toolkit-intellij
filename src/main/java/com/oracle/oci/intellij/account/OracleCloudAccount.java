@@ -6,6 +6,18 @@ package com.oracle.oci.intellij.account;
 
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
+import com.oracle.bmc.core.VirtualNetworkClient;
+import com.oracle.bmc.core.model.NetworkSecurityGroup;
+import com.oracle.bmc.core.model.Subnet;
+import com.oracle.bmc.core.model.Vcn;
+import com.oracle.bmc.core.requests.GetVcnRequest;
+import com.oracle.bmc.core.requests.ListNetworkSecurityGroupsRequest;
+import com.oracle.bmc.core.requests.ListSubnetsRequest;
+import com.oracle.bmc.core.requests.ListVcnsRequest;
+import com.oracle.bmc.core.responses.GetVcnResponse;
+import com.oracle.bmc.core.responses.ListNetworkSecurityGroupsResponse;
+import com.oracle.bmc.core.responses.ListSubnetsResponse;
+import com.oracle.bmc.core.responses.ListVcnsResponse;
 import com.oracle.bmc.database.DatabaseClient;
 import com.oracle.bmc.database.model.*;
 import com.oracle.bmc.database.requests.*;
@@ -14,11 +26,9 @@ import com.oracle.bmc.identity.IdentityClient;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.CreateCompartmentDetails;
 import com.oracle.bmc.identity.model.RegionSubscription;
-import com.oracle.bmc.identity.requests.CreateCompartmentRequest;
-import com.oracle.bmc.identity.requests.DeleteCompartmentRequest;
-import com.oracle.bmc.identity.requests.ListCompartmentsRequest;
-import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
+import com.oracle.bmc.identity.requests.*;
 import com.oracle.bmc.identity.responses.CreateCompartmentResponse;
+import com.oracle.bmc.identity.responses.GetCompartmentResponse;
 import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
 import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
@@ -50,6 +60,7 @@ public class OracleCloudAccount {
   private AuthenticationDetailsProvider authenticationDetailsProvider = null;
   private final IdentityClientProxy identityClientProxy = new IdentityClientProxy();
   private final DatabaseClientProxy databaseClientProxy = new DatabaseClientProxy();
+  private final VirtualNetworkClientProxy virtualNetworkClientProxy = new VirtualNetworkClientProxy();
 
   private OracleCloudAccount() {
     // Add the property change listeners in the order they have to be notified.
@@ -95,7 +106,9 @@ public class OracleCloudAccount {
 
     identityClientProxy.init(profile.get("region"));
     databaseClientProxy.init(profile.get("region"));
-    SystemPreferences.setConfigInfo(configFile, profile.getName(), profile.get("region"));
+    virtualNetworkClientProxy.init(profile.get("region"));
+    SystemPreferences.setConfigInfo(configFile, profile.getName(),
+            profile.get("region"), identityClientProxy.getRootCompartment());
   }
 
   private void validate() {
@@ -114,6 +127,11 @@ public class OracleCloudAccount {
     return databaseClientProxy;
   }
 
+  public VirtualNetworkClientProxy getVirtualNetworkClientProxy() {
+    validate();
+    return virtualNetworkClientProxy;
+  }
+
   private void reset() {
     authenticationDetailsProvider = null;
   }
@@ -123,7 +141,6 @@ public class OracleCloudAccount {
    * This proxy class holds the updated reference of {@link IdentityClient} object.
    */
   public class IdentityClientProxy implements PropertyChangeListener {
-    private static final String ROOT_COMPARTMENT_NAME = "root";
     private IdentityClient identityClient;
 
     // Instance of this should be taken from the outer class factory method only.
@@ -132,7 +149,7 @@ public class OracleCloudAccount {
 
     void init(String region) {
       reset();
-      identityClient = new IdentityClient(authenticationDetailsProvider);
+      identityClient = IdentityClient.builder().build(authenticationDetailsProvider);
       identityClient.setRegion(region);
     }
 
@@ -174,11 +191,13 @@ public class OracleCloudAccount {
      * @return the root compartment.
      */
     public Compartment getRootCompartment() {
+      String rootCompartmentName =
+              getCompartment(authenticationDetailsProvider.getTenantId()).getName();
       String tenantId = authenticationDetailsProvider.getTenantId();
       return Compartment.builder()
               .compartmentId(tenantId)
               .id(tenantId)
-              .name(ROOT_COMPARTMENT_NAME)
+              .name(rootCompartmentName + " (root)")
               .lifecycleState(Compartment.LifecycleState.Active)
               .build();
     }
@@ -214,6 +233,12 @@ public class OracleCloudAccount {
       return response.getItems();
     }
 
+    public Compartment getCompartment(String compartmentId) {
+      final GetCompartmentRequest request = GetCompartmentRequest.builder().compartmentId(compartmentId).build();
+      final GetCompartmentResponse response = identityClient.getCompartment(request);
+      return response.getCompartment();
+    }
+
     @Override
     public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
       LogHandler.info("IdentityClientProxy: Handling the event update : " + propertyChangeEvent.toString());
@@ -246,7 +271,7 @@ public class OracleCloudAccount {
 
     void init(String region) {
       reset();
-      databaseClient = new DatabaseClient(authenticationDetailsProvider);
+      databaseClient = DatabaseClient.builder().build(authenticationDetailsProvider);
       databaseClient.setRegion(region);
     }
 
@@ -295,6 +320,13 @@ public class OracleCloudAccount {
         }
       }
       return instances;
+    }
+
+    public AutonomousDatabase getDatabaseInfo(final AutonomousDatabaseSummary instance) {
+        GetAutonomousDatabaseRequest request = GetAutonomousDatabaseRequest.builder().
+                autonomousDatabaseId(instance.getId()).build();
+        GetAutonomousDatabaseResponse autonomousDatabase = databaseClient.getAutonomousDatabase(request);
+        return autonomousDatabase.getAutonomousDatabase();
     }
 
     public void startInstance(final AutonomousDatabaseSummary instance) {
@@ -568,6 +600,28 @@ public class OracleCloudAccount {
       return listDbVersionsResponse.getItems();
     }
 
+    public void updateRequiresMTLS(AutonomousDatabaseSummary autonomousDatabaseSummary, boolean requireMTLS) {
+        UpdateAutonomousDatabaseDetails updateRequest = 
+                UpdateAutonomousDatabaseDetails.builder().isMtlsConnectionRequired(Boolean.valueOf(requireMTLS))
+                    .build();
+        databaseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
+                .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(autonomousDatabaseSummary.getId()).build());
+    }
+
+    public void updateAcl(AutonomousDatabaseSummary autonomousDatabaseSummary, List<String> whitelistIps) {
+        // Per UpdateAutonomousDatabaseDetails.whitelistedIps, if you want to clear all
+        // then set a single empty string.
+        if (whitelistIps.isEmpty())
+        {
+            whitelistIps = new ArrayList<>();
+            whitelistIps.add("");
+        }
+        UpdateAutonomousDatabaseDetails updateRequest = UpdateAutonomousDatabaseDetails.builder()
+            .whitelistedIps(whitelistIps).build();
+        databaseClient.updateAutonomousDatabase(UpdateAutonomousDatabaseRequest.builder()
+                .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(autonomousDatabaseSummary.getId()).build());
+    }
+
     public AutonomousDatabaseSummary getAutonomousDatabaseSummary(String instanceId) {
       return instancesMap.get(instanceId);
     }
@@ -580,6 +634,80 @@ public class OracleCloudAccount {
       }
     }
 
+  }
+
+  public class VirtualNetworkClientProxy {
+    private VirtualNetworkClient virtualNetworkClient;
+
+    // Instance of this should be taken from the outer class factory method only.
+    private VirtualNetworkClientProxy() {
+    }
+
+    void init(String region) {
+      reset();
+      virtualNetworkClient = VirtualNetworkClient.builder().build(authenticationDetailsProvider);
+      virtualNetworkClient.setRegion(region);
+    }
+
+    public List<Vcn> listVcns(String compartmentId) {
+      final ListVcnsRequest listVcnsRequest =
+              ListVcnsRequest.builder()
+                      .compartmentId(compartmentId)
+                      .lifecycleState(Vcn.LifecycleState.Available)
+                      .build();
+      final ListVcnsResponse listVcnsResponse = virtualNetworkClient.listVcns(listVcnsRequest);
+      return listVcnsResponse.getItems();
+    }
+    
+    public Vcn getVcn(String vcnId)
+    {
+        if (virtualNetworkClient == null)
+        {
+            return null;
+        }
+        GetVcnRequest request = GetVcnRequest.builder().vcnId(vcnId).build();
+        
+        GetVcnResponse response = null;
+        try {
+            response = this.virtualNetworkClient.getVcn(request);
+        } catch(Throwable e) {
+            // To handle forbidden error
+            // TODO: ErrorHandler.logError("Unable to list Autonomous Databases: "+e.getMessage());
+        }
+
+        if (response == null) {
+            return null;
+        }
+        return response.getVcn();
+    }
+
+    public List<Subnet> listSubnets(String compartmentId) {
+      final ListSubnetsRequest listSubnetsRequest =
+              ListSubnetsRequest.builder()
+                      .compartmentId(compartmentId)
+                      .lifecycleState(Subnet.LifecycleState.Available)
+                      .build();
+      final ListSubnetsResponse listSubnetsResponse = virtualNetworkClient.listSubnets(listSubnetsRequest);
+      return listSubnetsResponse.getItems();
+    }
+
+    public List<NetworkSecurityGroup> listNetworkSecurityGroups(String compartmentId) {
+      final ListNetworkSecurityGroupsRequest listNetworkSecurityGroupsRequest =
+              ListNetworkSecurityGroupsRequest.builder()
+                      .compartmentId(compartmentId)
+                      .lifecycleState(NetworkSecurityGroup.LifecycleState.Available)
+                      .build();
+      final ListNetworkSecurityGroupsResponse listNetworkSecurityGroupsResponse =
+              virtualNetworkClient.listNetworkSecurityGroups(listNetworkSecurityGroupsRequest);
+      return listNetworkSecurityGroupsResponse.getItems();
+    }
+
+    private void reset() {
+      if (virtualNetworkClient != null) {
+        virtualNetworkClient.close();
+        virtualNetworkClient = null;
+      }
+    }
   }
 
 }
