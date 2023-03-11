@@ -8,7 +8,7 @@
 	<packaging>pom</packaging>
  	<version>0.2.0</version>
 	<properties>
-		<oci.java.sdk.ver>2.13.0</oci.java.sdk.ver>
+		<oci.java.sdk.ver>3.2.2</oci.java.sdk.ver>
 	</properties>
 
 	<!-- START: Delete Public GitHub -->

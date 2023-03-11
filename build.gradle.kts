@@ -10,7 +10,7 @@ plugins {
     // Kotlin support
     //id("org.jetbrains.kotlin.jvm") version "1.6.10"
     // Gradle IntelliJ Plugin
-    id("org.jetbrains.intellij") version "1.4.0"
+    id("org.jetbrains.intellij") version "1.13.1"
     // Gradle Changelog Plugin
     //id("org.jetbrains.changelog") version "1.3.1"
     // Gradle Qodana Plugin
@@ -27,8 +27,13 @@ repositories {
 }
 
 dependencies {
-    implementation(files("lib/sdk/oci-java-sdk-full-2.34.0.jar"))
-    implementation(fileTree("lib/thirdparty") { include("*.jar") })
+    implementation("com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey:3.2.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation(files("lib/sdk/oci-java-sdk-full-3.2.2.jar"))
+    //implementation(files("lib/sdk/jersey/oci-java-sdk-common-httpclient-jersey-3.2.0.jar"))
+    implementation(fileTree("lib/thirdparty/lib") { include("*.jar") })
+    implementation(fileTree("lib/thirdparty/jersey/lib") { include("*.jar") })
     
     testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -51,6 +56,7 @@ intellij {
 tasks {
     runIde {
         systemProperties["idea.auto.reload.plugins"] = true
+        systemProperties["idea.log.debug.categories"] = true
         jvmArgs = listOf(
             "-Xms512m",
             "-Xmx2048m",
