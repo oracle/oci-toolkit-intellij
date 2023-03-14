@@ -8,12 +8,14 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
+import org.opentest4j.AssertionFailedError;
 
 import com.oracle.bmc.database.model.AutonomousDatabaseBackupSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
@@ -38,8 +40,8 @@ public class OracleCloudAccountTest {
       File configFile = new File("./tests/resources/internal/config");
       assertTrue(configFile.exists());
       OracleCloudAccount.getInstance()
-              .configure(configFile.getAbsolutePath()
-                         , SystemPreferences.getProfileName());
+        .configure(configFile.getAbsolutePath()
+               , SystemPreferences.getProfileName());
     } catch (Exception ioException) {
       /*
       Configuring cloud account is sufficient for testing the APIs. Since
