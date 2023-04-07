@@ -75,7 +75,7 @@ To contribute, see [CONTRIBUTING](./CONTRIBUTING.md) for details.
   4. Build the plugin using the Gradle ``build`` target.
   5. After the successful build, install ``oci-toolkit-intellij/build/distributions/oci-intellij-plugin-x.y.z.zip`` through IntelliJ's plugin wizard.
   
-  Note: please check if oci-java-sdk' version is the same as what gradle loads depends on (build.gradle.kts -> dependencies ...), otherways you can download the appropriate version of oci-java-sdk from [oci-java-sdk](https://github.com/oracle/oci-java-sdk/releases) .
+  Note: please check if oci-java-sdk version is the same as what gradle  depends on (check this file : build.gradle.kts -> dependencies ...), otherways you can download the appropriate version of oci-java-sdk from [oci-java-sdk](https://github.com/oracle/oci-java-sdk/releases) .
 ## License
 
 Copyright (c) 2021, Oracle and/or its affiliates.
