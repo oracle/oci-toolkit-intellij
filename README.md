@@ -70,11 +70,12 @@ To contribute, see [CONTRIBUTING](./CONTRIBUTING.md) for details.
 
   1. Clone the project ``oci-toolkit-intellij`` using 'Get from VCS' in IntelliJ or by running the command,
      git clone https://username@github.com/oracle/oci-toolkit-intellij.git
-  2. Download ``oci-java-sdk-2.1.0.zip`` from [oci-java-sdk  2.1.0](https://github.com/oracle/oci-java-sdk/releases/tag/v2.1.0) and extract.
-  3. Copy ``oci-java-sdk-2/lib/oci-java-sdk-full-2.1.0.jar`` to ``oci-toolkit-intellij/lib/sdk`` folder and copy ``oci-java-sdk-2/third-party/lib/resilience4j-circuitbreaker-1.2.0.jar`` to ``oci-toolkit-intellij/lib/thirdparty`` folder.
+  2. Download ``oci-java-sdk-2.34.0.zip`` from [oci-java-sdk  2.34.0](https://github.com/oracle/oci-java-sdk/releases/tag/v2.34.0) and extract.
+  3. Copy ``oci-java-sdk-2/lib/oci-java-sdk-full-2.34.0.jar`` to ``oci-toolkit-intellij/lib/sdk`` folder and copy all the jar files in  ``oci-java-sdk-2/third-party/lib``folder to ``oci-toolkit-intellij/lib/thirdparty`` folder.
   4. Build the plugin using the Gradle ``build`` target.
   5. After the successful build, install ``oci-toolkit-intellij/build/distributions/oci-intellij-plugin-x.y.z.zip`` through IntelliJ's plugin wizard.
-
+  
+  Note: please check if oci-java-sdk' version is the same as what gradle loads depends on (build.gradle.kts -> dependencies ...), otherways you can download the appropriate version of oci-java-sdk from [oci-java-sdk](https://github.com/oracle/oci-java-sdk/releases) .
 ## License
 
 Copyright (c) 2021, Oracle and/or its affiliates.
