@@ -23,6 +23,7 @@ public enum Icons {
     REGION_SOUTH_KOREA("/icons/regions/south-korea-flag.png"),
     REGION_SWITZERLAND("/icons/regions/switzerland-flag.png"),
     REGION_AUSTRALIA("/icons/regions/australia-flag.png"),
+    DEFAULT_REGION("/icons/regions/default-flag.png"),
     DATABASE("icons/database.png"),
     DATABASE_AVAILABLE_STATE("icons/db-available-state.png"),
     DATABASE_IN_PROGRESS_STATE("icons/db-inprogress-state.png"),

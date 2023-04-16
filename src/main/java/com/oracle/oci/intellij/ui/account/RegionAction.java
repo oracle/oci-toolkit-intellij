@@ -41,12 +41,53 @@ public class RegionAction extends AnAction {
         put("ap-tokyo-1", Icons.REGION_JAPAN.getPath());
         put("eu-zurich-1", Icons.REGION_SWITZERLAND.getPath());
         put("ap-sydney-1", Icons.REGION_AUSTRALIA.getPath());
+
+
+        put("ap-hyderabad-1", Icons.REGION_INDIA.getPath());
+        put("ap-osaka-1", Icons.REGION_JAPAN.getPath());
+        put("us-chicago-1", Icons.REGION_US.getPath());
+        put("ap-melbourne-1", Icons.REGION_AUSTRALIA.getPath());
+        put("us-sanjose-1", Icons.REGION_US.getPath());
+        put("ap-chuncheon-1", Icons.REGION_SOUTH_KOREA.getPath());
+        put("ca-montreal-1", Icons.REGION_CANADA.getPath());
+
+
+        put("eu-amsterdam-1", Icons.DEFAULT_REGION.getPath());// netherlands
+        put("eu-stockholm-1", Icons.DEFAULT_REGION.getPath());//suid
+        put("me-abudhabi-1", Icons.DEFAULT_REGION.getPath());// United Arab Emirates
+        put("eu-paris-1", Icons.DEFAULT_REGION.getPath()); // france
+        put("uk-cardiff-1", Icons.DEFAULT_REGION.getPath()); //Wales
+        put("me-dubai-1", Icons.DEFAULT_REGION.getPath());// United Arab Emirates
+        put("sa-saopaulo-1", Icons.DEFAULT_REGION.getPath());// brazil
+        put("me-jeddah-1", Icons.DEFAULT_REGION.getPath());// saudi-arabia
+        put("af-johannesburg-1", Icons.DEFAULT_REGION.getPath());//South Africa
+        put("eu-milan-1", Icons.DEFAULT_REGION.getPath()); // italy
+        put("eu-madrid-1", Icons.DEFAULT_REGION.getPath()); //spain
+        put("eu-marseille-1", Icons.DEFAULT_REGION.getPath());//france
+        put("il-jerusalem-1", Icons.DEFAULT_REGION.getPath());//israel
+        put("mx-queretaro-1", Icons.DEFAULT_REGION.getPath());//mexico
+        put("sa-santiago-1", Icons.DEFAULT_REGION.getPath()); //chile
+        put("ap-singapore-1", Icons.DEFAULT_REGION.getPath());//Singapore
+        put("sa-vinhedo-1", Icons.DEFAULT_REGION.getPath());//brazil
       }
     };
 
-    regionIcon = new ImageIcon(
-            RegionAction.class
-                    .getResource(iconMap.get(SystemPreferences.getRegionName())));
+    regionIcon = getCurrentRegionIcon();
+  }
+
+  public static ImageIcon getCurrentRegionIcon() {
+    String regionName = SystemPreferences.getRegionName();
+    if (regionName != null) {
+      String icon = iconMap.get(regionName);
+      if (icon != null) {
+        return new ImageIcon(
+                RegionAction.class
+                        .getResource(icon));
+      }
+
+    }
+
+    return   new ImageIcon(RegionAction.class.getResource(Icons.DEFAULT_REGION.getPath()));
   }
 
   public RegionAction(){
@@ -105,8 +146,7 @@ public class RegionAction extends AnAction {
 
   @Override
   public void update(@NotNull AnActionEvent event) {
-    event.getPresentation().setIcon(new ImageIcon(RegionAction.class
-            .getResource(iconMap.get(SystemPreferences.getRegionName()))));
+    event.getPresentation().setIcon(getCurrentRegionIcon());
     super.update(event);
   }
 
