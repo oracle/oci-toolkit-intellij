@@ -245,23 +245,27 @@ public class OracleCloudAccount {
      * @return the root compartment.
      */
     public Compartment getRootCompartment() {
-      String rootCompartmentName =
-              getCompartment(authenticationDetailsProvider.getTenantId()).getName();
+      // here i am still getting all the compartments
+      Compartment rootCompartment = getCompartmentList(authenticationDetailsProvider.getTenantId()).get(0);
+
+      String rootCompartmentName =rootCompartment.getName();
       String tenantId = authenticationDetailsProvider.getTenantId();
       return Compartment.builder()
               .compartmentId(tenantId)
-              .id(tenantId)
+              .id(rootCompartment.getId())
               .name(rootCompartmentName + " (root)")
               .lifecycleState(Compartment.LifecycleState.Active)
               .build();
     }
 
-    public List<Compartment> getCompartmentList(Compartment compartment) {
+
+
+    public List<Compartment> getCompartmentList(String compartmentId) {
       final List<Compartment> compartmentList = new ArrayList<>();
 
       final ListCompartmentsResponse response = identityClient.listCompartments(
               ListCompartmentsRequest.builder()
-                      .compartmentId(compartment.getId())
+                      .compartmentId(compartmentId)
                       .lifecycleState(Compartment.LifecycleState.Active)
                       .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible)
                       .build());

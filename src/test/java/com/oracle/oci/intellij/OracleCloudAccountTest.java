@@ -58,12 +58,12 @@ public class OracleCloudAccountTest {
               OracleCloudAccount.getInstance().getIdentityClient().getRootCompartment();
 
       final List<Compartment> compartmentList =
-              OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(rootCompartment);
+              OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(rootCompartment.getId());
 
       compartmentList.forEach(compartment -> {
         LogHandler.info("\t" + compartment.getName());
         final List<Compartment> subCompartmentList =
-                OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(compartment);
+                OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(compartment.getId());
         subCompartmentList.forEach((subCompartment)->{
           LogHandler.info("\t\t" + subCompartment.getName());
         });

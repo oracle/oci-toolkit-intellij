@@ -120,7 +120,7 @@ public class CompartmentSelection extends DialogWrapper {
         });
       } else {
         final List<Compartment> childCompartments =
-                OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(givenCompartment);
+                OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(givenCompartment.getId());
 
         for(Compartment childCompartment: childCompartments) {
           final DefaultMutableTreeNode childTreeNode = new DefaultMutableTreeNode(childCompartment);
