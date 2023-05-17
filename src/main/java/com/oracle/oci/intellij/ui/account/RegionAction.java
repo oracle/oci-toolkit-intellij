@@ -52,23 +52,37 @@ public class RegionAction extends AnAction {
         put("ca-montreal-1", Icons.REGION_CANADA.getPath());
 
 
-        put("eu-amsterdam-1", Icons.DEFAULT_REGION.getPath());// netherlands
-        put("eu-stockholm-1", Icons.DEFAULT_REGION.getPath());//suid
-        put("me-abudhabi-1", Icons.DEFAULT_REGION.getPath());// United Arab Emirates
-        put("eu-paris-1", Icons.DEFAULT_REGION.getPath()); // france
-        put("uk-cardiff-1", Icons.DEFAULT_REGION.getPath()); //Wales
-        put("me-dubai-1", Icons.DEFAULT_REGION.getPath());// United Arab Emirates
-        put("sa-saopaulo-1", Icons.DEFAULT_REGION.getPath());// brazil
-        put("me-jeddah-1", Icons.DEFAULT_REGION.getPath());// saudi-arabia
-        put("af-johannesburg-1", Icons.DEFAULT_REGION.getPath());//South Africa
-        put("eu-milan-1", Icons.DEFAULT_REGION.getPath()); // italy
-        put("eu-madrid-1", Icons.DEFAULT_REGION.getPath()); //spain
-        put("eu-marseille-1", Icons.DEFAULT_REGION.getPath());//france
-        put("il-jerusalem-1", Icons.DEFAULT_REGION.getPath());//israel
-        put("mx-queretaro-1", Icons.DEFAULT_REGION.getPath());//mexico
-        put("sa-santiago-1", Icons.DEFAULT_REGION.getPath()); //chile
-        put("ap-singapore-1", Icons.DEFAULT_REGION.getPath());//Singapore
-        put("sa-vinhedo-1", Icons.DEFAULT_REGION.getPath());//brazil
+        put("eu-amsterdam-1", Icons.REGION_NETHERLANDS.getPath());
+        put("eu-stockholm-1", Icons.REGION_SWEDEN.getPath());
+        put("me-abudhabi-1", Icons.REGION_UNITED_ARABE_EMIRATES.getPath());
+        put("eu-paris-1", Icons.REGION_FRANCE.getPath());
+        put("uk-cardiff-1", Icons.REGION_WALES.getPath());
+        put("me-dubai-1", Icons.REGION_UNITED_ARABE_EMIRATES.getPath());
+        put("sa-saopaulo-1", Icons.REGION_BRAZIL.getPath());
+        put("me-jeddah-1", Icons.REGION_SAUDI_ARABIA.getPath());
+        put("af-johannesburg-1", Icons.REGION_SOUTH_AFRICA.getPath());
+        put("eu-madrid-1", Icons.REGION_SPAIN.getPath());
+        put("eu-marseille-1", Icons.DEFAULT_REGION.getPath());
+        put("il-jerusalem-1", Icons.REGION_ISRAEL.getPath());
+        put("mx-queretaro-1", Icons.REGION_MEXICO.getPath());
+        put("sa-santiago-1", Icons.REGION_CHILE.getPath());
+        put("ap-singapore-1", Icons.REGION_SINGAPORE.getPath());
+        put("sa-vinhedo-1", Icons.REGION_BRAZIL.getPath());
+
+        put("eu-milan-1", Icons.REGION_ITALY.getPath());
+        put("us-langley-1", Icons.REGION_CANADA.getPath());
+        put("us-luke-1", Icons.REGION_BRAZIL.getPath());
+        put("us-gov-ashburn-1", Icons.REGION_US.getPath());
+        put("us-gov-chicago-1", Icons.REGION_US.getPath());
+        put("us-gov-phoenix-1", Icons.REGION_US.getPath());
+        put("uk-gov-london-1", Icons.REGION_UK.getPath());
+        put("uk-gov-cardiff-1", Icons.REGION_WALES.getPath());
+        put("ap-chiyoda-1", Icons.REGION_JAPAN.getPath());
+        put("ap-ibaraki-1", Icons.REGION_JAPAN.getPath());
+        put("me-dcc-muscat-1", Icons.REGION_OMAN.getPath());
+        put("ap-dcc-canberra-1", Icons.REGION_AUSTRALIA.getPath());
+        put("eu-dcc-milan-1", Icons.REGION_ITALY.getPath());
+
       }
     };
 
@@ -88,6 +102,10 @@ public class RegionAction extends AnAction {
     }
 
     return   new ImageIcon(RegionAction.class.getResource(Icons.DEFAULT_REGION.getPath()));
+  }
+
+  public static HashMap<String,String> getIcons(){
+    return iconMap;
   }
 
   public RegionAction(){
