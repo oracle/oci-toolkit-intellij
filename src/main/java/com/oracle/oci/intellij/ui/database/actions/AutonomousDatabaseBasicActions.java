@@ -69,7 +69,7 @@ public class AutonomousDatabaseBasicActions extends AbstractAction {
     if (actionType == ActionType.TERMINATE) {
       terminate();
     } else if(actionType == ActionType.SERVICE_CONSOLE) {
-      BrowserUtil.browse(autonomousDatabaseSummary.getServiceConsoleUrl());
+      BrowserUtil.browse(autonomousDatabaseSummary.getConnectionUrls().getSqlDevWebUrl());
     } else if(actionType == ActionType.CHANGE_WORKLOAD_TYPE) {
       changeWorkloadType();
     } else {
