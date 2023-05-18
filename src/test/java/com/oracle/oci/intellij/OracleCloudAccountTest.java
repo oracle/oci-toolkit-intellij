@@ -23,7 +23,6 @@ import com.oracle.oci.intellij.ui.account.RegionAction;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Order;
 
 import com.oracle.bmc.database.model.AutonomousDatabaseBackupSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
@@ -34,6 +33,7 @@ import com.oracle.bmc.identity.model.RegionSubscription;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.util.LogHandler;
+import org.junit.jupiter.api.Order;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -184,17 +184,16 @@ public class OracleCloudAccountTest {
     };
     String preffix = "/icons/regions/";
     int index =0;
-    for (Region r: regions) {
-      SystemPreferences.setRegionName(r.getRegionId());
-      ImageIcon actualIcon = RegionAction.getCurrentRegionIcon();
-      ImageIcon exoectedIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource(preffix+expectedIconPath[index])));
+    for (Region region: regions) {
+      ImageIcon actualIcon = RegionAction.getCurrentRegionIcon(region.getRegionId());
+      ImageIcon expectedIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource(preffix+expectedIconPath[index])));
 
 
-      byte [] arr1 = ImageUtils.imageToBytes(exoectedIcon.getImage());
-      byte[] arr2 = ImageUtils.imageToBytes(actualIcon.getImage());
+      byte [] expectedImgBytes = ImageUtils.imageToBytes(expectedIcon.getImage());
+      byte[] actualImgBytes = ImageUtils.imageToBytes(actualIcon.getImage());
 
 
-      Assert.assertArrayEquals("the loaded icon doesn't match the expected icon ", arr1,arr2);
+      Assert.assertArrayEquals("the loaded icon doesn't match the expected icon ", expectedImgBytes,actualImgBytes);
       index++;
     }
 
@@ -202,17 +201,16 @@ public class OracleCloudAccountTest {
 
   @Test
   public void WhenThereIsNewRegionShouldReturnDefaultImage() throws IOException {
-    SystemPreferences.setRegionName("anyString");
     String expectedIconPath = "/icons/regions/default-flag.png";
 
 
-    ImageIcon actualIcon = RegionAction.getCurrentRegionIcon();
+    ImageIcon actualIcon = RegionAction.getCurrentRegionIcon("anyString");
     ImageIcon expectedIcon = new ImageIcon(getClass().getResource(expectedIconPath));
 
-    byte[] arr1 = ImageUtils.imageToBytes(expectedIcon.getImage()) ;
-    byte[] arr2 =ImageUtils.imageToBytes(actualIcon.getImage()) ;
+    byte[] expectedImgBytes = ImageUtils.imageToBytes(expectedIcon.getImage()) ;
+    byte[] actualImgBytes =ImageUtils.imageToBytes(actualIcon.getImage()) ;
 
-    Assert.assertArrayEquals(arr1,arr2);
+    Assert.assertArrayEquals(expectedImgBytes,actualImgBytes);
   }
 
    static class ImageUtils {

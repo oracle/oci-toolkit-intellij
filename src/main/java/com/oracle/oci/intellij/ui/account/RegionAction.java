@@ -85,12 +85,14 @@ public class RegionAction extends AnAction {
 
       }
     };
-
-    regionIcon = getCurrentRegionIcon();
-  }
-
-  public static ImageIcon getCurrentRegionIcon() {
     String regionName = SystemPreferences.getRegionName();
+    regionIcon = getCurrentRegionIcon(regionName);
+  }
+/* this method does a repetitive instructions which are load the icon
+  *I added to it the  parameter regionName just to  be suitable to  a test
+  */
+public static ImageIcon getCurrentRegionIcon(String regionName) {
+
     if (regionName != null) {
       String icon = iconMap.get(regionName);
       if (icon != null) {
@@ -164,7 +166,7 @@ public class RegionAction extends AnAction {
 
   @Override
   public void update(@NotNull AnActionEvent event) {
-    event.getPresentation().setIcon(getCurrentRegionIcon());
+    event.getPresentation().setIcon(getCurrentRegionIcon(SystemPreferences.getRegionName()));
     super.update(event);
   }
 
