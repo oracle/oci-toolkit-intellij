@@ -7,15 +7,22 @@ package com.oracle.oci.intellij;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import com.oracle.bmc.Region;
+import com.oracle.oci.intellij.ui.account.RegionAction;
+
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Order;
-import org.opentest4j.AssertionFailedError;
 
 import com.oracle.bmc.database.model.AutonomousDatabaseBackupSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
@@ -26,6 +33,10 @@ import com.oracle.bmc.identity.model.RegionSubscription;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.util.LogHandler;
+import org.junit.jupiter.api.Order;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 public class OracleCloudAccountTest {
 
@@ -157,4 +168,70 @@ public class OracleCloudAccountTest {
     });
   }
 
+@Test
+  public void isAllCurrentRegionsAreSupportedWithIcons(){
+    Region[] regions = Region.values();
+    HashMap<String,String> map = RegionAction.getIcons();
+
+  Assert.assertEquals(map.size(),regions.length);
+
+  }
+@Test
+  public void isImageIconsLoadedAreRight() throws IOException {
+    Region[] regions = Region.values();
+    String[] expectedIconPath = {
+            "south-korea-flag.png","australia-flag.png","india-flag.png","india-flag.png","japan-flag.png","south-korea-flag.png","australia-flag.png","japan-flag.png","canada-flag.png","canada-flag.png","netherlands.png","germany-orb.png","switzerland-flag.png","saudi_arabia.png","united_arab_emirates.png","brazil-flag.png","uk-orb.png","us-orb.png","us-orb.png","us-orb.png","wales.png","chile.png","brazil-flag.png","israel.png","default-flag.png","singapore.png","united_arab_emirates.png","italy.png","sweden.png","south_africa.png","france.png","mexico.png","spain.png","us-orb.png","canada-flag.png","brazil-flag.png","us-orb.png","us-orb.png","us-orb.png","uk-orb.png","wales.png","japan-flag.png","japan-flag.png","oman.png","australia-flag.png","italy.png"
+    };
+    String preffix = "/icons/regions/";
+    int index =0;
+    for (Region region: regions) {
+      ImageIcon actualIcon = RegionAction.getCurrentRegionIcon(region.getRegionId());
+      ImageIcon expectedIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource(preffix+expectedIconPath[index])));
+
+
+      byte [] expectedImgBytes = ImageUtils.imageToBytes(expectedIcon.getImage());
+      byte[] actualImgBytes = ImageUtils.imageToBytes(actualIcon.getImage());
+
+
+      Assert.assertArrayEquals("the loaded icon doesn't match the expected icon ", expectedImgBytes,actualImgBytes);
+      index++;
+    }
+
+  }
+
+  @Test
+  public void WhenThereIsNewRegionShouldReturnDefaultImage() throws IOException {
+    String expectedIconPath = "/icons/regions/default-flag.png";
+
+
+    ImageIcon actualIcon = RegionAction.getCurrentRegionIcon("anyString");
+    ImageIcon expectedIcon = new ImageIcon(getClass().getResource(expectedIconPath));
+
+    byte[] expectedImgBytes = ImageUtils.imageToBytes(expectedIcon.getImage()) ;
+    byte[] actualImgBytes =ImageUtils.imageToBytes(actualIcon.getImage()) ;
+
+    Assert.assertArrayEquals(expectedImgBytes,actualImgBytes);
+  }
+
+   static class ImageUtils {
+
+    public static byte[] imageToBytes(Image image) throws IOException {
+      BufferedImage bufferedImage = toBufferedImage(image);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      ImageIO.write(bufferedImage, "png", baos);
+      return baos.toByteArray();
+    }
+
+    private static BufferedImage toBufferedImage(Image image) {
+      if (image instanceof BufferedImage) {
+        return (BufferedImage) image;
+      }
+
+      BufferedImage bufferedImage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+      bufferedImage.getGraphics().drawImage(image, 0, 0, null);
+      return bufferedImage;
+    }
+  }
+
 }
+
