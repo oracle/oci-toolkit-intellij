@@ -62,7 +62,7 @@ public class RegionAction extends AnAction {
         put("me-jeddah-1", Icons.REGION_SAUDI_ARABIA.getPath());
         put("af-johannesburg-1", Icons.REGION_SOUTH_AFRICA.getPath());
         put("eu-madrid-1", Icons.REGION_SPAIN.getPath());
-        put("eu-marseille-1", Icons.DEFAULT_REGION.getPath());
+        put("eu-marseille-1", Icons.REGION_FRANCE.getPath());
         put("il-jerusalem-1", Icons.REGION_ISRAEL.getPath());
         put("mx-queretaro-1", Icons.REGION_MEXICO.getPath());
         put("sa-santiago-1", Icons.REGION_CHILE.getPath());
