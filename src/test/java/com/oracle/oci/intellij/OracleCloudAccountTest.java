@@ -168,6 +168,10 @@ public class OracleCloudAccountTest {
     });
   }
 
+
+  /*
+  *this test tells if there is some new regions add in the hardcoded map
+   */
 @Test
   public void isAllCurrentRegionsAreSupportedWithIcons(){
     Region[] regions = Region.values();
@@ -176,9 +180,26 @@ public class OracleCloudAccountTest {
   Assert.assertEquals(map.size(),regions.length);
 
   }
+  /*
+  this method prints the new added regions that we don't support in our map
+   */
+  @Test
+  public void whichRegionsAreAdded(){
+    Region[] regions = Region.values();
+    HashMap<String,String> map = RegionAction.getIcons();
+    for (Region region:regions
+         ) {
+      if (map.get(region.getRegionId())==null ){
+        System.out.println(region.getRegionId());
+      }
+    }
+
+  }
+
 @Test
   public void isImageIconsLoadedAreRight() throws IOException {
     Region[] regions = Region.values();
+    // the order matters of this icons
     String[] expectedIconPath = {
             "south-korea-flag.png","australia-flag.png","india-flag.png","india-flag.png","japan-flag.png","south-korea-flag.png","australia-flag.png","japan-flag.png","canada-flag.png","canada-flag.png","netherlands.png","germany-orb.png","switzerland-flag.png","saudi_arabia.png","united_arab_emirates.png","brazil-flag.png","uk-orb.png","us-orb.png","us-orb.png","us-orb.png","wales.png","chile.png","brazil-flag.png","israel.png","default-flag.png","singapore.png","united_arab_emirates.png","italy.png","sweden.png","south_africa.png","france.png","mexico.png","spain.png","us-orb.png","canada-flag.png","brazil-flag.png","us-orb.png","us-orb.png","us-orb.png","uk-orb.png","wales.png","japan-flag.png","japan-flag.png","oman.png","australia-flag.png","italy.png"
     };
@@ -234,4 +255,3 @@ public class OracleCloudAccountTest {
   }
 
 }
-
