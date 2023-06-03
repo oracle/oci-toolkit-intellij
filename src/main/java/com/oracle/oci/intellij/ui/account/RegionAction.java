@@ -82,6 +82,9 @@ public class RegionAction extends AnAction {
         put("me-dcc-muscat-1", Icons.REGION_OMAN.getPath());
         put("ap-dcc-canberra-1", Icons.REGION_AUSTRALIA.getPath());
         put("eu-dcc-milan-1", Icons.REGION_ITALY.getPath());
+        put("eu-dcc-milan-2", Icons.REGION_ITALY.getPath());
+        put("eu-dcc-dublin-2", Icons.REGION_IRELAND.getPath());
+        put("eu-dcc-dublin-1", Icons.REGION_IRELAND.getPath());
 
       }
     };
