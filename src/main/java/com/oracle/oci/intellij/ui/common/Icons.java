@@ -38,7 +38,7 @@ public enum Icons {
     REGION_SWEDEN("/icons/regions/sweden.png"),
     REGION_UNITED_ARABE_EMIRATES("/icons/regions/united_arab_emirates.png"),
     REGION_WALES("/icons/regions/wales.png"),
-    REGION_IRELAND("/icons/regions/ireland"),
+    REGION_IRELAND("/icons/regions/ireland.png"),
 
     DEFAULT_REGION("/icons/regions/default-flag.png"),
     DATABASE("icons/database.png"),
