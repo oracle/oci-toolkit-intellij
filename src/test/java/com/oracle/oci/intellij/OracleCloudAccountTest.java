@@ -195,13 +195,15 @@ public class OracleCloudAccountTest {
     }
 
   }
-
+  /*
+   * if  isAllCurrentRegionsAreSupportedWithIcons test failed this is also will fail because
+   * the expect icons array and actual icon array don't have the same size  */
 @Test
   public void isImageIconsLoadedAreRight() throws IOException {
     Region[] regions = Region.values();
     // the order matters of this icons
     String[] expectedIconPath = {
-            "south-korea-flag.png","australia-flag.png","india-flag.png","india-flag.png","japan-flag.png","south-korea-flag.png","australia-flag.png","japan-flag.png","canada-flag.png","canada-flag.png","netherlands.png","germany-orb.png","switzerland-flag.png","saudi_arabia.png","united_arab_emirates.png","brazil-flag.png","uk-orb.png","us-orb.png","us-orb.png","us-orb.png","wales.png","chile.png","brazil-flag.png","israel.png","default-flag.png","singapore.png","united_arab_emirates.png","italy.png","sweden.png","south_africa.png","france.png","mexico.png","spain.png","us-orb.png","canada-flag.png","brazil-flag.png","us-orb.png","us-orb.png","us-orb.png","uk-orb.png","wales.png","japan-flag.png","japan-flag.png","oman.png","australia-flag.png","italy.png"
+            "south-korea-flag.png","australia-flag.png","india-flag.png","india-flag.png","japan-flag.png","south-korea-flag.png","australia-flag.png","japan-flag.png","canada-flag.png","canada-flag.png","netherlands.png","germany-orb.png","switzerland-flag.png","saudi_arabia.png","united_arab_emirates.png","brazil-flag.png","uk-orb.png","us-orb.png","us-orb.png","us-orb.png","wales.png","chile.png","brazil-flag.png","israel.png","france.png","singapore.png","united_arab_emirates.png","italy.png","sweden.png","south_africa.png","france.png","mexico.png","spain.png","us-orb.png","canada-flag.png","brazil-flag.png","us-orb.png","us-orb.png","us-orb.png","uk-orb.png","wales.png","japan-flag.png","japan-flag.png","oman.png","australia-flag.png","italy.png"
     };
     String preffix = "/icons/regions/";
     int index =0;
@@ -219,7 +221,6 @@ public class OracleCloudAccountTest {
     }
 
   }
-
   @Test
   public void WhenThereIsNewRegionShouldReturnDefaultImage() throws IOException {
     String expectedIconPath = "/icons/regions/default-flag.png";
