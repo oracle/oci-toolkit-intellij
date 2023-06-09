@@ -201,9 +201,11 @@ public class OracleCloudAccountTest {
 @Test
   public void isImageIconsLoadedAreRight() throws IOException {
     Region[] regions = Region.values();
-    // the order matters of this icons
+    /* the order matters of this icons
+    and each time new region has been added we need to modify this expected list based on the order of the api above
+     */
     String[] expectedIconPath = {
-            "south-korea-flag.png","australia-flag.png","india-flag.png","india-flag.png","japan-flag.png","south-korea-flag.png","australia-flag.png","japan-flag.png","canada-flag.png","canada-flag.png","netherlands.png","germany-orb.png","switzerland-flag.png","saudi_arabia.png","united_arab_emirates.png","brazil-flag.png","uk-orb.png","us-orb.png","us-orb.png","us-orb.png","wales.png","chile.png","brazil-flag.png","israel.png","france.png","singapore.png","united_arab_emirates.png","italy.png","sweden.png","south_africa.png","france.png","mexico.png","spain.png","us-orb.png","canada-flag.png","brazil-flag.png","us-orb.png","us-orb.png","us-orb.png","uk-orb.png","wales.png","japan-flag.png","japan-flag.png","oman.png","australia-flag.png","italy.png"
+            "south-korea-flag.png","australia-flag.png","india-flag.png","india-flag.png","japan-flag.png","south-korea-flag.png","australia-flag.png","japan-flag.png","canada-flag.png","canada-flag.png","netherlands.png","germany-orb.png","switzerland-flag.png","saudi_arabia.png","united_arab_emirates.png","brazil-flag.png","uk-orb.png","us-orb.png","us-orb.png","us-orb.png","wales.png","chile.png","brazil-flag.png","israel.png","france.png","singapore.png","united_arab_emirates.png","italy.png","sweden.png","south_africa.png","france.png","mexico.png","spain.png","us-orb.png","canada-flag.png","brazil-flag.png","us-orb.png","us-orb.png","us-orb.png","uk-orb.png","wales.png","japan-flag.png","japan-flag.png","oman.png","australia-flag.png","italy.png","italy.png","ireland.png","germany-orb.png","germany-orb.png","ireland.png"
     };
     String preffix = "/icons/regions/";
     int index =0;
