@@ -27,7 +27,6 @@ dependencies {
         exclude(group="org.slf4j", module="slf4j-api")
     }
     implementation(files("lib/sdk/oci-java-sdk-full-3.2.2.jar"))
-    //implementation(files("lib/sdk/jersey/oci-java-sdk-common-httpclient-jersey-3.2.0.jar"))
     implementation(fileTree("lib/thirdparty/lib") { include("*.jar") })
     implementation(fileTree("lib/thirdparty/jersey/lib") { include("*.jar") })
     
