@@ -9,7 +9,9 @@
     <vendor email="support@oracle.com" url="http://www.oracle.com">Oracle</vendor>
     <idea-version since-build="211" />
     <description><![CDATA[ Oracle Cloud Infrastructure Plugin for IntelliJ IDEA]]></description>
-
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Oracle Cloud Infrastructure Explorer" secondary="true"  anchor="bottom"
                     factoryClass="com.oracle.oci.intellij.ui.explorer.OCIExplorerFactory"
