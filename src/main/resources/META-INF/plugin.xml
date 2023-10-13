@@ -8,7 +8,32 @@
     <name>OCI Toolkit</name>
     <vendor email="support@oracle.com" url="http://www.oracle.com">Oracle</vendor>
     <idea-version since-build="211" />
-    <description><![CDATA[ Oracle Cloud Infrastructure Plugin for IntelliJ IDEA]]></description>
+    <description><![CDATA[
+        <h2>Oracle Cloud Infrastructure Toolkit for IntelliJ</h2>
+        <p><b>The Oracle Cloud Infrastructure Toolkit for IntelliJ is an open source plugin maintained by Oracle for the
+            IntelliJ IDEA Integrated Development Environment (IDE).</b></p>
+
+        <p>The toolkit for IntelliJ IDEA features support for creating the Autonomous Database with the following
+            workload types:</p>
+        <ul>
+          <li>Data Warehouse</li>
+          <li>Transaction Processing</li>
+          <li>JSON</li>
+          <li>APEX</li>
+        </ul>
+        <p>The toolkit also features support for the following actions on the database instances:</p>
+        <ul>
+            <li>Administrator Password Change</li>
+            <li>Clone Autonomous Database Instance</li>
+            <li>Download Client Credentials (Wallet)</li>
+            <li>Restore Instance</li>
+            <li>Scale Up / Down</li>
+            <li>Start / Stop Database Instance</li>
+            <li>Terminate Database Instance</li>
+            <li>Update License Type</li>
+            <li>Display Autonomous Database Instance Information</li>
+        </ul>]]>
+    </description>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
     
