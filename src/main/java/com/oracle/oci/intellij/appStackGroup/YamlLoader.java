@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.oracle.oci.intellij.appStackGroup.models.*;
+import com.oracle.oci.intellij.appStackGroup.ui.AppStackParametersDialog;
 
 
 import java.beans.BeanInfo;
@@ -82,17 +83,25 @@ public class YamlLoader {
                 pd.setDisplayName((variable.get("title") != null)? variable.get("title").toString() : "");
                 pd.setShortDescription((variable.get("description") != null) ? variable.get("description").toString() : "" );
 //                // recheck this default value thing
-                pd.setValue("default", variable.get("default") == null ? "" : variable.get("default"));
-                pd.setValue("required",variable.get("required") == null ? false : variable.get("required"));
-                pd.setValue("enum",variable.get("enum") == null ? "" : variable.get("enum"));
-                pd.setValue("visible",variable.get("visible") == null ? true : variable.get("visible"));
-//                pd.setHidden();
+                if (variable.get("default") != null) {
+                    pd.setValue("default", variable.get("default"));
+                }
+                if (variable.get("required") != null) {
+                    pd.setValue("required", variable.get("required"));
+                }
+                if (variable.get("enum") != null) {
+                    pd.setValue("enum", variable.get("enum"));
+                }
+                if (variable.get("visible") != null) {
+                    pd.setValue("visible", variable.get("visible"));
+                }
+
                 descriptorsState.put(pd.getName(),pd);
             }
         }
     }
     public static void createUIForm(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
-        org.example.appStackGroup.ui.AppStackParametersDialog dialog =new org.example.appStackGroup.ui.AppStackParametersDialog(varGroups,descriptorsState) ;
+        AppStackParametersDialog dialog =new AppStackParametersDialog(varGroups,descriptorsState) ;
     }
     private static void generateVariableGroup(LinkedHashMap<String, Object> group, LinkedHashMap<String, Object> varMetadatas) throws IOException {
         String title = (String) group.get("title");
@@ -172,7 +181,4 @@ public class YamlLoader {
 
 }
 
-//public static class VariableGroup {
-//
-//    }
-//}
+
