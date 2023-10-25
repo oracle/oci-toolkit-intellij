@@ -1,4 +1,4 @@
-package org.example.appStackGroup.ui;
+package com.oracle.oci.intellij.appStackGroup.ui;
 
 
 import com.oracle.oci.intellij.appStackGroup.models.VariableGroup;
@@ -20,7 +20,7 @@ public class AppStackParametersDialog extends JFrame {
     JScrollPane scrollPane ;
     JPanel mainPanel;
 
-    public AppStackParametersDialog(List<VariableGroup> varGroups, LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
+    public AppStackParametersDialog(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
         super("AppStack Properties");
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -67,9 +67,6 @@ public class AppStackParametersDialog extends JFrame {
 
         saveButton.addActionListener((e)->{
             System.out.println(varGroups);
-            varGroups.forEach(item->{
-                System.out.println(item);
-            });
             dispose();
         });
 
@@ -139,15 +136,20 @@ public class AppStackParametersDialog extends JFrame {
 
             // Create the JSpinner with the SpinnerNumberModel
             JSpinner spinner = new JSpinner(spinnerModel);
+
+
             Object value = pd.getValue("default");
-            if (value instanceof String) {
-                if (((String)value).isEmpty()){
-                    value = 0;
-                } else {
-                    value = Integer.parseInt((String) value);
+            if (value != null){
+                if (value instanceof String) {
+                    if (((String)value).isEmpty()){
+                        value = 0;
+                    } else {
+                        value = Integer.parseInt((String) value);
+                    }
                 }
+                spinner.setValue(value);
             }
-            spinner.setValue(value);
+
             component = spinner;
 
 
@@ -168,17 +170,21 @@ public class AppStackParametersDialog extends JFrame {
                     }
                 }
             });
-            textField.setText(pd.getValue("default").toString());
+            if (pd.getValue("default") != null){
+                textField.setText(pd.getValue("default").toString());
+            }
+
 
             component = textField;
         }
 
         // check if it's visible
-        // in progress
-//        if (!visible(pd)) {
-//            label.setVisible(false);
-//            component.setVisible(false);
-//        }
+        //in progress
+
+        if (!visible(pd)) {
+            label.setVisible(false);
+            component.setVisible(false);
+        }
 
 
 
@@ -214,17 +220,3 @@ public class AppStackParametersDialog extends JFrame {
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
