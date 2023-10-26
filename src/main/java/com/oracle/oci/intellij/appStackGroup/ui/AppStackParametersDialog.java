@@ -72,6 +72,7 @@ public class AppStackParametersDialog extends JFrame {
 
 
         mainPanel.add(saveButton);
+        setLocationRelativeTo(null);
 
         scrollPane = new JScrollPane(mainPanel);
         add(scrollPane);
