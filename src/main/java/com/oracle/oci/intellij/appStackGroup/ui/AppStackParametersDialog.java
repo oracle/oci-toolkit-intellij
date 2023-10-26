@@ -181,10 +181,10 @@ public class AppStackParametersDialog extends JFrame {
         // check if it's visible
         //in progress
 
-        if (!visible(pd)) {
-            label.setVisible(false);
-            component.setVisible(false);
-        }
+//        if (!visible(pd)) {
+//            label.setVisible(false);
+//            component.setVisible(false);
+//        }
 
 
 

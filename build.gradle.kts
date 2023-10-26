@@ -38,9 +38,7 @@ dependencies {
     implementation("com.oracle.oci.sdk:oci-java-sdk-identitydataplane:3.24.0") {
         exclude(group="org.slf4j", module="slf4j-api")
     }
-    //implementation(files("lib/sdk/oci-java-sdk-full-3.24.0.jar"))
- //   implementation(fileTree("lib/thirdparty/lib") { include("*.jar") })
- //   implementation(fileTree("lib/thirdparty/jersey/lib") { include("*.jar") })
+    implementation ("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0") // Use the latest version
     
     testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
