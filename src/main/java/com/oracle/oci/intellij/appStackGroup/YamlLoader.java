@@ -79,9 +79,13 @@ public class YamlLoader {
                 LinkedHashMap variable = variables.get(pd.getName());
                 pd.setDisplayName((variable.get("title") != null)? variable.get("title").toString() : "");
                 pd.setShortDescription((variable.get("description") != null) ? variable.get("description").toString() : "" );
-//                // recheck this default value thing
+
+                //                // recheck this default value thing
                 if (variable.get("default") != null) {
                     pd.setValue("default", variable.get("default"));
+                }
+                if (variable.get("type") != null) {
+                    pd.setValue("type", variable.get("type"));
                 }
                 if (variable.get("required") != null) {
                     pd.setValue("required", variable.get("required"));
@@ -99,6 +103,7 @@ public class YamlLoader {
     }
     public static void createUIForm(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
         AppStackParametersDialog dialog =new AppStackParametersDialog(varGroups,descriptorsState) ;
+        dialog.showAndGet();
     }
     private static void generateVariableGroup(LinkedHashMap<String, Object> group, LinkedHashMap<String, Object> varMetadatas) throws IOException {
         String title = (String) group.get("title");

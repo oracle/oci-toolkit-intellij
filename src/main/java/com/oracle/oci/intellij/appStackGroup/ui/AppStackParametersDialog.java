@@ -1,9 +1,15 @@
 package com.oracle.oci.intellij.appStackGroup.ui;
 
 
+import com.google.api.Property;
+import com.intellij.openapi.ui.ComboBox;
+import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.ui.components.JBScrollPane;
+import com.intellij.util.ui.JBUI;
 import com.oracle.oci.intellij.appStackGroup.models.VariableGroup;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.NumberFormatter;
@@ -16,23 +22,30 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 
-public class AppStackParametersDialog extends JFrame {
-    JScrollPane scrollPane ;
+public class AppStackParametersDialog extends DialogWrapper {
     JPanel mainPanel;
 
+    private static final String WINDOW_TITLE = "App stack variables ";
+    private static final String OK_TEXT = "Save";
+
+
+
     public AppStackParametersDialog(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
-        super("AppStack Properties");
-
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(940, 800);
-        setLayout(new GridLayout(0, 1));
-
-        mainPanel = new JPanel();
+        super(true);
+        init();
+        setTitle(WINDOW_TITLE);
+        setOKButtonText(OK_TEXT);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
+        createGroupsPanels(varGroups);
 
 
 
+
+    }
+
+
+    private void createGroupsPanels(List<VariableGroup> varGroups) throws IntrospectionException {
         for (VariableGroup varGroup : varGroups) {
             Class<? extends VariableGroup> varGroupClazz = varGroup.getClass();
             BeanInfo beanInfo = Introspector.getBeanInfo(varGroupClazz);
@@ -48,54 +61,23 @@ public class AppStackParametersDialog extends JFrame {
                 if (pd.getName().equals("class")) {
                     continue;
                 }
-//
-
                 convertPdToUI(pd,varGroup,groupPanel);
-
-
             }
 
             mainPanel.add(groupPanel);
             JPanel spacer = new JPanel();
-            spacer.setBorder(new EmptyBorder(0, 20, 0, 20));
+            spacer.setBorder(JBUI.Borders.empty(0, 20));
             mainPanel.add(spacer);
         }
-
-
-
-        JButton saveButton = new JButton("Save");
-
-        saveButton.addActionListener((e)->{
-            System.out.println(varGroups);
-            dispose();
-        });
-
-
-        mainPanel.add(saveButton);
-        setLocationRelativeTo(null);
-
-        scrollPane = new JScrollPane(mainPanel);
-        add(scrollPane);
-        pack();
-        setVisible(true);
     }
 
 
-
     private void convertPdToUI(PropertyDescriptor pd,VariableGroup varGroup,JPanel groupPanel) {
-        if (pd.getName().equals("class")) {
-            return ;
-        }
 
 
         JLabel label = new JLabel( pd.getDisplayName());
         label.setToolTipText( pd.getShortDescription());
         JComponent component ;
-        Class<?> propertyType = pd.getPropertyType();
-
-
-
-
 
         // check if it's a required file
         if (pd.getValue("required") != null) {
@@ -105,37 +87,59 @@ public class AppStackParametersDialog extends JFrame {
             }
         }
 
-
-
         // create component
+        component = createComponentVariable(pd, varGroup);
+
+        // check if it's visible
+        //in progress
+
+//        if (!visible(pd)) {
+//            label.setVisible(false);
+//            component.setVisible(false);
+//        }
+
+        groupPanel.add(label);
+        groupPanel.add(component);
+
+
+    }
+
+    private JComponent createComponentVariable(PropertyDescriptor pd,VariableGroup varGroup) {
+
+        Class<?> propertyType = pd.getPropertyType();
+        JComponent component ;
 
         if (propertyType.getName().equals("boolean")) {
-
 
             JCheckBox checkBox = new JCheckBox();
             component = checkBox;
             checkBox.setSelected((boolean) pd.getValue("default"));
-
-
-        } else if (propertyType.isEnum()) {
-
-
-            JComboBox comboBox = new JComboBox();
+            // add this to the condition || ((String)pd.getValue("type")).startsWith("oci")
+        } else if (propertyType.isEnum() ) {
+            ComboBox comboBox = new ComboBox();
             List<String> enumValues = (List<String>) pd.getValue("enum");
-            for (String enumValue : enumValues) {
-                comboBox.addItem(enumValue);
+            if (enumValues != null){
+                for (String enumValue : enumValues) {
+                    comboBox.addItem(enumValue);
+                }
+            }else{
+                //todo  suggest values from account of user   in a combobox depeding on type
+                /* example
+                 * oci:identity:compartment:id --> compartments of the user
+                 * oci:core:vcn:id --> existed vcn s ...
+                 *
+                 */
+
             }
-            comboBox.setSelectedItem(pd.getValue("default"));
+
+            if (pd.getValue("default") != null) {
+                comboBox.setSelectedItem(pd.getValue("default"));
+            }
             component = comboBox;
 
 
         } else if (propertyType.getName().equals("int")) {
-
-
-
             SpinnerNumberModel spinnerModel = new SpinnerNumberModel(0, 0, Integer.MAX_VALUE, 1);
-
-            // Create the JSpinner with the SpinnerNumberModel
             JSpinner spinner = new JSpinner(spinnerModel);
 
 
@@ -152,48 +156,34 @@ public class AppStackParametersDialog extends JFrame {
             }
 
             component = spinner;
-
-
         } else {
 
-
-            JTextField textField = new JTextField();
-            textField.addFocusListener(new FocusAdapter() {
-                @Override
-                public void focusLost(java.awt.event.FocusEvent focusEvent) {
-                    try {
-                        String value = textField.getText();
-                        pd.getWriteMethod().invoke(varGroup, value);
-                    } catch (IllegalAccessException e) {
-                        throw new RuntimeException(e);
-                    } catch (InvocationTargetException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            });
+            JTextField textField = getjTextField(pd, varGroup);
             if (pd.getValue("default") != null){
                 textField.setText(pd.getValue("default").toString());
             }
-
-
             component = textField;
         }
 
-        // check if it's visible
-        //in progress
 
-//        if (!visible(pd)) {
-//            label.setVisible(false);
-//            component.setVisible(false);
-//        }
+        return component;
+    }
 
-
-
-
-        groupPanel.add(label);
-        groupPanel.add(component);
-
-
+    @NotNull
+    private static JTextField getjTextField(PropertyDescriptor pd, VariableGroup varGroup) {
+        JTextField textField = new JTextField();
+        textField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(java.awt.event.FocusEvent focusEvent) {
+                try {
+                    String value = textField.getText();
+                    pd.getWriteMethod().invoke(varGroup, value);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        return textField;
     }
 
     private boolean visible(PropertyDescriptor pd) {
@@ -210,7 +200,7 @@ public class AppStackParametersDialog extends JFrame {
         LinkedHashMap visible = (LinkedHashMap) pd.getValue("visible");
         if (visible.containsKey("and")) {
             if (visible.get("and") instanceof String) {
-                // there is just varible
+                // there is just variable
                 System.out.println(pd.getValue("and"));
                 return true;
             }
@@ -220,4 +210,8 @@ public class AppStackParametersDialog extends JFrame {
     }
 
 
+    @Override
+    protected @Nullable JComponent createCenterPanel() {
+        return new JBScrollPane(mainPanel);
+    }
 }
