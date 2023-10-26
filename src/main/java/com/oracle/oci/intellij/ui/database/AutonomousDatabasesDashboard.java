@@ -10,6 +10,7 @@ import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
+import com.oracle.oci.intellij.appStackGroup.YamlLoader;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.util.LogHandler;
 import com.oracle.oci.intellij.ui.common.UIUtil;
@@ -19,8 +20,10 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.IntrospectionException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
 
@@ -46,6 +49,7 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
   private JLabel compartmentValueLabel;
   private JLabel regionValueLabel;
   private JButton createADBInstanceButton;
+  private JButton deployButton ;
   private List<AutonomousDatabaseSummary> autonomousDatabaseInstancesList;
 
   private static final AutonomousDatabasesDashboard INSTANCE =
@@ -66,6 +70,10 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
     
     if (createADBInstanceButton != null) {
       createADBInstanceButton.setAction(new CreateAction("Create Autonomous Database"));
+    }
+
+    if (deployButton != null){
+      deployButton.setAction(new DeployAction("Deploy"));
     }
   }
 
@@ -393,6 +401,28 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
     public void actionPerformed(ActionEvent e) {
       final DialogWrapper wizard = new CreateAutonomousDatabaseDialog();
       wizard.showAndGet();
+    }
+  }
+
+  private static class DeployAction extends AbstractAction {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
+    public DeployAction(String actionName) {
+      super(actionName);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      try {
+        YamlLoader.Load();
+      } catch (IOException ex) {
+        throw new RuntimeException(ex);
+      } catch (IntrospectionException ex) {
+        throw new RuntimeException(ex);
+      }
     }
   }
 

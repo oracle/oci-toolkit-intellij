@@ -34,6 +34,8 @@ dependencies {
     //implementation(files("lib/sdk/jersey/oci-java-sdk-common-httpclient-jersey-3.2.0.jar"))
     implementation(fileTree("lib/thirdparty/lib") { include("*.jar") })
     implementation(fileTree("lib/thirdparty/jersey/lib") { include("*.jar") })
+
+    implementation ("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0") // Use the latest version
     
     testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")

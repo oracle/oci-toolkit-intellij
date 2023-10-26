@@ -1,0 +1,850 @@
+# Copyright (c) 2023 Oracle and/or its affiliates.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
+
+title: "App Stack for Java"
+description: |
+  The App Stack for Java can deploy existing Java applications to serverless Container Instances behind a load balancer in the Oracle Cloud. It supports multiple options: the source code of the application is in DevOps, the application is uploaded as a war or jar, or as a container image.
+schemaVersion: 1.1.0
+version: "v0.1.4"
+informationalText: |
+  For more information and product documentation please visit the <a href="https://github.com/oracle-quickstart/appstack/">App Stack project page</a> .
+
+logoUrl: "https://cloudmarketplace.oracle.com/marketplace/content?contentId=58352039"
+
+locale: "en"
+
+variableGroups:
+  - title: Hide constants and internal variables
+    visible: false
+    variables:
+      - tenancy_ocid
+      - compartment_ocid
+      - current_user_ocid
+      - region
+      - marketplace_source_images
+      - env_variables
+      - devops_pipeline_image
+      - devops_deploy_shape
+      - devops_memory
+      - devops_ocpu
+      - lb_health_check_timeout_in_millis
+      - lb_health_check_interval_ms
+      - lb_health_check_retries
+      - lb_listener_cypher_suite
+      - db_version
+      - db_license_model
+  - title: "General Configuration"
+    variables:
+      - compartment_id
+      - availability_domain
+  - title: "Application"
+    variables:
+      - application_name
+      - nb_copies
+      - application_source
+      - application_type
+      - devops_compartment
+      - repo_name
+      - branch
+      - build_command
+      - artifact_location
+      - registry_id
+      - artifact_id
+      - image_path
+      - exposed_port
+  - title: "Stack authentication"
+    variables:
+      - use_existing_token
+      - current_user_token
+      - use_existing_vault
+      - new_vault_display_name
+      - vault_compartment_id
+      - vault_id
+      - key_id
+  - title: "Application Performance Monitoring"
+    variables:
+      - is_free_tier
+  - title: "Database"
+    variables:
+      - use_existing_database
+      - autonomous_database_display_name
+      - autonomous_database_admin_password
+      - data_storage_size_in_tbs
+      - cpu_core_count
+      - ocpu_count
+      - autonomous_database
+      - autonomous_database_user
+      - autonomous_database_password
+      - use_connection_url_env
+      - connection_url_env
+      - use_tns_admin_env
+      - tns_admin_env
+      - use_username_env
+      - username_env
+      - use_password_env
+      - password_env
+  - title: "Other parameters"
+    variables:
+      - other_environment_variables
+      - vm_options
+      - program_arguments
+  - title: "Application configuration - SSL communication between backends and load balancer"
+    variables:
+      - use_default_ssl_configuration
+      - port_property
+      - keystore_property
+      - key_alias_property
+      - keystore_password_property
+      - keystore_type_property
+      - cert_pem
+      - private_key_pem
+      - ca_pem
+  - title: "Application URL"
+    variables:
+      - create_fqdn
+      - dns_compartment
+      - zone
+      - subdomain
+      - certificate_ocid
+  - title: "Network"
+    variables:
+      - create_new_vcn
+      - vcn_compartment_id
+      - existing_vcn_id
+      - vcn_cidr
+      - use_existing_app_subnet
+      - existing_app_subnet_id
+      - app_subnet_cidr
+      - use_existing_db_subnet
+      - existing_db_subnet_id
+      - db_subnet_cidr
+      - use_existing_lb_subnet
+      - existing_lb_subnet_id
+      - lb_subnet_cidr
+      - open_https_port
+      - use_default_lb_configuration
+      - maximum_bandwidth_in_mbps
+      - minimum_bandwidth_in_mbps
+      - health_checker_url_path
+      - health_checker_return_code
+      - enable_session_affinity
+      - session_affinity
+      - session_affinity_cookie_name
+  - title: "Container instance configuration"
+    variables:
+      - shape
+      - memory_in_gbs
+      - ocpus
+
+variables:
+  # General Configuration
+  compartment_id:
+    type: oci:identity:compartment:id
+    required: true
+    title: Compute Compartment
+    description: The compartment in which to create all Compute resources.
+    default: compartment_ocid
+  availability_domain:
+    type: oci:identity:availabilitydomain:name
+    required: true
+    title: Availability domain
+    description: The availability domain in which to create all Compute resources.
+    dependsOn:
+      compartmentId: ${compartment_id}
+  # Application
+  application_name:
+    type: string
+    required: true
+    title: Application name
+    description: This name will be used to name other needed resources.
+  nb_copies:
+    type: number
+    required: true
+    title: Number of deployments
+    description: This is the number of container instances that will be deployed.
+  application_source:
+    type: enum
+    title: "Application source"
+    default: "SOURCE_CODE"
+    description: You can deploy an application that is either a container image, a Java artifact (JAR/WAR) or from the source code.
+    required: true
+    enum:
+      - IMAGE
+      - ARTIFACT
+      - SOURCE_CODE
+  application_type:
+    type: enum
+    title: "Artifact type"
+    description: The stack can deploy either an executable JAR (using Java runtime) or a WAR (through Tomcat). 
+    default: "JAR"
+    required: true
+    enum:
+      - not selected
+      - JAR
+      - WAR
+    visible:
+      not:
+        - eq:
+          - application_source
+          - "IMAGE"
+  devops_compartment:
+    type: oci:identity:compartment:id
+    required: true
+    title: DevOps compartment
+    description: Compartment containing the DevOps project
+    default: ${compartment_id}
+  repo_name:
+    type: string
+    required: true
+    title: DevOps repository name (OCID)
+    description: OCID of the repository containing the application source code.
+    visible: 
+      eq: 
+        - application_source
+        - "SOURCE_CODE"
+  branch:
+    type: string
+    required: true
+    title: Branch used for build / deployment
+    description: Name of the branch to be built, deployed and on which a trigger will be installed for continuous deployment.
+    default: main
+    visible:
+      eq: 
+        - application_source
+        - "SOURCE_CODE"
+  build_command:
+    type: string
+    required: true
+    title: Application build command
+    description: 'For example: mvn install'
+    default: mvn install
+    visible: 
+      eq: 
+        - application_source
+        - "SOURCE_CODE"
+  artifact_location:
+    type: string
+    required: true
+    title: Artifact path
+    description: 'For example: target/MyApplication.jar'
+    visible: 
+      eq: 
+        - application_source
+        - "SOURCE_CODE"
+  artifact_id:
+    type: string
+    required: true
+    title: Artifact OCID
+    visible: 
+      eq: 
+        - application_source
+        - "ARTIFACT"
+  registry_id:
+    type: string
+    required: true
+    title: Artifact repository OCID
+    visible: 
+      eq: 
+        - application_source
+        - "ARTIFACT"
+  image_path:
+    type: string
+    required: true
+    title: Full path to the image in container registry
+    visible: 
+      eq: 
+        - application_source
+        - "IMAGE"
+  exposed_port:
+    type: string
+    required: true
+    title: Exposed port
+    description: This is the backend port on which the application is listening.
+    default: 8443
+    visible: 
+      eq: 
+        - application_source
+        - "IMAGE"
+  is_free_tier:
+    type: boolean
+    required: true
+    title: Create as Always Free Domain
+    description: Up to 1000 spans per hour, 31 day storage for trace data and 10 monitor runs per hour.
+    default: false
+  # Database
+  use_existing_database:
+    type: boolean
+    default: true
+    required: true
+    title: Use existing database (Autonomous Database Serverless)
+  autonomous_database_display_name:
+    type: string
+    required: true
+    title: Autonomous Database display name
+    description: A user-friendly name to help you easily identify the resource.
+    visible: 
+      not:
+        - use_existing_database
+  autonomous_database_admin_password:
+    type: password
+    title: Database ADMIN password
+    # validate
+    description: Password must be 12 to 30 characters and contain at least one uppercase letter, one lowercase letter, and one number. The password cannot contain the double quote (") character or the username "admin".
+    required: true
+    
+    visible: 
+      not: 
+        - use_existing_database
+  data_storage_size_in_tbs:
+    type: number
+    required: true
+    title: Storage (TB)
+    description: The amount of storage to allocate.
+    default: 1
+    visible: 
+      not:
+        - use_existing_database
+  cpu_core_count:
+     type: number
+     required: true
+     title: CPU core count
+     description: The number of OCPU cores to be made available to the database
+     default: 2
+     visible:
+       not:
+         - use_existing_database
+  ocpu_count:
+    type: number
+    required: true
+    title: OCPU count
+    description: The number of OCPU cores to enable. Available cores are subject to your tenancy's service limits.
+    default: 1
+    visible: 
+      not:
+        - use_existing_database
+  autonomous_database:
+    type: oci:database:autonomousdatabase:id
+    required: true
+    title: Autonomous Database
+    description: The Autonomous Database used by the application.
+    dependsOn:
+      compartmentId: ${compartment_id}
+    visible: 
+      and: 
+        - use_existing_database
+  autonomous_database_user:
+    type: string
+    required: true
+    title: DB username
+    default: ""
+    description: The username used to connect to the database.
+    visible: 
+      and: 
+        - use_existing_database
+  autonomous_database_password:
+    type: password
+    title: DB user password
+    required: true
+    description: The password of the user used to access the database.
+    visible: 
+      and: 
+        - use_existing_database
+  # Vault
+  use_existing_vault:
+    type: boolean
+    title: Use an existing key vault
+    required: true
+    default: true
+    description: This vault will be used to store the authentication token needed by the build and deploy pipelines to publish the container image to the container registry.
+  new_vault_display_name:
+    type: string
+    title: Key vault display name
+    description: A user-friendly name to help you easily identify the resource.
+    required: true
+    visible:
+      not:
+      - use_existing_vault
+  vault_compartment_id:
+    type: oci:identity:compartment:id
+    required: true
+    title: Compartment
+    description: The compartment containing the existing vault.
+    default: compartment_ocid
+    visible:
+      and:
+        - use_existing_vault
+  vault_id:
+    type: oci:kms:vault:id
+    required: true
+    title: Vault
+    description: Choose an existing vault used to store the authentication token.
+    dependsOn:
+      compartmentId: ${vault_compartment_id}
+    visible:
+      and:
+        - use_existing_vault
+  key_id:
+    type: oci:kms:key:id
+    required: true
+    title: Encryption key
+    description: This key will be used to encrypt the sensitive information stored as vault secrets.
+    dependsOn:
+      compartmentId: ${vault_compartment_id}
+      vaultId: ${vault_id}
+    visible:
+      and:
+        - use_existing_vault
+  use_existing_token:
+    type: boolean
+    required: true
+    title: Use existing authentication token
+    description: This token will be used by the stack to authenticate the user when connecting to the code repository or container registry.
+    default: true
+  current_user_token:
+    type: password
+    required: true
+    title: User's authentication token
+    visible: use_existing_token
+  # Application configuration
+  use_connection_url_env:
+    type: boolean
+    title: Set connection URL environment variable
+    default: true
+    description: Assuming that your application can consume an environment variable to configure the URL, this field can be used to specify the name of the environment variable.
+  connection_url_env:
+    type: string
+    title: Connection URL environment variable name
+    description: Specify the name of the environment variable. Its value will be set automatically by the stack.
+    required: true
+    default: "SPRING_DATASOURCE_URL"
+    visible: use_connection_url_env
+  use_username_env:
+    type: boolean
+    title: Set username environment variable
+    description: Assuming that your application can consume an environment variable to configure the database username, this field can be used to specify the name of the environment variable.
+    default: false
+    visible: 
+      eq: 
+        - application_source
+        - "IMAGE"
+  username_env:
+    type: string
+    title: Database user environment variable name
+    description: Only the name of the environment variable is needed. The value will be automatically set. If a new database is created, the database ADMIN user will be used.
+    required: true
+    default: "SPRING_DATASOURCE_USERNAME"
+    visible: use_username_env
+  use_password_env:
+    type: boolean
+    title: Set password environment variable
+    description: Assuming that your application can consume an environment variable to configure the database user's password, this field can be used to specify the name of the environment variable.
+    default: false
+    visible: 
+      eq: 
+        - application_source
+        - "IMAGE"
+  password_env:
+    type: string
+    title: Database user's password environment variable name
+    description: Specify the name of the environment variable. Its value will be set automatically by the stack. If a new database is created, the database ADMIN user will be used.
+    required: true
+    default: "SPRING_DATASOURCE_PASSWORD"
+    visible: use_password_env
+  use_tns_admin_env:
+    type: boolean
+    title: Set TNS_ADMIN environment variable
+    description: Assuming that your application can consume an environment variable to configure TNS_ADMIN, this field can be used to specify the name of the environment variable.
+    default: true
+    visible: 
+      eq: 
+        - application_source
+        - "IMAGE"
+  tns_admin_env:
+    type: string
+    title: TNS_ADMIN environment variable name
+    description: Specify the name of the environment variable (Ex. TNS_ADMIN).
+    required: true
+    default: "TNS_ADMIN"
+    visible: 
+      and: 
+        - use_tns_admin_env
+        - eq: 
+          - application_source
+          - "IMAGE"
+  # SSL properties
+  use_default_ssl_configuration:
+    type: boolean
+    title: Use default SSL properties for Spring 
+    description: The stack creates a self-signed certificate that will be used for the communication between the load balancer and the backends. This self-signed certificate is stored in a JKS keystore. The following properties can be used to configure the web server to use this JKS keystore. By default Spring boot properties will be used by the stack. Click on this checkbox to specify your own property names.
+    default: true
+    visible:
+      and:
+        - eq:
+          - application_type
+          - "JAR"
+        - not: 
+          - eq:
+            - application_source
+            - "IMAGE"
+  port_property:
+    type: string
+    title: Server port number property name
+    default: "server.port"
+    required: true
+    description:  Assuming that your application can consume a property to configure the server port, this field can be used to specify the name of the property.
+    visible: 
+      not:
+        - use_default_ssl_configuration
+  keystore_property:
+    type: string
+    title: SSL keystore filename property name
+    default: "server.ssl.key-store"
+    required: true
+    description:  Assuming that your application can consume a property to configure the SSL keystore filename, this field can be used to specify the name of the property.
+    visible: 
+      not: 
+        - use_default_ssl_configuration
+  key_alias_property:
+    type: string
+    title: SSL key alias property name
+    default: "server.ssl.key-alias"
+    required: true
+    description:  Assuming that your application can consume a property to configure the SSL key alias property name, this field can be used to specify the name of the property.
+    visible: 
+      not:
+        - use_default_ssl_configuration
+  keystore_password_property:
+    type: string
+    title: SSL keystore password property name
+    default: "server.ssl.key-store-password"
+    required: true
+    description:  Assuming that your application can consume a property to configure the SSL keystore password property name, this field can be used to specify the name of the property.
+    visible: 
+      not:
+        - use_default_ssl_configuration
+  keystore_type_property:
+    type: string
+    title: SSL keystore type property name
+    default: "server.ssl.key-store-type"
+    required: true
+    description:  Assuming that your application can consume a property to configure the SSL keystore type property name, this field can be used to specify the name of the property.
+    visible: 
+      not: 
+        - use_default_ssl_configuration
+  cert_pem:
+    type: text
+    multiline: true
+    title: SSL certificate
+    required: true
+    visible:
+      eq:
+        - application_source
+        - "IMAGE"
+  private_key_pem:
+    type: text
+    multiline: true
+    title: Private key
+    required: true
+    visible:
+      eq:
+        - application_source
+        - "IMAGE"
+  ca_pem:
+    type: text
+    multiline: true
+    title: CA certificate
+    required: true
+    visible:
+      eq:
+        - application_source
+        - "IMAGE"
+  other_environment_variables:
+    type: string
+    title: Other environment variables
+    description: If your application can be configured through environment variables you can configure them here. Separate variables with semicolon (var1=value1;var2=value2).
+  vm_options:
+    type: string
+    title: JVM options
+    description: 'For example : -Xms=2G -Dspring.sql.init.data-locations=/temp/script.sql'
+    visible:
+      not:
+        - eq:
+          - application_source
+          - "IMAGE"
+  program_arguments:
+    type: string
+    title: Program arguments
+    description: These space-separated program arguments are passed to the java process at startup.
+    visible:
+      and :
+        - eq:
+          - application_type
+          - "JAR"
+        - not:
+          - eq:
+            - application_source
+            - "IMAGE"
+  # FQDN
+  create_fqdn:
+    type : boolean
+    required: true
+    default: true
+    title : Create DNS record
+    description: If you check this checkbox the stack will create a DNS record that will resolve to the load balancer's IP address.
+  dns_compartment:
+    type: oci:identity:compartment:id
+    required: true
+    default: compartment_ocid
+    title: DNS and Certificate compartement
+    description: Compartment containing the DNS Zone and the Certificate
+    visible: create_fqdn
+  zone :
+    type: string
+    required: true
+    title: DNS Zone
+    description : Domain name in which the host name will be created.
+    visible : create_fqdn
+  subdomain:
+    type: string
+    required: true
+    title: Host name
+    description: The host name will be created on the selected Zone and will resolve to the the load balancer's IP address.
+    visible : create_fqdn
+  certificate_ocid:
+    type: string
+    required: true
+    title: Certificate OCID
+    description: You must have a SSL certificate available in OCI Certificates service. Provide the certificate OCID for the host name.
+    visible : create_fqdn
+  # Network
+  create_new_vcn:
+    type: boolean
+    required: true
+    title: Create new VCN
+    default: true
+  vcn_compartment_id:
+    type: oci:identity:compartment:id
+    required: true
+    title: The compartment of the existing VCN.
+    default: compartment_ocid
+    visible: 
+      not:
+        - create_new_vcn
+  existing_vcn_id:
+    type: oci:core:vcn:id
+    required: true
+    title: Select to VCN
+    visible: 
+      not:
+        - create_new_vcn
+    dependsOn:
+      compartmentId: ${vcn_compartment_id}
+  vcn_cidr:
+    type: string
+    required: true
+    title: VCN IPv4 CIDR Blocks
+    description: This VCN will be used for all resources created by the stack.
+    default: "10.0.0.0/24"
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    visible: create_new_vcn
+  use_existing_app_subnet:
+    type: boolean
+    required: true
+    title: Use existing Application Subnet
+    default: false
+    visible: 
+      not : 
+        - create_new_vcn
+  existing_app_subnet_id:
+    type: oci:core:subnet:id
+    required: true
+    title: Select the application subnet
+    dependsOn:
+      compartmentId: ${vcn_compartment_id}
+      vcnId: ${existing_vcn_id}
+      hidePublicSubnet: true
+    visible: use_existing_app_subnet
+  app_subnet_cidr:
+    type: string
+    required: true
+    title: Application Subnet IPv4 CIDR Blocks
+    description: The container instances running the application will be created in this subnet.
+    default: "10.0.0.0/25"
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    visible:
+      not:
+        - use_existing_app_subnet
+  use_existing_db_subnet:
+    type: boolean
+    required: true
+    title: Use existing Database Subnet
+    default: false
+    visible:
+      and: 
+        - not: 
+          - create_new_vcn
+        - not:
+          - use_existing_database
+  existing_db_subnet_id:
+    type: oci:core:subnet:id
+    required: true
+    title: Select the database subnet
+    dependsOn:
+      compartmentId: ${vcn_compartment_id}
+      vcnId: ${existing_vcn_id}
+      hidePublicSubnet: true
+    visible: use_existing_db_subnet
+  db_subnet_cidr:
+    type: string
+    required: true
+    title: 'Database Subnet Creation: IPv4 CIDR Blocks'
+    description: 'The Autonomous Database will be created in this subnet. For example: 10.0.0.128/26'
+    default: "10.0.0.128/26"
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    visible: 
+      and:
+        - not: 
+          - use_existing_db_subnet
+        - not:
+          - use_existing_database
+  use_existing_lb_subnet:
+    type: boolean
+    required: true
+    title: Use existing Load Balancer Subnet
+    default: false
+    visible: 
+      not : 
+        - create_new_vcn
+  existing_lb_subnet_id:
+    type: oci:core:subnet:id
+    required: true
+    title: Select the load balancer subnet
+    dependsOn:
+      compartmentId: ${vcn_compartment_id}
+      vcnId: ${existing_vcn_id}
+      hidePublicSubnet: false
+    visible: use_existing_lb_subnet
+  lb_subnet_cidr:
+    type: string
+    required: true
+    title: Load balancer Subnet IPv4 CIDR Blocks
+    description: The load balancer will be created in this subnet.
+    pattern: "^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\/(3[0-2]|[1-2]?[0-9])$"
+    default: "10.0.0.192/26"
+    visible: 
+      not:
+        - use_existing_lb_subnet
+  open_https_port:
+    type: boolean
+    required: true
+    title: Open load balancer's HTTPS port
+    description: By checking this checkbox you agree to make the load balancer 
+      subnet public and to open the HTTPS port of the load balancer to the 
+      Internet.
+    default: false
+  # Container instances configuration
+  shape:
+    type: enum
+    required: true
+    title: Container instance shape
+    description: A shape is a template that determines the number of OCPUs, amount of memory, and other resources that are allocated to a container instance.
+    default: "CI.Standard.E3.Flex"
+    enum:
+      - CI.Standard.E3.Flex
+      - CI.Standard.E4.Flex
+  memory_in_gbs:
+    type: number
+    required: true
+    title: Memory (GB)
+    default: 8
+    minimum: 1
+    maximum: 1024
+    description: Min - 1 GB or a value matching the number of OCPUs, whichever is greater. Max - 64 GB per OCPU, up to 1024 GB total
+  ocpus:
+    type: number
+    required: true
+    title: OCPU
+    description: Min - 1 OCPU. Max - 64 OCPU
+    default: 2
+    minimum: 1
+    maximum: 64
+  # Load balancer
+  use_default_lb_configuration:
+    type: boolean
+    required: true
+    title: Use default load balancer configuration
+    default: true
+  maximum_bandwidth_in_mbps:
+    type: number
+    required: true
+    title: Maximum bandwidth (Mbps)
+    description : 10Mbps for always free load balancer
+    default: 10
+    visible:
+      not:
+        - use_default_lb_configuration
+  minimum_bandwidth_in_mbps:
+    type: number
+    required: true
+    title: Minimum bandwidth (Mbps)
+    description : 10Mbps for always free load balancer
+    default: 10
+    visible:
+      not:
+        - use_default_lb_configuration
+  health_checker_url_path:
+    type: string
+    required: true
+    title: URL path (URI)
+    description: This url will be used by the health checker to verify that the application is running
+    default: "/"
+    visible:
+      not:
+        - use_default_lb_configuration
+  health_checker_return_code:
+    type: number
+    required: true
+    title: Status code
+    description: Status code returned by the health checker url when the application is running
+    default: 200
+    visible:
+      not:
+        - use_default_lb_configuration
+  enable_session_affinity:
+    type: boolean
+    required: true
+    default: false
+    title: Enable cookie-based session persistence
+    visible: 
+      not: use_default_lb_configuration
+  session_affinity:
+    type: enum
+    required: true
+    title: Session persistence
+    description: Specify whether the cookie is generated by your application server or by the load balancer.
+    enum:
+      - Enable application cookie persistence
+      - Enable load balancer cookie persistence
+    visible: enable_session_affinity
+  session_affinity_cookie_name:
+    type: string
+    required: true
+    title: Cookie name
+    discription: Specify '*' to match any cookie name.
+    default: X-Oracle-BMC-LBS-Route
+    visible: enable_session_affinity
+
+outputGroups:
+  - title: Application
+    outputs:
+      - app_url
+
+outputs:
+  app_url:
+    type: link
+    title: Application URL
+    visible: true
+
+
+
+

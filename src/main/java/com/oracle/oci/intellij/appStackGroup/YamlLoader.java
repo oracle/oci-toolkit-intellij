@@ -24,19 +24,16 @@ public class YamlLoader {
 
     static LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
 
-    public static void main(String[] args) throws StreamReadException, DatabindException, IOException, IntrospectionException {
+    public static void Load() throws StreamReadException, DatabindException, IOException, IntrospectionException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        mapper.findAndRegisterModules();
         LinkedHashMap readValue =
-                mapper.readValue(new File("src/main/resources/interface.yaml"), LinkedHashMap.class);
+                mapper.readValue(new File("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/interface.yaml"), LinkedHashMap.class);
 
         LinkedHashMap variables = (LinkedHashMap) readValue.get("variables");
-//        variables.forEach((key,val) -> System.out.printf("%s = %s\n", key, val));
+
+
         List<LinkedHashMap> groups = (List<LinkedHashMap>) readValue.get("variableGroups");
-//        for (LinkedHashMap group : groups) {
-//            //group.forEach((key,value) ->
-//            generateVariableGroup(group, variables);
-//        }
+
 
 
 
