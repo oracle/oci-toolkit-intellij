@@ -13,9 +13,12 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -93,6 +96,23 @@ import com.oracle.bmc.identity.IdentityClient;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.CreateCompartmentDetails;
 import com.oracle.bmc.identity.model.RegionSubscription;
+import com.oracle.bmc.identity.requests.CreateCompartmentRequest;
+import com.oracle.bmc.identity.requests.DeleteCompartmentRequest;
+import com.oracle.bmc.identity.requests.GetCompartmentRequest;
+import com.oracle.bmc.identity.requests.ListCompartmentsRequest;
+import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
+import com.oracle.bmc.identity.responses.CreateCompartmentResponse;
+import com.oracle.bmc.identity.responses.GetCompartmentResponse;
+import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
+import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
+import com.oracle.bmc.resourcemanager.ResourceManagerClient;
+import com.oracle.bmc.resourcemanager.model.CreateStackDetails;
+import com.oracle.bmc.resourcemanager.model.CreateZipUploadConfigSourceDetails;
+import com.oracle.bmc.resourcemanager.model.StackSummary;
+import com.oracle.bmc.resourcemanager.requests.CreateStackRequest;
+import com.oracle.bmc.resourcemanager.requests.ListStacksRequest;
+import com.oracle.bmc.resourcemanager.responses.CreateStackResponse;
+import com.oracle.bmc.resourcemanager.responses.ListStacksResponse;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
@@ -108,6 +128,7 @@ public class OracleCloudAccount {
   private final IdentityClientProxy identityClientProxy = new IdentityClientProxy();
   private final DatabaseClientProxy databaseClientProxy = new DatabaseClientProxy();
   private final VirtualNetworkClientProxy virtualNetworkClientProxy = new VirtualNetworkClientProxy();
+  private final ResourceManagerClientProxy resourceManagerClientProxy = new ResourceManagerClientProxy();
 
   private OracleCloudAccount() {
     // Add the property change listeners in the order they have to be notified.
@@ -164,6 +185,7 @@ public class OracleCloudAccount {
     identityClientProxy.init(profile.get("region"));
     databaseClientProxy.init(profile.get("region"));
     virtualNetworkClientProxy.init(profile.get("region"));
+    resourceManagerClientProxy.init(profile.get("region"));
     SystemPreferences.setConfigInfo(configFile, profile.getName(),
             profile.get("region"), identityClientProxy.getRootCompartment());
   }
@@ -187,6 +209,11 @@ public class OracleCloudAccount {
   public VirtualNetworkClientProxy getVirtualNetworkClientProxy() {
     validate();
     return virtualNetworkClientProxy;
+  }
+
+  public ResourceManagerClientProxy getResourceManagerClientProxy() {
+    validate();
+    return resourceManagerClientProxy;
   }
 
   private void reset() {
@@ -850,4 +877,109 @@ public class OracleCloudAccount {
     }
   }
 
+  public class ResourceManagerClientProxy {
+    private ResourceManagerClient resourceManagerClient;
+
+    // Instance of this should be taken from the outer class factory method only.
+    private ResourceManagerClientProxy() {
+    }
+
+    void init(String region) {
+      reset();
+      resourceManagerClient = ResourceManagerClient.builder().build(authenticationDetailsProvider);
+      resourceManagerClient.setRegion(region);
+    }
+
+    public List<StackSummary> listStacks(String compartmentId) {
+      ListStacksRequest listStackRequest = ListStacksRequest.builder().compartmentId(compartmentId).build();
+      ListStacksResponse listStacks = this.resourceManagerClient.listStacks(listStackRequest);
+      List<StackSummary> items = listStacks.getItems();
+
+//      final ListVcnsRequest listVcnsRequest =
+//              ListVcnsRequest.builder()
+//                      .compartmentId(compartmentId)
+//                      .lifecycleState(Vcn.LifecycleState.Available)
+//                      .build();
+//      final ListVcnsResponse listVcnsResponse = resourceManagerClient.listVcns(listVcnsRequest);
+      return items;
+    }
+    
+    public String createStack() throws IOException {
+      CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
+        CreateZipUploadConfigSourceDetails.builder()
+        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/cbateman/Downloads/appstackforjava.zip"))
+        .build();
+
+      String compartmentId = SystemPreferences.getCompartmentId();
+      CreateStackDetails stackDetails =
+        CreateStackDetails.builder()
+                          .compartmentId(compartmentId)
+                          .configSource(zipUploadConfigSourceDetails)
+                          .build();
+      CreateStackRequest createStackRequest =
+        CreateStackRequest.builder().createStackDetails(stackDetails).build();
+      CreateStackResponse createStackResponse =
+        resourceManagerClient.createStack(createStackRequest);
+      System.out.println("Created Stack : " + createStackResponse.getStack());
+      final String stackId = createStackResponse.getStack().getId();
+
+      System.out.println(stackId);
+      return stackId;
+    }
+    
+    private String getBase64EncodingForAFile(String filePath) throws IOException {
+      byte[] fileData = Files.readAllBytes(Paths.get(filePath));
+      byte[] fileDataBase64Encoded = Base64.getEncoder().encode(fileData);
+      return new String(fileDataBase64Encoded, StandardCharsets.UTF_8);
+    }
+//    public Vcn getVcn(String vcnId)
+//    {
+//        if (resourceManagerClient == null)
+//        {
+//            return null;
+//        }
+//        GetVcnRequest request = GetVcnRequest.builder().vcnId(vcnId).build();
+//        
+//        GetVcnResponse response = null;
+//        try {
+//            response = this.resourceManagerClient.getVcn(request);
+//        } catch(Throwable e) {
+//            // To handle forbidden error
+//            // TODO: ErrorHandler.logError("Unable to list Autonomous Databases: "+e.getMessage());
+//        }
+//
+//        if (response == null) {
+//            return null;
+//        }
+//        return response.getVcn();
+//    }
+
+//    public List<Subnet> listSubnets(String compartmentId) {
+//      final ListSubnetsRequest listSubnetsRequest =
+//              ListSubnetsRequest.builder()
+//                      .compartmentId(compartmentId)
+//                      .lifecycleState(Subnet.LifecycleState.Available)
+//                      .build();
+//      final ListSubnetsResponse listSubnetsResponse = resourceManagerClient.listSubnets(listSubnetsRequest);
+//      return listSubnetsResponse.getItems();
+//    }
+//
+//    public List<NetworkSecurityGroup> listNetworkSecurityGroups(String compartmentId) {
+//      final ListNetworkSecurityGroupsRequest listNetworkSecurityGroupsRequest =
+//              ListNetworkSecurityGroupsRequest.builder()
+//                      .compartmentId(compartmentId)
+//                      .lifecycleState(NetworkSecurityGroup.LifecycleState.Available)
+//                      .build();
+//      final ListNetworkSecurityGroupsResponse listNetworkSecurityGroupsResponse =
+//              resourceManagerClient.listNetworkSecurityGroups(listNetworkSecurityGroupsRequest);
+//      return listNetworkSecurityGroupsResponse.getItems();
+//    }
+
+    private void reset() {
+      if (resourceManagerClient != null) {
+        resourceManagerClient.close();
+        resourceManagerClient = null;
+      }
+    }
+  }
 }
