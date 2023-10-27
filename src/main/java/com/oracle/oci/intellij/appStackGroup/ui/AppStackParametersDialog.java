@@ -5,7 +5,16 @@ import com.google.api.Property;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.util.Consumer;
 import com.intellij.util.ui.JBUI;
+import com.oracle.bmc.core.model.Subnet;
+import com.oracle.bmc.core.model.Vcn;
+import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
+import com.oracle.bmc.identity.model.AvailabilityDomain;
+import com.oracle.bmc.keymanagement.model.KeySummary;
+import com.oracle.bmc.keymanagement.model.Vault;
+import com.oracle.bmc.keymanagement.model.VaultSummary;
+import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.appStackGroup.models.VariableGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,6 +30,7 @@ import java.text.NumberFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class AppStackParametersDialog extends DialogWrapper {
     JPanel mainPanel;
@@ -38,9 +48,6 @@ public class AppStackParametersDialog extends DialogWrapper {
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
         createGroupsPanels(varGroups);
-
-
-
 
     }
 
@@ -90,13 +97,7 @@ public class AppStackParametersDialog extends DialogWrapper {
         // create component
         component = createComponentVariable(pd, varGroup);
 
-        // check if it's visible
-        //in progress
 
-//        if (!visible(pd)) {
-//            label.setVisible(false);
-//            component.setVisible(false);
-//        }
 
         groupPanel.add(label);
         groupPanel.add(component);
@@ -129,6 +130,11 @@ public class AppStackParametersDialog extends DialogWrapper {
                  * oci:core:vcn:id --> existed vcn s ...
                  *
                  */
+
+                 enumValues = getSuggestedValues(pd);
+                for (String enumValue : enumValues) {
+                    comboBox.addItem(enumValue);
+                }
 
             }
 
@@ -165,8 +171,21 @@ public class AppStackParametersDialog extends DialogWrapper {
             component = textField;
         }
 
+        // check if it's visible
+        //in progress
+
+        //        if (!visible(pd)) {
+        //            label.setVisible(false);
+        //            component.setVisible(false);
+        //        }
+
 
         return component;
+    }
+
+    private List<String> getSuggestedValues(PropertyDescriptor pd) {
+        String varType = (String) pd.getValue("type");
+        return Utils.getSuggestedValuesOf(varType).apply(pd);
     }
 
     @NotNull
@@ -206,6 +225,7 @@ public class AppStackParametersDialog extends DialogWrapper {
             }
             LinkedHashMap andCondition = (LinkedHashMap) visible.get("and");
         }
+
         return true;
     }
 
@@ -214,4 +234,79 @@ public class AppStackParametersDialog extends DialogWrapper {
     protected @Nullable JComponent createCenterPanel() {
         return new JBScrollPane(mainPanel);
     }
+}
+
+class Utils{
+    static LinkedHashMap<String,SuggestConsumor<PropertyDescriptor,List<String>>> suggestedValues = new LinkedHashMap<>();
+    static {
+        suggestedValues.put("oci:identity:compartment:id",(pd)->{
+            /* there are :
+            * default: ${compartment_id}
+            * default: compartment_ocid
+             */
+            // we have to pop up the compartment selection ....
+            return null;
+        });
+
+        suggestedValues.put("oci:core:vcn:id",(pd)->{
+                String vcn_compartment_id = "null";
+
+                List<Vcn> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listVcns(vcn_compartment_id);
+
+                return vcn.stream().map(Vcn::getDisplayName).collect(Collectors.toList());
+        });
+
+        suggestedValues.put("oci:core:subnet:id",(pd)->{
+            String vcn_compartment_id="" ;
+            String existing_vcn_id ="";
+            // todo
+            LinkedHashMap dependsOn = (LinkedHashMap) pd.getValue("dependsOn");
+            List<Subnet> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listSubnets(vcn_compartment_id,existing_vcn_id);
+
+            return vcn.stream().map(Subnet::getDisplayName).collect(Collectors.toList());
+
+        });
+
+        suggestedValues.put("oci:identity:availabilitydomain:name",(pd)->{
+            String compartment_id ="" ;
+            List<AvailabilityDomain> availabilityDomains = OracleCloudAccount.getInstance().getIdentityClient().getAvailabilityDomainsList(compartment_id);
+            return availabilityDomains.stream().map(AvailabilityDomain::getName).collect(Collectors.toList());
+        });
+
+        suggestedValues.put("oci:database:autonomousdatabase:id",(pd)->{
+            String compartment_id ="" ;
+            List<AutonomousDatabaseSummary> autonomousDatabases = OracleCloudAccount.getInstance().getDatabaseClient().getAutonomousDatabaseList(compartment_id);
+            return autonomousDatabases.stream().map(AutonomousDatabaseSummary::getDisplayName).collect(Collectors.toList());
+
+        });
+
+        suggestedValues.put("oci:kms:vault:id",(pd)->{
+            String vault_compartment_id = "";
+
+            List<VaultSummary> vaultList = OracleCloudAccount.getInstance().getIdentityClient().getVaultsList(vault_compartment_id);
+            return vaultList.stream().map(VaultSummary::getDisplayName).collect(Collectors.toList());
+        });
+
+        suggestedValues.put("oci:kms:key:id",(pd)->{
+            String vault_compartment_id = "";
+            String vault_id = "";
+
+            List<KeySummary> vaultList = OracleCloudAccount.getInstance().getIdentityClient().getKeyList(vault_compartment_id,vault_id);
+
+            return vaultList.stream().map(KeySummary::getDisplayName).collect(Collectors.toList());
+
+        });
+
+
+    }
+
+    static SuggestConsumor<PropertyDescriptor,List<String>> getSuggestedValuesOf(String type){
+        return suggestedValues.get(type);
+    }
+
+
+}
+@FunctionalInterface
+interface SuggestConsumor<T,  R> {
+    R apply(T t);
 }
