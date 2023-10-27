@@ -27,6 +27,18 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.oracle.bmc.identity.model.AvailabilityDomain;
+import com.oracle.bmc.identity.requests.*;
+import com.oracle.bmc.identity.responses.*;
+import com.oracle.bmc.keymanagement.KmsManagementClient;
+import com.oracle.bmc.keymanagement.KmsVaultClient;
+import com.oracle.bmc.keymanagement.model.KeySummary;
+import com.oracle.bmc.keymanagement.model.Vault;
+import com.oracle.bmc.keymanagement.model.VaultSummary;
+import com.oracle.bmc.keymanagement.requests.ListKeysRequest;
+import com.oracle.bmc.keymanagement.requests.ListVaultsRequest;
+import com.oracle.bmc.keymanagement.responses.ListKeysResponse;
+import com.oracle.bmc.keymanagement.responses.ListVaultsResponse;
 import org.apache.commons.io.FileUtils;
 
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
@@ -81,15 +93,6 @@ import com.oracle.bmc.identity.IdentityClient;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.CreateCompartmentDetails;
 import com.oracle.bmc.identity.model.RegionSubscription;
-import com.oracle.bmc.identity.requests.CreateCompartmentRequest;
-import com.oracle.bmc.identity.requests.DeleteCompartmentRequest;
-import com.oracle.bmc.identity.requests.GetCompartmentRequest;
-import com.oracle.bmc.identity.requests.ListCompartmentsRequest;
-import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
-import com.oracle.bmc.identity.responses.CreateCompartmentResponse;
-import com.oracle.bmc.identity.responses.GetCompartmentResponse;
-import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
-import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
@@ -297,6 +300,57 @@ public class OracleCloudAccount {
       return response.getCompartment();
     }
 
+    public List<AvailabilityDomain> getAvailabilityDomainsList(String compartmentId){
+      ListAvailabilityDomainsRequest listAvailabilityDomainsRequest = ListAvailabilityDomainsRequest.builder()
+              .compartmentId(compartmentId).build();
+
+      /* Send request to the Client */
+      ListAvailabilityDomainsResponse response = identityClient.listAvailabilityDomains(listAvailabilityDomainsRequest);
+      return response.getItems();
+    }
+
+    public List<VaultSummary> getVaultsList(String compartmentId){
+      if (authenticationDetailsProvider != null) {
+        KmsVaultClient client = KmsVaultClient.builder().build(authenticationDetailsProvider);
+
+        ListVaultsRequest listVaultsRequest = ListVaultsRequest.builder()
+                .compartmentId("ocid1.test.oc1..<unique_ID>EXAMPLE-compartmentId-Value")
+                .sortBy(ListVaultsRequest.SortBy.Timecreated)
+                .sortOrder(ListVaultsRequest.SortOrder.Desc).build();
+
+        /* Send request to the Client */
+        ListVaultsResponse response = client.listVaults(listVaultsRequest);
+        return response.getItems();
+      }
+      return null;
+    }
+
+    public List<KeySummary> getKeyList(String compartmentId,String vaultId){
+      if (authenticationDetailsProvider != null) {
+        KmsVaultClient kmsVaultClient = KmsVaultClient.builder().build(authenticationDetailsProvider);
+        KmsManagementClient kmsManagementClient = KmsManagementClient.builder().build(authenticationDetailsProvider);
+
+
+        ListKeysRequest listKeysRequest = ListKeysRequest.builder()
+                .compartmentId(compartmentId)
+                .build();
+        ListKeysResponse response = kmsManagementClient.listKeys(listKeysRequest);
+
+        List<KeySummary> keys = response.getItems();
+        List<KeySummary> vaultKeys = new ArrayList<>();
+        for (KeySummary key : keys){
+          if (key.getVaultId().equals(vaultId)){
+              vaultKeys.add(key);
+          }
+        }
+
+        return vaultKeys;
+        }
+      return null;
+      }
+
+
+
     @Override
     public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
       LogHandler.info("IdentityClientProxy: Handling the event update : " + propertyChangeEvent.toString());
@@ -305,6 +359,7 @@ public class OracleCloudAccount {
         identityClient.setRegion(propertyChangeEvent.getNewValue().toString());
       }
     }
+
 
     private void reset() {
       if (identityClient != null) {
@@ -680,6 +735,22 @@ public class OracleCloudAccount {
                 .updateAutonomousDatabaseDetails(updateRequest).autonomousDatabaseId(autonomousDatabaseSummary.getId()).build());
     }
 
+    public List<AutonomousDatabaseSummary> getAutonomousDatabaseList(String compartementId){
+      LogHandler.info("Fetching Autonomous Database instances.");
+
+
+      final ListAutonomousDatabasesRequest listAutonomousDatabasesRequest =
+              ListAutonomousDatabasesRequest.builder()
+                      .compartmentId(compartementId)
+                      .sortBy(ListAutonomousDatabasesRequest.SortBy.Timecreated)
+                      .sortOrder(ListAutonomousDatabasesRequest.SortOrder.Desc)
+                      .build();
+
+      final ListAutonomousDatabasesResponse response =
+              databaseClient.listAutonomousDatabases(listAutonomousDatabasesRequest);
+      return response.getItems();
+    }
+
     public AutonomousDatabaseSummary getAutonomousDatabaseSummary(String instanceId) {
       return instancesMap.get(instanceId);
     }
@@ -743,6 +814,17 @@ public class OracleCloudAccount {
       final ListSubnetsRequest listSubnetsRequest =
               ListSubnetsRequest.builder()
                       .compartmentId(compartmentId)
+                      .lifecycleState(Subnet.LifecycleState.Available)
+                      .build();
+      final ListSubnetsResponse listSubnetsResponse = virtualNetworkClient.listSubnets(listSubnetsRequest);
+      return listSubnetsResponse.getItems();
+    }
+
+    public List<Subnet> listSubnets(String compartmentId,String vcnId) {
+      final ListSubnetsRequest listSubnetsRequest =
+              ListSubnetsRequest.builder()
+                      .compartmentId(compartmentId)
+                      .vcnId(vcnId)
                       .lifecycleState(Subnet.LifecycleState.Available)
                       .build();
       final ListSubnetsResponse listSubnetsResponse = virtualNetworkClient.listSubnets(listSubnetsRequest);
