@@ -1,20 +1,13 @@
-//import org.jetbrains.changelog.markdownToHTML
-//import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
     idea
     // Java support
     id("java")
-    // Kotlin support
-    //id("org.jetbrains.kotlin.jvm") version "1.6.10"
     // Gradle IntelliJ Plugin
     id("org.jetbrains.intellij") version "1.13.1"
-    // Gradle Changelog Plugin
-    //id("org.jetbrains.changelog") version "1.3.1"
-    // Gradle Qodana Plugin
-    //id("org.jetbrains.qodana") version "0.1.13"
+    id("maven-publish")
+    id("distribution")
 }
 
 group = properties("pluginGroup")
@@ -36,7 +29,7 @@ dependencies {
     implementation(fileTree("lib/thirdparty/jersey/lib") { include("*.jar") })
 
     implementation ("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0") // Use the latest version
-    
+
     testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
@@ -71,3 +64,37 @@ tasks {
         sinceBuild.set(sinceBuildVersion)
     }
 }
+
+distributions {
+  main {
+    distributionBaseName.set("OCIPluginForIntelliJ.zip")
+  }
+}
+
+
+
+//publishing {
+//    publications {
+//        maven(MavenPublication) {
+//            groupId = "com.oracle.oci"
+//            artifactId = "intellij.plugin"
+//            version = "0.3-SNAPSHOT"
+//
+//            pom {
+//                name = "My Library"
+//                description = "A description of my library"
+//            }
+//        }
+//    }
+
+//    repositories {
+//        maven {
+//            credentials {
+//                username = "jdbcmaventoolsso_us@oracle.com"
+//                password = "AKCp8jQnLTKdt2DPJyJDv85u74rpyphECVUHw9uxmM1E8eyhk8msHXstPN1MvD6cwAk8YEuxA"
+//            }
+//
+//            url = "https://artifacthub-phx.oci.oraclecorp.com/jdbc-dev-local"
+//        }
+//    }
+//}
