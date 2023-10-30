@@ -341,7 +341,7 @@ public class OracleCloudAccount {
         KmsVaultClient client = KmsVaultClient.builder().build(authenticationDetailsProvider);
 
         ListVaultsRequest listVaultsRequest = ListVaultsRequest.builder()
-                .compartmentId("ocid1.test.oc1..<unique_ID>EXAMPLE-compartmentId-Value")
+                .compartmentId(compartmentId)
                 .sortBy(ListVaultsRequest.SortBy.Timecreated)
                 .sortOrder(ListVaultsRequest.SortOrder.Desc).build();
 

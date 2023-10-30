@@ -6,6 +6,7 @@ package com.oracle.oci.intellij.ui.appstack;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
+import java.beans.IntrospectionException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
@@ -324,14 +325,17 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
     @Override
     public void actionPerformed(ActionEvent e) {
-//      final DialogWrapper wizard = new CreateAutonomousDatabaseDialog();
-//      wizard.showAndGet();
       try {
-        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack();
-      } catch (IOException e1) {
-        // TODO Auto-generated catch block
-        e1.printStackTrace();
+        YamlLoader.Load();
+      } catch (IOException | IntrospectionException ex) {
+        throw new RuntimeException(ex);
       }
+//      try {
+//        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack();
+//      } catch (IOException e1) {
+//        // TODO Auto-generated catch block
+//        e1.printStackTrace();
+//      }
     }
   }
 

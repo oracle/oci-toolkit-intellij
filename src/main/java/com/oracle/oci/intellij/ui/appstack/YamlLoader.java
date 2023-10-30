@@ -1,11 +1,12 @@
-package com.oracle.oci.intellij.appStackGroup;
+package com.oracle.oci.intellij.ui.appstack;
 
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.oracle.oci.intellij.appStackGroup.models.*;
-import com.oracle.oci.intellij.appStackGroup.ui.AppStackParametersDialog;
+import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersDialog;
+import com.oracle.oci.intellij.ui.appstack.models.*;
 
 
 import java.beans.BeanInfo;
@@ -82,7 +83,9 @@ public class YamlLoader {
 
                 //                // recheck this default value thing
                 if (variable.get("default") != null) {
-                    pd.setValue("default", variable.get("default"));
+                    // fill default variables ....
+                   String defaultValue =  getDefaultValue(pd,variable);
+                    pd.setValue("default", defaultValue);
                 }
                 if (variable.get("type") != null) {
                     pd.setValue("type", variable.get("type"));
@@ -101,6 +104,15 @@ public class YamlLoader {
             }
         }
     }
+
+    private static String getDefaultValue(PropertyDescriptor pd, LinkedHashMap variable) {
+        if (variable.get("default").toString().contains("compartment_ocid") || variable.get("default").toString().contains("compartment_id"))
+            return OracleCloudAccount.getInstance().getIdentityClient().getRootCompartment().getCompartmentId();
+        return variable.get("default").toString();
+    }
+
+
+
     public static void createUIForm(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
         AppStackParametersDialog dialog =new AppStackParametersDialog(varGroups,descriptorsState) ;
         dialog.showAndGet();

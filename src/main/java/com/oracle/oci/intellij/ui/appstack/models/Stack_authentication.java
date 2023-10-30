@@ -1,4 +1,4 @@
-package com.oracle.oci.intellij.appStackGroup.models;
+package com.oracle.oci.intellij.ui.appstack.models;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;

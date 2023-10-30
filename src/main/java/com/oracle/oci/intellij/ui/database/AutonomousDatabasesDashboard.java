@@ -6,11 +6,12 @@ package com.oracle.oci.intellij.ui.database;
 
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.remoteServer.impl.runtime.ui.tree.actions.DeployAction;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
-import com.oracle.oci.intellij.appStackGroup.YamlLoader;
+import com.oracle.oci.intellij.ui.appstack.YamlLoader;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.util.LogHandler;
 import com.oracle.oci.intellij.ui.common.UIUtil;
@@ -50,7 +51,6 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
   private JLabel compartmentValueLabel;
   private JLabel regionValueLabel;
   private JButton createADBInstanceButton;
-  private JButton deployButton ;
   private List<AutonomousDatabaseSummary> autonomousDatabaseInstancesList;
 
   private static final AutonomousDatabasesDashboard INSTANCE =
@@ -73,9 +73,7 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
       createADBInstanceButton.setAction(new CreateAction("Create Autonomous Database"));
     }
 
-    if (deployButton != null){
-      deployButton.setAction(new DeployAction("Deploy"));
-    }
+
   }
 
   private void initializeLabels() {
@@ -408,27 +406,7 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
 
 
 
-  private static class DeployAction extends AbstractAction {
-    /**
-     *
-     */
-    private static final long serialVersionUID = 1L;
 
-    public DeployAction(String actionName) {
-      super(actionName);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-      try {
-        YamlLoader.Load();
-      } catch (IOException ex) {
-        throw new RuntimeException(ex);
-      } catch (IntrospectionException ex) {
-        throw new RuntimeException(ex);
-      }
-    }
-  }
 
     @Override
     public String getTitle() {
