@@ -339,6 +339,12 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
       } catch (IOException | IntrospectionException ex) {
         throw new RuntimeException(ex);
       }
+//      try {
+//        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack();
+//      } catch (IOException e1) {
+//        // TODO Auto-generated catch block
+//        e1.printStackTrace();
+//      }
     }
   }
 

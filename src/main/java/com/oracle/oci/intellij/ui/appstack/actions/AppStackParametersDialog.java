@@ -9,6 +9,7 @@ import com.oracle.bmc.core.model.Subnet;
 import com.oracle.bmc.core.model.Vcn;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.identity.model.AvailabilityDomain;
+import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.keymanagement.model.KeySummary;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
@@ -33,6 +34,7 @@ public class AppStackParametersDialog extends DialogWrapper {
 
     private static final String WINDOW_TITLE = "App stack variables ";
     private static final String OK_TEXT = "Save";
+    LinkedHashMap<String, PropertyDescriptor> descriptorsState;
 
 
 
@@ -42,7 +44,7 @@ public class AppStackParametersDialog extends DialogWrapper {
         setTitle(WINDOW_TITLE);
         setOKButtonText(OK_TEXT);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-
+        this.descriptorsState =descriptorsState;
         createGroupsPanels(varGroups);
 
     }
@@ -110,9 +112,14 @@ public class AppStackParametersDialog extends DialogWrapper {
 
             JCheckBox checkBox = new JCheckBox();
             component = checkBox;
-            checkBox.setSelected((boolean) pd.getValue("default"));
+            checkBox.addActionListener(e -> {
+                if (checkBox.isSelected()){
+                   checkBox.setVisible(false);
+                }
+            });
+            checkBox.setSelected(Boolean.getBoolean((String) pd.getValue("default")) );
             // add this to the condition || ((String)pd.getValue("type")).startsWith("oci")
-        } else if (propertyType.isEnum() ) {
+        } else if (propertyType.isEnum() || ((String)pd.getValue("type")).startsWith("oci") ) {
             ComboBox comboBox = new ComboBox();
             List<String> enumValues = (List<String>) pd.getValue("enum");
             if (enumValues != null){
@@ -120,7 +127,7 @@ public class AppStackParametersDialog extends DialogWrapper {
                     comboBox.addItem(enumValue);
                 }
             }else{
-                //todo  suggest values from account of user   in a combobox depeding on type
+                //todo  suggest values from account of user   in a combobox depending on  type
                 /* example
                  * oci:identity:compartment:id --> compartments of the user
                  * oci:core:vcn:id --> existed vcn s ...
@@ -128,9 +135,11 @@ public class AppStackParametersDialog extends DialogWrapper {
                  */
 
                  enumValues = getSuggestedValues(pd);
-                for (String enumValue : enumValues) {
-                    comboBox.addItem(enumValue);
-                }
+                 if (enumValues != null) {
+                     for (String enumValue : enumValues) {
+                         comboBox.addItem(enumValue);
+                     }
+                 }
 
             }
 
@@ -181,7 +190,7 @@ public class AppStackParametersDialog extends DialogWrapper {
 
     private List<String> getSuggestedValues(PropertyDescriptor pd) {
         String varType = (String) pd.getValue("type");
-        return Utils.getSuggestedValuesOf(varType).apply(pd);
+        return Utils.getSuggestedValuesOf(varType).apply(pd,descriptorsState);
     }
 
     @NotNull
@@ -233,28 +242,33 @@ public class AppStackParametersDialog extends DialogWrapper {
 }
 
 class Utils{
-    static LinkedHashMap<String,SuggestConsumor<PropertyDescriptor,List<String>>> suggestedValues = new LinkedHashMap<>();
+    static LinkedHashMap<String,SuggestConsumor<PropertyDescriptor,LinkedHashMap<String, PropertyDescriptor>,List<String>>> suggestedValues = new LinkedHashMap<>();
     static {
-        suggestedValues.put("oci:identity:compartment:id",(pd)->{
+        suggestedValues.put("oci:identity:compartment:id",(pd,pds)->{
             /* there are :
             * default: ${compartment_id}
             * default: compartment_ocid
              */
             // we have to pop up the compartment selection ....
-            return null;
+            Compartment rootCompartement = OracleCloudAccount.getInstance().getIdentityClient().getRootCompartment();
+            List<Compartment> compartmentList = OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(rootCompartement.getCompartmentId());
+
+            return compartmentList.stream().map(Compartment::getName).collect(Collectors.toList());
         });
 
-        suggestedValues.put("oci:core:vcn:id",(pd)->{
-                String vcn_compartment_id = "null";
+        suggestedValues.put("oci:core:vcn:id",(pd,pds)->{
+                String vcn_compartment_id = (String) pds.get("vcn_compartment_id").getValue("default");
 
                 List<Vcn> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listVcns(vcn_compartment_id);
 
                 return vcn.stream().map(Vcn::getDisplayName).collect(Collectors.toList());
         });
 
-        suggestedValues.put("oci:core:subnet:id",(pd)->{
-            String vcn_compartment_id="" ;
-            String existing_vcn_id ="";
+        suggestedValues.put("oci:core:subnet:id",(pd,pds)->{
+            String vcn_compartment_id=(String) pds.get("vcn_compartment_id").getValue("default"); ;
+            String existing_vcn_id =(String) pds.get("existing_vcn_id").getValue("default");;
+            if (existing_vcn_id == null) return null;
+
             // todo
             LinkedHashMap dependsOn = (LinkedHashMap) pd.getValue("dependsOn");
             List<Subnet> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listSubnets(vcn_compartment_id,existing_vcn_id);
@@ -263,30 +277,32 @@ class Utils{
 
         });
 
-        suggestedValues.put("oci:identity:availabilitydomain:name",(pd)->{
-            String compartment_id ="" ;
+        suggestedValues.put("oci:identity:availabilitydomain:name",(pd,pds)->{
+            String compartment_id =(String) pds.get("compartment_id").getValue("default");  ;
             List<AvailabilityDomain> availabilityDomains = OracleCloudAccount.getInstance().getIdentityClient().getAvailabilityDomainsList(compartment_id);
             return availabilityDomains.stream().map(AvailabilityDomain::getName).collect(Collectors.toList());
         });
 
-        suggestedValues.put("oci:database:autonomousdatabase:id",(pd)->{
-            String compartment_id ="" ;
+        suggestedValues.put("oci:database:autonomousdatabase:id",(pd,pds)->{
+            String compartment_id =(String) pds.get("compartment_id").getValue("default"); ;
             List<AutonomousDatabaseSummary> autonomousDatabases = OracleCloudAccount.getInstance().getDatabaseClient().getAutonomousDatabaseList(compartment_id);
             return autonomousDatabases.stream().map(AutonomousDatabaseSummary::getDisplayName).collect(Collectors.toList());
 
         });
 
-        suggestedValues.put("oci:kms:vault:id",(pd)->{
-            String vault_compartment_id = "";
+        suggestedValues.put("oci:kms:vault:id",(pd,pds)->{
+            String vault_compartment_id = (String) pds.get("vault_compartment_id").getValue("default");;
+
+
 
             List<VaultSummary> vaultList = OracleCloudAccount.getInstance().getIdentityClient().getVaultsList(vault_compartment_id);
             return vaultList.stream().map(VaultSummary::getDisplayName).collect(Collectors.toList());
         });
 
-        suggestedValues.put("oci:kms:key:id",(pd)->{
-            String vault_compartment_id = "";
-            String vault_id = "";
-
+        suggestedValues.put("oci:kms:key:id",(pd,pds)->{
+            String vault_compartment_id = (String) pds.get("vault_compartment_id").getValue("default");
+            String vault_id = (String) pds.get("vault_id").getValue("default");;
+            if (vault_id == null) return null;
             List<KeySummary> vaultList = OracleCloudAccount.getInstance().getIdentityClient().getKeyList(vault_compartment_id,vault_id);
 
             return vaultList.stream().map(KeySummary::getDisplayName).collect(Collectors.toList());
@@ -296,13 +312,13 @@ class Utils{
 
     }
 
-    static SuggestConsumor<PropertyDescriptor,List<String>> getSuggestedValuesOf(String type){
+    static SuggestConsumor<PropertyDescriptor,LinkedHashMap<String,PropertyDescriptor> ,List<String>> getSuggestedValuesOf(String type){
         return suggestedValues.get(type);
     }
 
 
 }
 @FunctionalInterface
-interface SuggestConsumor<T,  R> {
-    R apply(T t);
+interface SuggestConsumor<T,U,R> {
+    R apply(T t,U u);
 }
