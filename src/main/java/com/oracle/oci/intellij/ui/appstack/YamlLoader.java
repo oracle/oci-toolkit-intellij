@@ -1,11 +1,11 @@
-package com.oracle.oci.intellij.appStackGroup;
+package com.oracle.oci.intellij.ui.appstack;
 
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.oracle.oci.intellij.appStackGroup.models.*;
-import com.oracle.oci.intellij.appStackGroup.ui.AppStackParametersDialog;
+import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersDialog;
+import com.oracle.oci.intellij.ui.appstack.models.*;
 
 
 import java.beans.BeanInfo;
