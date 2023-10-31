@@ -1,5 +1,7 @@
 package com.oracle.oci.intellij.ui.appstack.models;
 
+import com.oracle.oci.intellij.ui.appstack.actions.PropertyOrder;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
@@ -10,7 +12,7 @@ public class General_Configuration extends VariableGroup {
 
     private Object availability_domain;
 
-
+    @PropertyOrder(1)
     public Object getCompartment_id() {
         return compartment_id;
     }
@@ -18,7 +20,7 @@ public class General_Configuration extends VariableGroup {
     public void setCompartment_id(Object compartment_id) {
         this.compartment_id = compartment_id;
     }
-
+    @PropertyOrder(2)
     public Object getAvailability_domain() {
         return availability_domain;
     }
