@@ -14,19 +14,23 @@ import com.oracle.bmc.keymanagement.model.KeySummary;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
+import com.oracle.oci.intellij.ui.common.UIUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
+import java.awt.event.FocusEvent;
+import java.beans.*;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class AppStackParametersDialog extends DialogWrapper {
@@ -34,6 +38,7 @@ public class AppStackParametersDialog extends DialogWrapper {
 
     private static final String WINDOW_TITLE = "App stack variables ";
     private static final String OK_TEXT = "Save";
+    Map<String , JComponent> pdComponents = new LinkedHashMap<>();
     LinkedHashMap<String, PropertyDescriptor> descriptorsState;
 
 
@@ -55,6 +60,11 @@ public class AppStackParametersDialog extends DialogWrapper {
             Class<? extends VariableGroup> varGroupClazz = varGroup.getClass();
             BeanInfo beanInfo = Introspector.getBeanInfo(varGroupClazz);
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+            Arrays.sort(propertyDescriptors, Comparator.comparingInt(pd -> {
+                PropertyOrder annotation = pd.getReadMethod().getAnnotation(PropertyOrder.class);
+                return (annotation != null) ? annotation.value() : Integer.MAX_VALUE;
+            }));
 
             // create group panel
             JPanel groupPanel = new JPanel();
@@ -96,7 +106,6 @@ public class AppStackParametersDialog extends DialogWrapper {
         component = createComponentVariable(pd, varGroup);
 
 
-
         groupPanel.add(label);
         groupPanel.add(component);
 
@@ -113,17 +122,19 @@ public class AppStackParametersDialog extends DialogWrapper {
             JCheckBox checkBox = new JCheckBox();
             component = checkBox;
             checkBox.addActionListener(e -> {
-                if (checkBox.isSelected()){
-                   checkBox.setVisible(false);
+                try {
+                    pd.getWriteMethod().invoke(varGroup,checkBox.isSelected());
+                } catch (IllegalAccessException | InvocationTargetException ex) {
+                    throw new RuntimeException(ex);
                 }
             });
             checkBox.setSelected(Boolean.getBoolean((String) pd.getValue("default")) );
             // add this to the condition || ((String)pd.getValue("type")).startsWith("oci")
         } else if (propertyType.isEnum() || ((String)pd.getValue("type")).startsWith("oci") ) {
             ComboBox comboBox = new ComboBox();
-            List<String> enumValues = (List<String>) pd.getValue("enum");
-            if (enumValues != null){
-                for (String enumValue : enumValues) {
+            AtomicReference<List<String>> enumValues = new AtomicReference<>((List<String>) pd.getValue("enum"));
+            if (enumValues.get() != null){
+                for (String enumValue : enumValues.get()) {
                     comboBox.addItem(enumValue);
                 }
             }else{
@@ -133,13 +144,52 @@ public class AppStackParametersDialog extends DialogWrapper {
                  * oci:core:vcn:id --> existed vcn s ...
                  *
                  */
+//                Runnable fetchData = ()->{
+                    enumValues.set(getSuggestedValues(pd));
 
-                 enumValues = getSuggestedValues(pd);
-                 if (enumValues != null) {
-                     for (String enumValue : enumValues) {
-                         comboBox.addItem(enumValue);
-                     }
-                 }
+//                };
+//                final Runnable updateUI = ()->{
+                    if (enumValues.get() != null) {
+                        for (String enumValue : enumValues.get()) {
+                            comboBox.addItem(enumValue);
+                        }
+                    }
+
+                    comboBox.addActionListener(e->{
+                        try {
+                            if (pd.getName().equals("compartment_id")){
+                                pd.setValue("default",comboBox.getItem());
+
+
+                                JComboBox comboAv = (JComboBox) pdComponents.get("availability_domain");
+                                JComboBox comboADb = (JComboBox) pdComponents.get("autonomous_database");
+                                if(comboAv == null) return;
+                                if (comboADb == null) return;
+
+                                comboAv.removeAllItems();
+                                comboADb.removeAllItems();
+
+
+
+                                List <String> avs = Utils.getSuggestedValuesOf("oci:identity:availabilitydomain:name").apply(pd,descriptorsState);
+                                for (String enumValue : avs) {
+                                    comboAv.addItem(enumValue);
+                                }
+                                List <String> adbs = Utils.getSuggestedValuesOf("oci:database:autonomousdatabase:id").apply(pd,descriptorsState);
+                                for (String enumValue : adbs) {
+                                    comboADb.addItem(enumValue);
+                                }
+
+                            }
+
+                            pd.getWriteMethod().invoke(varGroup,comboBox.getItem());
+                        } catch (IllegalAccessException | InvocationTargetException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    });
+//                };
+//                UIUtil.executeAndUpdateUIAsync(fetchData, updateUI);
+
 
             }
 
@@ -165,6 +215,13 @@ public class AppStackParametersDialog extends DialogWrapper {
                 }
                 spinner.setValue(value);
             }
+            spinner.addChangeListener(e->{
+                try {
+                    pd.getWriteMethod().invoke(varGroup,spinner.getValue());
+                } catch (IllegalAccessException | InvocationTargetException ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
 
             component = spinner;
         } else {
@@ -173,6 +230,18 @@ public class AppStackParametersDialog extends DialogWrapper {
             if (pd.getValue("default") != null){
                 textField.setText(pd.getValue("default").toString());
             }
+            textField.addFocusListener(new FocusAdapter() {
+                @Override
+                public void focusLost(FocusEvent e) {
+                    try {
+                        pd.getWriteMethod().invoke(varGroup, textField.getText());
+                    } catch (IllegalAccessException | InvocationTargetException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+
+            );
             component = textField;
         }
 
@@ -184,6 +253,8 @@ public class AppStackParametersDialog extends DialogWrapper {
         //            component.setVisible(false);
         //        }
 
+        pdComponents.put(pd.getName(),component);
+        component.getPreferredSize();
 
         return component;
     }
@@ -201,6 +272,7 @@ public class AppStackParametersDialog extends DialogWrapper {
             public void focusLost(java.awt.event.FocusEvent focusEvent) {
                 try {
                     String value = textField.getText();
+                    pd.setValue("default",value);
                     pd.getWriteMethod().invoke(varGroup, value);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
@@ -239,6 +311,11 @@ public class AppStackParametersDialog extends DialogWrapper {
     protected @Nullable JComponent createCenterPanel() {
         return new JBScrollPane(mainPanel);
     }
+
+    @Override
+    protected void doOKAction() {
+        super.doOKAction();
+    }
 }
 
 class Utils{
@@ -253,7 +330,7 @@ class Utils{
             Compartment rootCompartement = OracleCloudAccount.getInstance().getIdentityClient().getRootCompartment();
             List<Compartment> compartmentList = OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(rootCompartement.getCompartmentId());
 
-            return compartmentList.stream().map(Compartment::getName).collect(Collectors.toList());
+            return compartmentList.stream().map(Compartment::getId).collect(Collectors.toList());
         });
 
         suggestedValues.put("oci:core:vcn:id",(pd,pds)->{
@@ -261,7 +338,7 @@ class Utils{
 
                 List<Vcn> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listVcns(vcn_compartment_id);
 
-                return vcn.stream().map(Vcn::getDisplayName).collect(Collectors.toList());
+                return vcn.stream().map(Vcn::getId).collect(Collectors.toList());
         });
 
         suggestedValues.put("oci:core:subnet:id",(pd,pds)->{
@@ -270,23 +347,25 @@ class Utils{
             if (existing_vcn_id == null) return null;
 
             // todo
-            LinkedHashMap dependsOn = (LinkedHashMap) pd.getValue("dependsOn");
+//            LinkedHashMap dependsOn = (LinkedHashMap) pd.getValue("dependsOn");
             List<Subnet> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listSubnets(vcn_compartment_id,existing_vcn_id);
 
-            return vcn.stream().map(Subnet::getDisplayName).collect(Collectors.toList());
+            return vcn.stream().map(Subnet::getId).collect(Collectors.toList());
 
         });
 
         suggestedValues.put("oci:identity:availabilitydomain:name",(pd,pds)->{
             String compartment_id =(String) pds.get("compartment_id").getValue("default");  ;
             List<AvailabilityDomain> availabilityDomains = OracleCloudAccount.getInstance().getIdentityClient().getAvailabilityDomainsList(compartment_id);
-            return availabilityDomains.stream().map(AvailabilityDomain::getName).collect(Collectors.toList());
+            return availabilityDomains.stream().map(AvailabilityDomain::getId).collect(Collectors.toList());
         });
 
         suggestedValues.put("oci:database:autonomousdatabase:id",(pd,pds)->{
-            String compartment_id =(String) pds.get("compartment_id").getValue("default"); ;
+
+            String compartment_id = (String) pd.getValue("default");
+            if (compartment_id== null) return null;
             List<AutonomousDatabaseSummary> autonomousDatabases = OracleCloudAccount.getInstance().getDatabaseClient().getAutonomousDatabaseList(compartment_id);
-            return autonomousDatabases.stream().map(AutonomousDatabaseSummary::getDisplayName).collect(Collectors.toList());
+            return autonomousDatabases.stream().map(AutonomousDatabaseSummary::getId).collect(Collectors.toList());
 
         });
 
@@ -296,7 +375,7 @@ class Utils{
 
 
             List<VaultSummary> vaultList = OracleCloudAccount.getInstance().getIdentityClient().getVaultsList(vault_compartment_id);
-            return vaultList.stream().map(VaultSummary::getDisplayName).collect(Collectors.toList());
+            return vaultList.stream().map(VaultSummary::getId).collect(Collectors.toList());
         });
 
         suggestedValues.put("oci:kms:key:id",(pd,pds)->{
@@ -305,7 +384,7 @@ class Utils{
             if (vault_id == null) return null;
             List<KeySummary> vaultList = OracleCloudAccount.getInstance().getIdentityClient().getKeyList(vault_compartment_id,vault_id);
 
-            return vaultList.stream().map(KeySummary::getDisplayName).collect(Collectors.toList());
+            return vaultList.stream().map(KeySummary::getId).collect(Collectors.toList());
 
         });
 
@@ -322,3 +401,4 @@ class Utils{
 interface SuggestConsumor<T,U,R> {
     R apply(T t,U u);
 }
+

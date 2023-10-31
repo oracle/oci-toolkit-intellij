@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersDialog;
 import com.oracle.oci.intellij.ui.appstack.models.*;
 
@@ -33,7 +34,7 @@ public class YamlLoader {
         LinkedHashMap variables = (LinkedHashMap) readValue.get("variables");
 
 
-        List<LinkedHashMap> groups = (List<LinkedHashMap>) readValue.get("variableGroups");
+//        List<LinkedHashMap> groups = (List<LinkedHashMap>) readValue.get("variableGroups");
 
 
 
@@ -107,7 +108,7 @@ public class YamlLoader {
 
     private static String getDefaultValue(PropertyDescriptor pd, LinkedHashMap variable) {
         if (variable.get("default").toString().contains("compartment_ocid") || variable.get("default").toString().contains("compartment_id"))
-            return OracleCloudAccount.getInstance().getIdentityClient().getRootCompartment().getCompartmentId();
+            return SystemPreferences.getCompartmentId();
         return variable.get("default").toString();
     }
 

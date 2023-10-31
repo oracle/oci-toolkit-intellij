@@ -1,5 +1,7 @@
 package com.oracle.oci.intellij.ui.appstack.models;
 
+import com.oracle.oci.intellij.ui.appstack.actions.PropertyOrder;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
@@ -11,7 +13,7 @@ public class Other_parameters extends VariableGroup {
     private String vm_options;
 
     private String program_arguments;
-
+    @PropertyOrder(1)
     public String getOther_environment_variables() {
         return other_environment_variables;
     }
@@ -19,7 +21,7 @@ public class Other_parameters extends VariableGroup {
     public void setOther_environment_variables(String other_environment_variables) {
         this.other_environment_variables = other_environment_variables;
     }
-
+    @PropertyOrder(2)
     public String getVm_options() {
         return vm_options;
     }
@@ -27,7 +29,7 @@ public class Other_parameters extends VariableGroup {
     public void setVm_options(String vm_options) {
         this.vm_options = vm_options;
     }
-
+    @PropertyOrder(3)
     public String getProgram_arguments() {
         return program_arguments;
     }
