@@ -42,6 +42,8 @@ dependencies {
     
     testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("jakarta.json:jakarta.json-api:2.1.2")
+    testImplementation("org.eclipse.parsson:parsson:1.1.5")
 }
 
 intellij {
