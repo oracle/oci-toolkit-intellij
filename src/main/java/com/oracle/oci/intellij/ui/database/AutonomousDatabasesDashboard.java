@@ -15,6 +15,7 @@ import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.util.LogHandler;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.actions.*;
+import com.oracle.oci.intellij.ui.explorer.ITabbedExplorerContent;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -27,7 +28,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
 
-public final class AutonomousDatabasesDashboard implements PropertyChangeListener {
+public final class AutonomousDatabasesDashboard implements PropertyChangeListener, ITabbedExplorerContent {
 
   private static final String[] ADB_COLUMN_NAMES = new String[] {"Display Name",
           "Database Name", "State", "Free Tier", "Dedicated Infrastructure",
@@ -424,6 +425,12 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
         throw new RuntimeException(ex);
       }
     }
+ }
+  
+  
+  @Override
+  public String getTitle() {
+    return "Autonomouse Database";
   }
 
 }

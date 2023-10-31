@@ -4,27 +4,28 @@
  */
 package com.oracle.oci.intellij.ui.explorer;
 
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+
+import org.jetbrains.annotations.Nullable;
+
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBTabbedPane;
-import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
-import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
-
-public class TabbedExplorer extends DialogWrapper {
+public class TabbedExplorer<TabContent extends ITabbedExplorerContent> extends DialogWrapper {
   private JBTabbedPane tabbedPane;
   private JPanel mainPanel;
-  private final AutonomousDatabasesDashboard autonomousDatabasesTable;
+  private final TabContent tabbedExplorerContent;
 
-  public TabbedExplorer(final ToolWindow toolWindow, final AutonomousDatabasesDashboard dashboard) {
+  public TabbedExplorer(final ToolWindow toolWindow, final TabContent dashboard) {
     super(true);
-    this.autonomousDatabasesTable = dashboard;
+    this.tabbedExplorerContent = dashboard;
     init();
   }
 
   public JComponent getContent() {
-    tabbedPane.add("Autonomous Database Instances", autonomousDatabasesTable.createCenterPanel());
+    tabbedPane.add(tabbedExplorerContent.getTitle(), tabbedExplorerContent.createCenterPanel());
     return mainPanel;
   }
 

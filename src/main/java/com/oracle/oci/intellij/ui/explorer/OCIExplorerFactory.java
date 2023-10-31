@@ -20,6 +20,7 @@ import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.account.CompartmentAction;
 import com.oracle.oci.intellij.ui.account.ConfigureAction;
 import com.oracle.oci.intellij.ui.account.RegionAction;
+import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
@@ -37,6 +38,7 @@ public class OCIExplorerFactory implements ToolWindowFactory {
             OracleCloudAccount.getInstance().configure(SystemPreferences.getConfigFilePath(),
                                                        SystemPreferences.getProfileName());
             AutonomousDatabasesDashboard.getInstance().populateTableData();
+            AppStackDashboard.getInstance();//.populate();
           } catch (Exception ex) {
            final String message = "Oracle Cloud account configuration failed: " + ex.getMessage();
            LogHandler.warn(message);
@@ -57,14 +59,24 @@ public class OCIExplorerFactory implements ToolWindowFactory {
     actionGroup.add(new RegionAction());
     actionGroup.add(new CompartmentAction());
     toolWindow.setTitleActions(Arrays.asList(actionGroup));
-
-    final TabbedExplorer ociTabbedToolBar =
-      new TabbedExplorer(toolWindow,
-                         AutonomousDatabasesDashboard.getInstance());
-    final ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-    final Content ociTabbedToolBarContent =
-      contentFactory.createContent(ociTabbedToolBar.getContent(), "", false);
-    toolWindow.getContentManager().addContent(ociTabbedToolBarContent);
+    {
+      final TabbedExplorer ociTabbedToolBar =
+        new TabbedExplorer(toolWindow,
+                           AutonomousDatabasesDashboard.getInstance());
+      final ContentFactory contentFactory =
+        ContentFactory.SERVICE.getInstance();
+      final Content ociTabbedToolBarContent =
+        contentFactory.createContent(ociTabbedToolBar.getContent(), "Autonomous Database", false);
+      toolWindow.getContentManager().addContent(ociTabbedToolBarContent);
+    }
+    {
+      final TabbedExplorer ociTabbedToolBar =
+        new TabbedExplorer(toolWindow, AppStackDashboard.getInstance());
+      final ContentFactory contentFactory =
+        ContentFactory.SERVICE.getInstance();
+      final Content ociTabbedToolBarContent =
+        contentFactory.createContent(ociTabbedToolBar.getContent(), "Application Stack", false);
+      toolWindow.getContentManager().addContent(ociTabbedToolBarContent);
+    }
   }
-
 }
