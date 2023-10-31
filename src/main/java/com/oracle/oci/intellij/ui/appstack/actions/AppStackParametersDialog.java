@@ -14,7 +14,6 @@ import com.oracle.bmc.keymanagement.model.KeySummary;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
-import com.oracle.oci.intellij.ui.common.UIUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,14 +21,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
 import java.beans.*;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -155,37 +152,61 @@ public class AppStackParametersDialog extends DialogWrapper {
                         }
                     }
 
-                    comboBox.addActionListener(e->{
-                        try {
-                            if (pd.getName().equals("compartment_id")){
-                                pd.setValue("default",comboBox.getItem());
+                    comboBox.addItemListener(e->{
+                        if(e.getStateChange() == ItemEvent.SELECTED){
 
+                            pd.setValue("default",comboBox.getItem());
+                            List<String> dependencies = Utils.depondsOn.get(pd.getName());
+                            if (dependencies != null){
+                                JComboBox newCombobox = new ComboBox();
+                                for (String dependent :dependencies){
+                                    JComboBox jComboBox = (JComboBox) pdComponents.get(dependent);
+                                    if (jComboBox == null) continue;
+                                    jComboBox.removeAllItems();
+                                    PropertyDescriptor dependentPd = descriptorsState.get(dependent);
 
-                                JComboBox comboAv = (JComboBox) pdComponents.get("availability_domain");
-                                JComboBox comboADb = (JComboBox) pdComponents.get("autonomous_database");
-                                if(comboAv == null) return;
-                                if (comboADb == null) return;
+                                    List<String> suggestedvalues = Utils.getSuggestedValuesOf((String) dependentPd.getValue("type")).apply(pd,descriptorsState);
+                                    for (String enumValue : suggestedvalues) {
+                                        jComboBox.addItem(enumValue);
+                                    }
+                                    jComboBox.repaint();
 
-                                comboAv.removeAllItems();
-                                comboADb.removeAllItems();
-
-
-
-                                List <String> avs = Utils.getSuggestedValuesOf("oci:identity:availabilitydomain:name").apply(pd,descriptorsState);
-                                for (String enumValue : avs) {
-                                    comboAv.addItem(enumValue);
                                 }
-                                List <String> adbs = Utils.getSuggestedValuesOf("oci:database:autonomousdatabase:id").apply(pd,descriptorsState);
-                                for (String enumValue : adbs) {
-                                    comboADb.addItem(enumValue);
-                                }
-
                             }
-
-                            pd.getWriteMethod().invoke(varGroup,comboBox.getItem());
-                        } catch (IllegalAccessException | InvocationTargetException ex) {
-                            throw new RuntimeException(ex);
                         }
+//                        try {
+
+
+
+//                            if (pd.getName().equals("compartment_id")){
+//                                pd.setValue("default",comboBox.getItem());
+//
+//
+//                                JComboBox comboAv = (JComboBox) pdComponents.get("availability_domain");
+//                                JComboBox comboADb = (JComboBox) pdComponents.get("autonomous_database");
+//                                if(comboAv == null) return;
+//                                if (comboADb == null) return;
+//
+//                                comboAv.removeAllItems();
+//                                comboADb.removeAllItems();
+//
+//
+//
+//                                List <String> avs = Utils.getSuggestedValuesOf("oci:identity:availabilitydomain:name").apply(pd,descriptorsState);
+//                                for (String enumValue : avs) {
+//                                    comboAv.addItem(enumValue);
+//                                }
+//                                List <String> adbs = Utils.getSuggestedValuesOf("oci:database:autonomousdatabase:id").apply(pd,descriptorsState);
+//                                for (String enumValue : adbs) {
+//                                    comboADb.addItem(enumValue);
+//                                }
+//
+//                            }
+
+//                            pd.getWriteMethod().invoke(varGroup,comboBox.getItem());
+//                        } catch (IllegalAccessException | InvocationTargetException ex) {
+//                            throw new RuntimeException(ex);
+//                        }
                     });
 //                };
 //                UIUtil.executeAndUpdateUIAsync(fetchData, updateUI);
@@ -254,7 +275,7 @@ public class AppStackParametersDialog extends DialogWrapper {
         //        }
 
         pdComponents.put(pd.getName(),component);
-        component.getPreferredSize();
+        component.setPreferredSize(new Dimension(200,30));
 
         return component;
     }
@@ -390,6 +411,14 @@ class Utils{
 
 
     }
+
+    static public Map<String , List<String>> depondsOn = new LinkedHashMap<>(){{
+        put("compartment_id", List.of("availability_domain","autonomous_database"));
+        put("vault_compartment_id",List.of("vault_id","key_id"));
+        put("vault_id",List.of("key_id"));
+        put("vcn_compartment_id",List.of("existing_vcn_id","existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
+        put("existing_vcn_id",List.of("existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
+    }};
 
     static SuggestConsumor<PropertyDescriptor,LinkedHashMap<String,PropertyDescriptor> ,List<String>> getSuggestedValuesOf(String type){
         return suggestedValues.get(type);
