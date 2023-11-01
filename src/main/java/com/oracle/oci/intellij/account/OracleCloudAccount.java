@@ -387,7 +387,6 @@ public class OracleCloudAccount {
       }
     }
 
-
     private void reset() {
       if (identityClient != null) {
         identityClient.close();
@@ -903,7 +902,7 @@ public class OracleCloudAccount {
 //      final ListVcnsResponse listVcnsResponse = resourceManagerClient.listVcns(listVcnsRequest);
       return items;
     }
-    
+
     public String createStack() throws IOException {
       CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
         CreateZipUploadConfigSourceDetails.builder()
@@ -926,7 +925,7 @@ public class OracleCloudAccount {
       System.out.println(stackId);
       return stackId;
     }
-    
+
     private String getBase64EncodingForAFile(String filePath) throws IOException {
       byte[] fileData = Files.readAllBytes(Paths.get(filePath));
       byte[] fileDataBase64Encoded = Base64.getEncoder().encode(fileData);
@@ -939,7 +938,7 @@ public class OracleCloudAccount {
 //            return null;
 //        }
 //        GetVcnRequest request = GetVcnRequest.builder().vcnId(vcnId).build();
-//        
+//
 //        GetVcnResponse response = null;
 //        try {
 //            response = this.resourceManagerClient.getVcn(request);

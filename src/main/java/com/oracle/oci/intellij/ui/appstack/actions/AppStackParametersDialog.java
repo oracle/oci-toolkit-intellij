@@ -1,35 +1,31 @@
-package com.oracle.oci.intellij.appStackGroup.ui;
+package com.oracle.oci.intellij.ui.appstack.actions;
 
 
-import com.google.api.Property;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBScrollPane;
-import com.intellij.util.Consumer;
 import com.intellij.util.ui.JBUI;
 import com.oracle.bmc.core.model.Subnet;
 import com.oracle.bmc.core.model.Vcn;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.keymanagement.model.KeySummary;
-import com.oracle.bmc.keymanagement.model.Vault;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.appStackGroup.models.VariableGroup;
+import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
-import java.beans.*;
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
-import java.text.NumberFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AppStackParametersDialog extends DialogWrapper {
@@ -40,7 +36,7 @@ public class AppStackParametersDialog extends DialogWrapper {
 
 
 
-    public AppStackParametersDialog(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
+    public AppStackParametersDialog(List<VariableGroup> varGroups, LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
         super(true);
         init();
         setTitle(WINDOW_TITLE);
