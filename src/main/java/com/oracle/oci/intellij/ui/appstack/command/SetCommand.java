@@ -1,4 +1,4 @@
-package com.oracle.oci.intellij.appStackGroup.command;
+package com.oracle.oci.intellij.ui.appstack.command;
 
 import java.beans.PropertyDescriptor;
 
