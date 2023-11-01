@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.oracle.oci.intellij.appStackGroup.command.SetCommand;
-import com.oracle.oci.intellij.appStackGroup.command.SetCommand.SetCommandResult;
+import com.oracle.oci.intellij.ui.appstack.command.SetCommand;
+import com.oracle.oci.intellij.ui.appstack.command.SetCommand.SetCommandResult;
 import com.oracle.oci.intellij.appStackGroup.models.Application;
 import com.oracle.oci.intellij.appStackGroup.models.Application_Performance_Monitoring;
 import com.oracle.oci.intellij.appStackGroup.models.Application_URL;
