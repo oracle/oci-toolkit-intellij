@@ -106,12 +106,75 @@ public class YamlLoader {
                 }
                 if (variable.get("visible") != null) {
                     pd.setValue("visible", variable.get("visible"));
+//                    isVisible(pd);
+                }else {
+                    pd.setHidden(false);
                 }
+
+                // visible logic
+
 
                 descriptorsState.put(pd.getName(),pd);
             }
         }
     }
+//
+//    private static boolean isVisible(PropertyDescriptor pd) {
+//        Object rules = pd.getValue("visible");
+//        if (rules instanceof String){
+//            System.out.println(rules);
+//        }else {
+//            System.out.println("hi");
+//        }
+//        Map operation = (LinkedHashMap)rules;
+//       if (operation.get("eq") != null){
+//           List<String> eqParam = (ArrayList<String>) operation.get("eq");
+//           isVisible(eqParam,"eq");
+//       }else if (operation.get("and") != null){
+//           isVisible(operation.get("and"),"and");
+//       } else if (operation.get("not") != null) {
+//           isVisible(operation.get("not"),"not");
+//
+//       }
+//
+//        return true;
+//    }
+//
+//    static boolean isVisible(Object rule){
+//
+//            if (rule instanceof String) {
+//                // Rule is a variable name
+//                String variableName = (String) rule;
+//                System.out.println(rule);
+//                return true;
+//            } else if (rule instanceof List) {
+//                List<?> ruleList = (List<?>) rule;
+////                Object operation =  ruleList.get(0);
+//
+//
+//                 if ("eq".equals(op)) {
+//                    // Equality operation
+//                    String variableName = (String) ruleList.get(1);
+//                    Object expectedValue = ruleList.get(2);
+//                    return descriptorsState.containsKey(variableName) && descriptorsState.get(variableName).equals(expectedValue);
+//                } else if ("and".equals(op)) {
+//                    // Logical AND operation
+//                    for (int i = 1; i < ruleList.size(); i++) {
+//                        if (!isVisible(ruleList.get(i),"and")) {
+//                            return false;
+//                        }
+//                    }
+//                    return true;
+//                } else if ("not".equals(op)) {
+//                    // Logical NOT operation
+//                     ruleList.get(0);
+//                    return !isVisible(ruleList.get(1),"not");
+//                }
+//            }
+//            // Invalid rule format
+//            throw new IllegalArgumentException("Invalid rule format: " + rule);
+//
+//    }
 
     private static Object getDefaultValue(PropertyDescriptor pd, LinkedHashMap variable) {
         if (variable.get("default").toString().contains("compartment_ocid") || variable.get("default").toString().contains("compartment_id"))
