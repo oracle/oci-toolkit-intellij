@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersDialog;
@@ -17,6 +18,7 @@ import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,7 +28,7 @@ public class YamlLoader {
 
     static LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
 
-    public static void Load() throws StreamReadException, DatabindException, IOException, IntrospectionException {
+    public static void Load() throws StreamReadException, DatabindException, IOException, IntrospectionException, InvocationTargetException, IllegalAccessException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         LinkedHashMap readValue =
                 mapper.readValue(new File("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/interface.yaml"), LinkedHashMap.class);
@@ -68,7 +70,7 @@ public class YamlLoader {
 
     }
 
-    static void mapToDescriptors (LinkedHashMap<String, LinkedHashMap> variables,List<VariableGroup> groups) throws IntrospectionException {
+    static void mapToDescriptors (LinkedHashMap<String, LinkedHashMap> variables,List<VariableGroup> groups) throws IntrospectionException, InvocationTargetException, IllegalAccessException {
         for (VariableGroup group : groups) {
             Class<? extends VariableGroup> varGroupClazz = group.getClass();
             BeanInfo beanInfo = Introspector.getBeanInfo(varGroupClazz);
@@ -85,11 +87,16 @@ public class YamlLoader {
                 //                // recheck this default value thing
                 if (variable.get("default") != null) {
                     // fill default variables ....
-                   String defaultValue =  getDefaultValue(pd,variable);
+                   Object defaultValue =  getDefaultValue(pd,variable);
                     pd.setValue("default", defaultValue);
+                    pd.setValue("value",defaultValue);
+//                    pd.getWriteMethod().invoke(group,defaultValue);
                 }
                 if (variable.get("type") != null) {
                     pd.setValue("type", variable.get("type"));
+                }
+                if (variable.get("dependsOn") != null) {
+                    pd.setValue("dependsOn", variable.get("dependsOn"));
                 }
                 if (variable.get("required") != null) {
                     pd.setValue("required", variable.get("required"));
@@ -106,9 +113,9 @@ public class YamlLoader {
         }
     }
 
-    private static String getDefaultValue(PropertyDescriptor pd, LinkedHashMap variable) {
+    private static Object getDefaultValue(PropertyDescriptor pd, LinkedHashMap variable) {
         if (variable.get("default").toString().contains("compartment_ocid") || variable.get("default").toString().contains("compartment_id"))
-            return SystemPreferences.getCompartmentId();
+            return OracleCloudAccount.getInstance().getIdentityClient().getCompartment(SystemPreferences.getCompartmentId());
         return variable.get("default").toString();
     }
 

@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -352,10 +353,11 @@ public class OracleCloudAccount {
       return null;
     }
 
-    public List<KeySummary> getKeyList(String compartmentId,String vaultId){
+    public List<KeySummary> getKeyList(String compartmentId,VaultSummary vault){
       if (authenticationDetailsProvider != null) {
-        KmsVaultClient kmsVaultClient = KmsVaultClient.builder().build(authenticationDetailsProvider);
-        KmsManagementClient kmsManagementClient = KmsManagementClient.builder().build(authenticationDetailsProvider);
+        KmsManagementClient kmsManagementClient = KmsManagementClient.builder().
+        vaultSummary(vault)
+        .build(authenticationDetailsProvider);
 
 
         ListKeysRequest listKeysRequest = ListKeysRequest.builder()
@@ -366,7 +368,7 @@ public class OracleCloudAccount {
         List<KeySummary> keys = response.getItems();
         List<KeySummary> vaultKeys = new ArrayList<>();
         for (KeySummary key : keys){
-          if (key.getVaultId().equals(vaultId)){
+          if (key.getVaultId().equals(vault.getId())){
               vaultKeys.add(key);
           }
         }
@@ -846,15 +848,16 @@ public class OracleCloudAccount {
       return listSubnetsResponse.getItems();
     }
 
-    public List<Subnet> listSubnets(String compartmentId,String vcnId) {
+    public List<Subnet> listSubnets(String compartmentId,String vcnId,boolean hidePublicSubnet) {
       final ListSubnetsRequest listSubnetsRequest =
               ListSubnetsRequest.builder()
                       .compartmentId(compartmentId)
                       .vcnId(vcnId)
+
                       .lifecycleState(Subnet.LifecycleState.Available)
                       .build();
       final ListSubnetsResponse listSubnetsResponse = virtualNetworkClient.listSubnets(listSubnetsRequest);
-      return listSubnetsResponse.getItems();
+      return listSubnetsResponse.getItems().stream().filter((e)->e.getProhibitPublicIpOnVnic() == hidePublicSubnet).collect(Collectors.toList());
     }
 
     public List<NetworkSecurityGroup> listNetworkSecurityGroups(String compartmentId) {

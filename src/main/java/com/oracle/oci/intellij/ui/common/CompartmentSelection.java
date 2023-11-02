@@ -212,6 +212,10 @@ public class CompartmentSelection extends DialogWrapper {
     return selectedCompartment;
   }
 
+  public void setSelectedCompartment(Compartment selectedCompartment) {
+    this.selectedCompartment = selectedCompartment;
+  }
+
   @Override
   protected void doOKAction() {
     if (selectedCompartment == null) {
