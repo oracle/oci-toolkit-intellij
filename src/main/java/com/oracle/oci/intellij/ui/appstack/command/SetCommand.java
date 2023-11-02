@@ -2,12 +2,14 @@ package com.oracle.oci.intellij.ui.appstack.command;
 
 import java.beans.PropertyDescriptor;
 
+import com.oracle.oci.intellij.ui.appstack.command.SetCommand.SetCommandResult;
 import com.oracle.oci.intellij.common.Utils;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand;
+import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Severity;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Status;
 
-public class SetCommand<ModelType, ObjType> extends AbstractBasicCommand {
+public class SetCommand<ModelType, ObjType> extends AbstractBasicCommand<SetCommandResult<ModelType, ObjType>> {
 	public static class SetCommandResult<ModelType, ObjType> extends Result {
 		private ModelType modelType;
 		private ObjType oldValue;
