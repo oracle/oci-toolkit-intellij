@@ -10,6 +10,7 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -325,20 +326,17 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
     @Override
     public void actionPerformed(ActionEvent e) {
-//      final DialogWrapper wizard = new CreateAutonomousDatabaseDialog();
-//      wizard.showAndGet();
+      try {
+        YamlLoader.Load();
+      } catch (IOException | IntrospectionException | InvocationTargetException | IllegalAccessException ex) {
+        throw new RuntimeException(ex);
+      }
 //      try {
-////        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack();
+//        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack();
 //      } catch (IOException e1) {
 //        // TODO Auto-generated catch block
 //        e1.printStackTrace();
 //      }
-
-      try {
-        YamlLoader.Load();
-      } catch (IOException | IntrospectionException ex) {
-        throw new RuntimeException(ex);
-      }
     }
   }
 

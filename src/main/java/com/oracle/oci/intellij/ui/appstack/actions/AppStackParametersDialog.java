@@ -8,41 +8,47 @@ import com.intellij.util.ui.JBUI;
 import com.oracle.bmc.core.model.Subnet;
 import com.oracle.bmc.core.model.Vcn;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
+import com.oracle.bmc.http.client.internal.ExplicitlySetBmcModel;
 import com.oracle.bmc.identity.model.AvailabilityDomain;
+import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.keymanagement.model.KeySummary;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
+import com.oracle.oci.intellij.ui.common.CompartmentSelection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
+import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.beans.*;
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class AppStackParametersDialog extends DialogWrapper {
     JPanel mainPanel;
 
     private static final String WINDOW_TITLE = "App stack variables ";
     private static final String OK_TEXT = "Save";
+    Map<String , JComponent> pdComponents = new LinkedHashMap<>();
+    LinkedHashMap<String, PropertyDescriptor> descriptorsState;
 
 
 
-    public AppStackParametersDialog(List<VariableGroup> varGroups, LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
+
+
+    public AppStackParametersDialog(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
         super(true);
         init();
         setTitle(WINDOW_TITLE);
         setOKButtonText(OK_TEXT);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-
+        this.descriptorsState =descriptorsState;
         createGroupsPanels(varGroups);
 
     }
@@ -53,6 +59,11 @@ public class AppStackParametersDialog extends DialogWrapper {
             Class<? extends VariableGroup> varGroupClazz = varGroup.getClass();
             BeanInfo beanInfo = Introspector.getBeanInfo(varGroupClazz);
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+            Arrays.sort(propertyDescriptors, Comparator.comparingInt(pd -> {
+                PropertyOrder annotation = pd.getReadMethod().getAnnotation(PropertyOrder.class);
+                return (annotation != null) ? annotation.value() : Integer.MAX_VALUE;
+            }));
 
             // create group panel
             JPanel groupPanel = new JPanel();
@@ -86,13 +97,12 @@ public class AppStackParametersDialog extends DialogWrapper {
         if (pd.getValue("required") != null) {
             boolean required = (boolean) pd.getValue("required");
             if (required) {
-                label.setText(label.getText() + " (*)");
+                label.setText(label.getText() + " *");
             }
         }
 
         // create component
         component = createComponentVariable(pd, varGroup);
-
 
 
         groupPanel.add(label);
@@ -110,35 +120,124 @@ public class AppStackParametersDialog extends DialogWrapper {
 
             JCheckBox checkBox = new JCheckBox();
             component = checkBox;
-            checkBox.setSelected((boolean) pd.getValue("default"));
+            checkBox.addActionListener(e -> {
+                try {
+                    pd.setValue("value",checkBox.isSelected());
+                    pd.getWriteMethod().invoke(varGroup,checkBox.isSelected());
+                } catch (IllegalAccessException | InvocationTargetException ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
+            checkBox.setSelected(Boolean.getBoolean((String) pd.getValue("default")) );
             // add this to the condition || ((String)pd.getValue("type")).startsWith("oci")
-        } else if (propertyType.isEnum() ) {
-            ComboBox comboBox = new ComboBox();
-            List<String> enumValues = (List<String>) pd.getValue("enum");
-            if (enumValues != null){
-                for (String enumValue : enumValues) {
-                    comboBox.addItem(enumValue);
+        } else if (propertyType.isEnum() || ((String)pd.getValue("type")).startsWith("oci") ) {
+
+            // if it's an compartment object
+            if (pd.getValue("type").equals("oci:identity:compartment:id")){
+                JPanel compartmentPanel = new JPanel();
+                JButton selectCompartmentBtn  = new JButton("select");
+                JTextField compartmentName = new JTextField("");
+                compartmentName.setPreferredSize(new Dimension(260,30));
+                compartmentName.setEnabled(false);
+                compartmentPanel.add(compartmentName);
+                compartmentPanel.add(selectCompartmentBtn);
+                final CompartmentSelection compartmentSelection = CompartmentSelection.newInstance();
+
+                compartmentSelection.setSelectedCompartment((Compartment) pd.getValue("default"));
+                compartmentName.setText(((Compartment) pd.getValue("default")).getName());
+                updateDependencies(pd);
+
+
+                selectCompartmentBtn.addActionListener(e->{
+
+                    if (compartmentSelection.showAndGet()){
+                        final Compartment selected = compartmentSelection.getSelectedCompartment();
+                        try {
+                            compartmentName.setText(selected.getName());
+                            pd.setValue("value",selected);
+                            pd.getWriteMethod().invoke(varGroup,selected);
+                            updateDependencies(pd);
+
+                        } catch (IllegalAccessException | InvocationTargetException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                });
+                pdComponents.put(pd.getName(),compartmentPanel);
+                return compartmentPanel;
+
+            }else {
+
+                ComboBox comboBox = new ComboBox();
+                AtomicReference<List<String>> enumValues = new AtomicReference<>((List<String>) pd.getValue("enum"));
+                if (enumValues.get() != null) {
+                    for (String enumValue : enumValues.get()) {
+                        comboBox.addItem(enumValue);
+                    }
+                } else {
+                    //todo  suggest values from account of user   in a combobox depending on  type
+                    /* example
+                     * oci:identity:compartment:id --> compartments of the user
+                     * oci:core:vcn:id --> existed vcn s ...
+                     *
+                     */
+                    // we need to set a custom renderer
+                    List<ExplicitlySetBmcModel> suggestedValues = (List<ExplicitlySetBmcModel>) getSuggestedValues(pd);
+//                    enumValues.set(getSuggestedValues(pd));
+
+                    comboBox.setRenderer(new DefaultListCellRenderer(){
+
+                        //todo enhance this later
+                        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                            if (value instanceof AutonomousDatabaseSummary) {
+                            AutonomousDatabaseSummary adb = (AutonomousDatabaseSummary) value;
+                                setText(adb.getDisplayName()); // Set the display name of the instance
+                            } else if (value instanceof VaultSummary) {
+                                VaultSummary adb = (VaultSummary) value;
+                                setText(adb.getDisplayName()); // Set the display name of the instance
+                            }else if (value instanceof KeySummary) {
+                                KeySummary adb = (KeySummary) value;
+                                setText(adb.getDisplayName()); // Set the display name of the instance
+                            }else if (value instanceof AvailabilityDomain) {
+                                AvailabilityDomain adb = (AvailabilityDomain) value;
+                                setText(adb.getName()); // Set the display name of the instance
+                            }else if (value instanceof Subnet) {
+                                Subnet adb = (Subnet) value;
+                                setText(adb.getDisplayName()); // Set the display name of the instance
+                            }else if (value instanceof Vcn) {
+                                Vcn adb = (Vcn) value;
+                                setText(adb.getDisplayName()); // Set the display name of the instance
+                            }else if (value instanceof Compartment) {
+                                Compartment adb = (Compartment) value;
+                                setText(adb.getName()); // Set the display name of the instance
+                            }
+                            return this;
+                        }
+                    });
+
+                    if (suggestedValues != null) {
+                        for (ExplicitlySetBmcModel enumValue : suggestedValues) {
+                            comboBox.addItem(enumValue);
+                        }
+                    }
+
+                    comboBox.addItemListener(e -> {
+                        if (e.getStateChange() == ItemEvent.SELECTED) {
+
+                            pd.setValue("value", comboBox.getItem());
+                            updateDependencies(pd);
+                        }
+
+                    });
+
                 }
-            }else{
-                //todo  suggest values from account of user   in a combobox depeding on type
-                /* example
-                 * oci:identity:compartment:id --> compartments of the user
-                 * oci:core:vcn:id --> existed vcn s ...
-                 *
-                 */
 
-                 enumValues = getSuggestedValues(pd);
-                for (String enumValue : enumValues) {
-                    comboBox.addItem(enumValue);
+                if (pd.getValue("default") != null) {
+                    comboBox.setSelectedItem(pd.getValue("default"));
                 }
-
+                component = comboBox;
             }
-
-            if (pd.getValue("default") != null) {
-                comboBox.setSelectedItem(pd.getValue("default"));
-            }
-            component = comboBox;
-
 
         } else if (propertyType.getName().equals("int")) {
             SpinnerNumberModel spinnerModel = new SpinnerNumberModel(0, 0, Integer.MAX_VALUE, 1);
@@ -156,6 +255,14 @@ public class AppStackParametersDialog extends DialogWrapper {
                 }
                 spinner.setValue(value);
             }
+            spinner.addChangeListener(e->{
+                try {
+                    pd.setValue("value",spinner.getValue());
+                    pd.getWriteMethod().invoke(varGroup,spinner.getValue());
+                } catch (IllegalAccessException | InvocationTargetException ex) {
+                    throw new RuntimeException(ex);
+                }
+            });
 
             component = spinner;
         } else {
@@ -164,24 +271,50 @@ public class AppStackParametersDialog extends DialogWrapper {
             if (pd.getValue("default") != null){
                 textField.setText(pd.getValue("default").toString());
             }
+            textField.addFocusListener(new FocusAdapter() {
+                @Override
+                public void focusLost(FocusEvent e) {
+                    try {
+                        pd.setValue("value",textField.getText());
+                        pd.getWriteMethod().invoke(varGroup, textField.getText());
+                    } catch (IllegalAccessException | InvocationTargetException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+
+            );
             component = textField;
         }
 
-        // check if it's visible
-        //in progress
-
-        //        if (!visible(pd)) {
-        //            label.setVisible(false);
-        //            component.setVisible(false);
-        //        }
-
+        pdComponents.put(pd.getName(),component);
+        component.setPreferredSize(new Dimension(200,30));
 
         return component;
     }
+    void updateDependencies(PropertyDescriptor pd){
+        List<String> dependencies = Utils.depondsOn.get(pd.getName());
+        if (dependencies != null) {
+            for (String dependent : dependencies) {
+                ComboBox jComboBox = (ComboBox) pdComponents.get(dependent);
+                if (jComboBox == null) continue;
+                jComboBox.removeAllItems();
+                PropertyDescriptor dependentPd = descriptorsState.get(dependent);
 
-    private List<String> getSuggestedValues(PropertyDescriptor pd) {
+                List<? extends ExplicitlySetBmcModel> suggestedvalues = Utils.getSuggestedValuesOf((String) dependentPd.getValue("type")).apply(dependentPd, descriptorsState);
+                if (suggestedvalues == null) return;
+                for (ExplicitlySetBmcModel enumValue : suggestedvalues) {
+                    jComboBox.addItem(enumValue);
+                }
+                jComboBox.repaint();
+
+            }
+        }
+    }
+
+    private List<? extends ExplicitlySetBmcModel> getSuggestedValues(PropertyDescriptor pd) {
         String varType = (String) pd.getValue("type");
-        return Utils.getSuggestedValuesOf(varType).apply(pd);
+        return Utils.getSuggestedValuesOf(varType).apply(pd,descriptorsState);
     }
 
     @NotNull
@@ -192,6 +325,7 @@ public class AppStackParametersDialog extends DialogWrapper {
             public void focusLost(java.awt.event.FocusEvent focusEvent) {
                 try {
                     String value = textField.getText();
+                    pd.setValue("value",value);
                     pd.getWriteMethod().invoke(varGroup, value);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
@@ -230,79 +364,106 @@ public class AppStackParametersDialog extends DialogWrapper {
     protected @Nullable JComponent createCenterPanel() {
         return new JBScrollPane(mainPanel);
     }
+
+    @Override
+    protected void doOKAction() {
+        super.doOKAction();
+    }
 }
 
 class Utils{
-    static LinkedHashMap<String,SuggestConsumor<PropertyDescriptor,List<String>>> suggestedValues = new LinkedHashMap<>();
+    static LinkedHashMap<String,SuggestConsumor<PropertyDescriptor,LinkedHashMap<String, PropertyDescriptor>,List<? extends ExplicitlySetBmcModel>>> suggestedValues = new LinkedHashMap<>();
     static {
-        suggestedValues.put("oci:identity:compartment:id",(pd)->{
+        suggestedValues.put("oci:identity:compartment:id",(pd,pds)->{
             /* there are :
             * default: ${compartment_id}
             * default: compartment_ocid
              */
             // we have to pop up the compartment selection ....
-            return null;
+            Compartment rootCompartment = OracleCloudAccount.getInstance().getIdentityClient().getRootCompartment();
+            List<Compartment> compartmentList = OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(rootCompartment.getCompartmentId());
+
+            return compartmentList;
         });
 
-        suggestedValues.put("oci:core:vcn:id",(pd)->{
-                String vcn_compartment_id = "null";
+        suggestedValues.put("oci:core:vcn:id",(pd,pds)->{
+                String vcn_compartment_id = ( (Compartment)pds.get("vcn_compartment_id").getValue("value")).getId();
 
                 List<Vcn> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listVcns(vcn_compartment_id);
 
-                return vcn.stream().map(Vcn::getDisplayName).collect(Collectors.toList());
+                return vcn;
         });
 
-        suggestedValues.put("oci:core:subnet:id",(pd)->{
-            String vcn_compartment_id="" ;
-            String existing_vcn_id ="";
+        suggestedValues.put("oci:core:subnet:id",(pd,pds)->{
+            String vcn_compartment_id=( (Compartment)pds.get("vcn_compartment_id").getValue("value")).getId();
+            Vcn vcn = (Vcn) pds.get("existing_vcn_id").getValue("value");
+            if (vcn == null) return null;
+            String existing_vcn_id =vcn.getId();;
+
+
             // todo
             LinkedHashMap dependsOn = (LinkedHashMap) pd.getValue("dependsOn");
-            List<Subnet> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listSubnets(vcn_compartment_id,existing_vcn_id);
+            boolean hidePublicSubnet = (boolean) dependsOn.get("hidePublicSubnet");
+            List<Subnet> subnets = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listSubnets(vcn_compartment_id,existing_vcn_id,hidePublicSubnet);
 
-            return vcn.stream().map(Subnet::getDisplayName).collect(Collectors.toList());
+            return subnets;
 
         });
 
-        suggestedValues.put("oci:identity:availabilitydomain:name",(pd)->{
-            String compartment_id ="" ;
+        suggestedValues.put("oci:identity:availabilitydomain:name",(pd,pds)->{
+            String compartment_id =( (Compartment)pds.get("compartment_id").getValue("value")).getId();  ;
             List<AvailabilityDomain> availabilityDomains = OracleCloudAccount.getInstance().getIdentityClient().getAvailabilityDomainsList(compartment_id);
-            return availabilityDomains.stream().map(AvailabilityDomain::getName).collect(Collectors.toList());
+            return availabilityDomains;
         });
 
-        suggestedValues.put("oci:database:autonomousdatabase:id",(pd)->{
-            String compartment_id ="" ;
+        suggestedValues.put("oci:database:autonomousdatabase:id",(pd,pds)->{
+
+            String compartment_id = ( (Compartment)pds.get("compartment_id").getValue("value")).getId();
+            if (compartment_id== null) return null;
             List<AutonomousDatabaseSummary> autonomousDatabases = OracleCloudAccount.getInstance().getDatabaseClient().getAutonomousDatabaseList(compartment_id);
-            return autonomousDatabases.stream().map(AutonomousDatabaseSummary::getDisplayName).collect(Collectors.toList());
+            return autonomousDatabases;
 
         });
 
-        suggestedValues.put("oci:kms:vault:id",(pd)->{
-            String vault_compartment_id = "";
+        suggestedValues.put("oci:kms:vault:id",(pd,pds)->{
+            String vault_compartment_id = ( (Compartment) pds.get("vault_compartment_id").getValue("value")).getId();;
 
             List<VaultSummary> vaultList = OracleCloudAccount.getInstance().getIdentityClient().getVaultsList(vault_compartment_id);
-            return vaultList.stream().map(VaultSummary::getDisplayName).collect(Collectors.toList());
+            return vaultList;
         });
 
-        suggestedValues.put("oci:kms:key:id",(pd)->{
-            String vault_compartment_id = "";
-            String vault_id = "";
+        suggestedValues.put("oci:kms:key:id",(pd,pds)->{
+            String vault_compartment_id = ( (Compartment) pds.get("vault_compartment_id").getValue("value")).getId();
+            VaultSummary vault =(VaultSummary) pds.get("vault_id").getValue("value");
+            if (vault == null) return null ;
+            String vault_id = vault.getId();
+            List<KeySummary> keyList = OracleCloudAccount.getInstance().getIdentityClient().getKeyList(vault_compartment_id,vault);
 
-            List<KeySummary> vaultList = OracleCloudAccount.getInstance().getIdentityClient().getKeyList(vault_compartment_id,vault_id);
-
-            return vaultList.stream().map(KeySummary::getDisplayName).collect(Collectors.toList());
+            return keyList;
 
         });
 
 
     }
 
-    static SuggestConsumor<PropertyDescriptor,List<String>> getSuggestedValuesOf(String type){
+    static public Map<String , List<String>> depondsOn = new LinkedHashMap<>(){{
+        put("compartment_id", List.of("availability_domain","autonomous_database"));
+        put("vault_compartment_id",List.of("vault_id","key_id"));
+        put("vault_id",List.of("key_id"));
+        put("vcn_compartment_id",List.of("existing_vcn_id","existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
+        put("existing_vcn_id",List.of("existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
+    }};
+
+    static SuggestConsumor<PropertyDescriptor,LinkedHashMap<String,PropertyDescriptor> ,List<? extends ExplicitlySetBmcModel>> getSuggestedValuesOf(String type){
         return suggestedValues.get(type);
     }
 
 
 }
 @FunctionalInterface
-interface SuggestConsumor<T,  R> {
-    R apply(T t);
+interface SuggestConsumor<T,U,R> {
+    R apply(T t,U u);
 }
+
+
+

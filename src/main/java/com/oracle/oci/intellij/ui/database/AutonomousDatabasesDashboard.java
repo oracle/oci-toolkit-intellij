@@ -72,7 +72,6 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
     if (createADBInstanceButton != null) {
       createADBInstanceButton.setAction(new CreateAction("Create Autonomous Database"));
     }
-
   }
 
   private void initializeLabels() {

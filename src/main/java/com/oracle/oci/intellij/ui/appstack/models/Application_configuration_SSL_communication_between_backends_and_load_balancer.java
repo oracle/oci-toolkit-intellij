@@ -1,5 +1,7 @@
 package com.oracle.oci.intellij.ui.appstack.models;
 
+import com.oracle.oci.intellij.ui.appstack.actions.PropertyOrder;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
@@ -23,7 +25,7 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
     private Object private_key_pem;
 
     private Object ca_pem;
-
+    @PropertyOrder(1)
     public boolean isUse_default_ssl_configuration() {
         return use_default_ssl_configuration;
     }
@@ -31,7 +33,7 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
     public void setUse_default_ssl_configuration(boolean use_default_ssl_configuration) {
         this.use_default_ssl_configuration = use_default_ssl_configuration;
     }
-
+    @PropertyOrder(2)
     public String getPort_property() {
         return port_property;
     }
@@ -39,7 +41,7 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
     public void setPort_property(String port_property) {
         this.port_property = port_property;
     }
-
+    @PropertyOrder(3)
     public String getKeystore_property() {
         return keystore_property;
     }
@@ -47,6 +49,7 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
     public void setKeystore_property(String keystore_property) {
         this.keystore_property = keystore_property;
     }
+    @PropertyOrder(4)
 
     public String getKey_alias_property() {
         return key_alias_property;
@@ -55,6 +58,7 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
     public void setKey_alias_property(String key_alias_property) {
         this.key_alias_property = key_alias_property;
     }
+    @PropertyOrder(5)
 
     public String getKeystore_password_property() {
         return keystore_password_property;
@@ -63,7 +67,7 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
     public void setKeystore_password_property(String keystore_password_property) {
         this.keystore_password_property = keystore_password_property;
     }
-
+    @PropertyOrder(6)
     public String getKeystore_type_property() {
         return keystore_type_property;
     }
