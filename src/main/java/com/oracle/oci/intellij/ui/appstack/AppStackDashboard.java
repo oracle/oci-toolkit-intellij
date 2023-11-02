@@ -26,14 +26,16 @@ import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
+import com.oracle.oci.intellij.ui.appstack.actions.CreateAction;
+import com.oracle.oci.intellij.ui.appstack.actions.RefreshAction;
+import com.oracle.oci.intellij.ui.appstack.uimodel.AppStackTableModel;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.explorer.ITabbedExplorerContent;
 import com.oracle.oci.intellij.util.LogHandler;
 
 public final class AppStackDashboard implements PropertyChangeListener, ITabbedExplorerContent {
 
-  private static final String[] APPSTACK_COLUMN_NAMES =
-    new String[] { "Display Name", "Description", "Terraform Version", "State", "Created" };
+
 
   private static final String CREATE_APPSTACK = "Create Application Stack";
 
@@ -79,27 +81,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   }
 
   private void initializeTableStructure() {
-    appStacksTable.setModel(new DefaultTableModel(APPSTACK_COLUMN_NAMES, 0) {
-      /**
-         * 
-         */
-        private static final long serialVersionUID = 1L;
-
-    @Override
-      public boolean isCellEditable(int row, int column){
-        return false;
-      }
-
-      @Override
-      public String getColumnName(int index){
-        return APPSTACK_COLUMN_NAMES[index];
-      }
-
-      @Override
-      public Class<?> getColumnClass(int column){
-        return String.class; //(column == 2) ? JLabel.class : String.class;
-      }
-    });
+    appStacksTable.setModel(new AppStackTableModel(0));
 
 //    appStacksTable.getColumn("State").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
 //      if (column == 2) {
@@ -238,7 +220,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         model.setRowCount(0);
 
         for (StackSummary s : appStackList) {
-          final Object[] rowData = new Object[APPSTACK_COLUMN_NAMES.length];
+          final Object[] rowData = new Object[AppStackTableModel.APPSTACK_COLUMN_NAMES.length];
 //          final boolean isFreeTier =
 //                  s.getIsFreeTier() != null && s.getIsFreeTier();
           rowData[0] = s.getDisplayName();

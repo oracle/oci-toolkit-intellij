@@ -1,6 +1,6 @@
 package com.oracle.oci.intellij.common.command;
 
-public abstract class AbstractBasicCommand {
+public abstract class AbstractBasicCommand<RESULT extends AbstractBasicCommand.Result> implements BasicCommand<RESULT> {
 	public static class CommandFailedException extends Exception {
 
 		private static final long serialVersionUID = -827559900110505792L;
@@ -77,7 +77,7 @@ public abstract class AbstractBasicCommand {
 		}
 	}
 
-	public final AbstractBasicCommand.Result execute() throws Exception
+	public final RESULT execute() throws Exception
 	{
 		try {
 			return doExecute();
@@ -89,7 +89,7 @@ public abstract class AbstractBasicCommand {
 	
 	private boolean hasExecuted;
 	
-	protected abstract Result doExecute() throws Exception;
+	protected abstract RESULT doExecute() throws Exception;
 
 	public boolean hasExecuted( ) {
 		return this.hasExecuted;

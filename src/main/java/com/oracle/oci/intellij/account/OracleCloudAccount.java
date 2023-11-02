@@ -30,18 +30,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import com.oracle.bmc.identity.model.AvailabilityDomain;
-import com.oracle.bmc.identity.requests.*;
-import com.oracle.bmc.identity.responses.*;
-import com.oracle.bmc.keymanagement.KmsManagementClient;
-import com.oracle.bmc.keymanagement.KmsVaultClient;
-import com.oracle.bmc.keymanagement.model.KeySummary;
-import com.oracle.bmc.keymanagement.model.Vault;
-import com.oracle.bmc.keymanagement.model.VaultSummary;
-import com.oracle.bmc.keymanagement.requests.ListKeysRequest;
-import com.oracle.bmc.keymanagement.requests.ListVaultsRequest;
-import com.oracle.bmc.keymanagement.responses.ListKeysResponse;
-import com.oracle.bmc.keymanagement.responses.ListVaultsResponse;
 import org.apache.commons.io.FileUtils;
 
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
@@ -93,25 +81,47 @@ import com.oracle.bmc.database.responses.ListAutonomousDatabaseBackupsResponse;
 import com.oracle.bmc.database.responses.ListAutonomousDatabasesResponse;
 import com.oracle.bmc.database.responses.ListDbVersionsResponse;
 import com.oracle.bmc.identity.IdentityClient;
+import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.CreateCompartmentDetails;
 import com.oracle.bmc.identity.model.RegionSubscription;
 import com.oracle.bmc.identity.requests.CreateCompartmentRequest;
 import com.oracle.bmc.identity.requests.DeleteCompartmentRequest;
 import com.oracle.bmc.identity.requests.GetCompartmentRequest;
+import com.oracle.bmc.identity.requests.ListAvailabilityDomainsRequest;
 import com.oracle.bmc.identity.requests.ListCompartmentsRequest;
 import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
 import com.oracle.bmc.identity.responses.CreateCompartmentResponse;
 import com.oracle.bmc.identity.responses.GetCompartmentResponse;
+import com.oracle.bmc.identity.responses.ListAvailabilityDomainsResponse;
 import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
 import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
+import com.oracle.bmc.keymanagement.KmsManagementClient;
+import com.oracle.bmc.keymanagement.KmsVaultClient;
+import com.oracle.bmc.keymanagement.model.KeySummary;
+import com.oracle.bmc.keymanagement.model.VaultSummary;
+import com.oracle.bmc.keymanagement.requests.ListKeysRequest;
+import com.oracle.bmc.keymanagement.requests.ListVaultsRequest;
+import com.oracle.bmc.keymanagement.responses.ListKeysResponse;
+import com.oracle.bmc.keymanagement.responses.ListVaultsResponse;
 import com.oracle.bmc.resourcemanager.ResourceManagerClient;
 import com.oracle.bmc.resourcemanager.model.CreateStackDetails;
 import com.oracle.bmc.resourcemanager.model.CreateZipUploadConfigSourceDetails;
+import com.oracle.bmc.resourcemanager.model.Stack;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
+import com.oracle.bmc.resourcemanager.requests.CreateJobRequest;
 import com.oracle.bmc.resourcemanager.requests.CreateStackRequest;
+import com.oracle.bmc.resourcemanager.requests.DeleteStackRequest;
+import com.oracle.bmc.resourcemanager.requests.GetJobLogsRequest;
+import com.oracle.bmc.resourcemanager.requests.GetJobTfStateRequest;
+import com.oracle.bmc.resourcemanager.requests.ListJobsRequest;
 import com.oracle.bmc.resourcemanager.requests.ListStacksRequest;
+import com.oracle.bmc.resourcemanager.responses.CreateJobResponse;
 import com.oracle.bmc.resourcemanager.responses.CreateStackResponse;
+import com.oracle.bmc.resourcemanager.responses.DeleteStackResponse;
+import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
+import com.oracle.bmc.resourcemanager.responses.GetJobTfStateResponse;
+import com.oracle.bmc.resourcemanager.responses.ListJobsResponse;
 import com.oracle.bmc.resourcemanager.responses.ListStacksResponse;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
@@ -135,6 +145,7 @@ public class OracleCloudAccount {
     SystemPreferences.addPropertyChangeListener(identityClientProxy);
     SystemPreferences.addPropertyChangeListener(databaseClientProxy);
     SystemPreferences.addPropertyChangeListener(AutonomousDatabasesDashboard.getInstance());
+    // TODO: property change listener for resource manager
   }
 
   /**
@@ -889,21 +900,39 @@ public class OracleCloudAccount {
       resourceManagerClient.setRegion(region);
     }
 
+    public void deleteStack(String stackId) {
+      // Delete Stack
+      final DeleteStackRequest deleteStackRequest = DeleteStackRequest.builder().stackId(stackId).build();
+      final DeleteStackResponse deleteStackResponse = resourceManagerClient.deleteStack(deleteStackRequest);
+      System.out.println("Deleted Stack : " + deleteStackResponse.toString());
+    }
+
     public List<StackSummary> listStacks(String compartmentId) {
       ListStacksRequest listStackRequest = ListStacksRequest.builder().compartmentId(compartmentId).build();
       ListStacksResponse listStacks = this.resourceManagerClient.listStacks(listStackRequest);
       List<StackSummary> items = listStacks.getItems();
-
-//      final ListVcnsRequest listVcnsRequest =
-//              ListVcnsRequest.builder()
-//                      .compartmentId(compartmentId)
-//                      .lifecycleState(Vcn.LifecycleState.Available)
-//                      .build();
-//      final ListVcnsResponse listVcnsResponse = resourceManagerClient.listVcns(listVcnsRequest);
       return items;
     }
 
-    public String createStack() throws IOException {
+    public ListJobsResponse listJobs(String compartmentId, String stackId) {
+      ListJobsRequest request = ListJobsRequest.builder().compartmentId(compartmentId).build();
+      return resourceManagerClient.listJobs(request);
+    }
+
+    public GetJobLogsResponse getJobLogs(String planJobId) {
+      GetJobLogsRequest getJobLogsRequest = 
+        GetJobLogsRequest.builder().jobId(planJobId).build();
+      return resourceManagerClient.getJobLogs(getJobLogsRequest);
+      
+    }
+
+    public GetJobTfStateResponse getJobTfState(String applyJobId) {
+      GetJobTfStateRequest getJobTfStateRequest =
+        GetJobTfStateRequest.builder().jobId(applyJobId).build();
+      return resourceManagerClient.getJobTfState(getJobTfStateRequest);
+    }
+
+    public CreateStackResponse createStack() throws IOException {
       CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
         CreateZipUploadConfigSourceDetails.builder()
         .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/cbateman/Downloads/appstackforjava.zip"))
@@ -920,10 +949,10 @@ public class OracleCloudAccount {
       CreateStackResponse createStackResponse =
         resourceManagerClient.createStack(createStackRequest);
       System.out.println("Created Stack : " + createStackResponse.getStack());
-      final String stackId = createStackResponse.getStack().getId();
+      final Stack stack = createStackResponse.getStack();
 
-      System.out.println(stackId);
-      return stackId;
+      System.out.println(stack.getId());
+      return createStackResponse;
     }
 
     private String getBase64EncodingForAFile(String filePath) throws IOException {
@@ -931,48 +960,10 @@ public class OracleCloudAccount {
       byte[] fileDataBase64Encoded = Base64.getEncoder().encode(fileData);
       return new String(fileDataBase64Encoded, StandardCharsets.UTF_8);
     }
-//    public Vcn getVcn(String vcnId)
-//    {
-//        if (resourceManagerClient == null)
-//        {
-//            return null;
-//        }
-//        GetVcnRequest request = GetVcnRequest.builder().vcnId(vcnId).build();
-//
-//        GetVcnResponse response = null;
-//        try {
-//            response = this.resourceManagerClient.getVcn(request);
-//        } catch(Throwable e) {
-//            // To handle forbidden error
-//            // TODO: ErrorHandler.logError("Unable to list Autonomous Databases: "+e.getMessage());
-//        }
-//
-//        if (response == null) {
-//            return null;
-//        }
-//        return response.getVcn();
-//    }
-
-//    public List<Subnet> listSubnets(String compartmentId) {
-//      final ListSubnetsRequest listSubnetsRequest =
-//              ListSubnetsRequest.builder()
-//                      .compartmentId(compartmentId)
-//                      .lifecycleState(Subnet.LifecycleState.Available)
-//                      .build();
-//      final ListSubnetsResponse listSubnetsResponse = resourceManagerClient.listSubnets(listSubnetsRequest);
-//      return listSubnetsResponse.getItems();
-//    }
-//
-//    public List<NetworkSecurityGroup> listNetworkSecurityGroups(String compartmentId) {
-//      final ListNetworkSecurityGroupsRequest listNetworkSecurityGroupsRequest =
-//              ListNetworkSecurityGroupsRequest.builder()
-//                      .compartmentId(compartmentId)
-//                      .lifecycleState(NetworkSecurityGroup.LifecycleState.Available)
-//                      .build();
-//      final ListNetworkSecurityGroupsResponse listNetworkSecurityGroupsResponse =
-//              resourceManagerClient.listNetworkSecurityGroups(listNetworkSecurityGroupsRequest);
-//      return listNetworkSecurityGroupsResponse.getItems();
-//    }
+    
+    public CreateJobResponse submitJob(CreateJobRequest createPlanJobRequest) {
+      return resourceManagerClient.createJob(createPlanJobRequest);
+    }
 
     private void reset() {
       if (resourceManagerClient != null) {
