@@ -2,8 +2,10 @@ package com.oracle.oci.intellij.common;
 
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,8 +17,19 @@ public class Utils {
 
 	public static String GetBase64EncodingForAFile(String filePath) throws IOException {
 		byte[] fileData = Files.readAllBytes(Paths.get(filePath));
-		byte[] fileDataBase64Encoded = Base64.getEncoder().encode(fileData);
+		return GetBase64EncodingForBytes(fileData);
+	}
+
+  private static String GetBase64EncodingForBytes(byte[] fileData) {
+    byte[] fileDataBase64Encoded = Base64.getEncoder().encode(fileData);
 		return new String(fileDataBase64Encoded, StandardCharsets.UTF_8);
+  }
+
+	public static String GetBased64EncodingForAFile(ClassLoader classLoader, String resourcePath) throws IOException {
+	  URL resource = classLoader.getResource(resourcePath);
+	  InputStream is = resource.openStream();
+	  byte[] readAllBytes = is.readAllBytes();
+	  return GetBase64EncodingForBytes(readAllBytes);
 	}
 
 	public static Object getPropertyValue(Object target, PropertyDescriptor pd) throws CommandFailedException {
