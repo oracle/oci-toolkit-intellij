@@ -10,6 +10,7 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -336,7 +337,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
       try {
         YamlLoader.Load();
-      } catch (IOException | IntrospectionException ex) {
+      } catch (IOException | IntrospectionException | InvocationTargetException | IllegalAccessException ex) {
         throw new RuntimeException(ex);
       }
 //      try {
