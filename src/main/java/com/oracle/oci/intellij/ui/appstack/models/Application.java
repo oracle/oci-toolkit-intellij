@@ -11,7 +11,7 @@ public class Application extends VariableGroup {
     private String application_name;
     private int nb_copies;
 
-    private enum Application_source{
+    public enum Application_source{
         IMAGE,
         ARTIFACT,
         SOURCE_CODE,
@@ -20,7 +20,7 @@ public class Application extends VariableGroup {
 
 ;
 
-    private enum Application_type{
+    public enum Application_type{
         not_selected,
         JAR,
         WAR,

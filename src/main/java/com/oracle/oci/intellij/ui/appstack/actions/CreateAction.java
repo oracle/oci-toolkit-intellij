@@ -2,6 +2,8 @@ package com.oracle.oci.intellij.ui.appstack.actions;
 
 import java.awt.event.ActionEvent;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 
@@ -22,7 +24,9 @@ public class CreateAction extends AbstractAction {
 //      final DialogWrapper wizard = new CreateAutonomousDatabaseDialog();
 //      wizard.showAndGet();
       try {
-        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack();
+        // TODO:
+        Map<String, String> variables = new HashMap<>();
+        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack(variables);
       } catch (IOException e1) {
         // TODO Auto-generated catch block
         e1.printStackTrace();

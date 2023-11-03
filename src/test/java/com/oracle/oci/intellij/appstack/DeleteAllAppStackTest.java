@@ -9,9 +9,9 @@ import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;
-import com.oracle.oci.intellij.appStackGroup.command.DeleteStackCommand;
-import com.oracle.oci.intellij.appStackGroup.command.ListStackCommand;
-import com.oracle.oci.intellij.appStackGroup.command.ListStackCommand.ListStackResult;
+import com.oracle.oci.intellij.ui.appstack.command.DeleteStackCommand;
+import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand;
+import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand.ListStackResult;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result;
 
 public class DeleteAllAppStackTest {

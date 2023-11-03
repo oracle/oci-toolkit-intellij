@@ -46,11 +46,16 @@ public class ModelLoader {
 
 	public static void main(String[] args) throws Exception {
 
-		ModelLoader loader = new ModelLoader();
-		loader.loadAndIndex(loader);
+	  new ModelLoader().loadTestVariables();
+	}
+	
+	public Map<String, String> loadTestVariables() throws Exception {
+	   ModelLoader loader = new ModelLoader();
+	   return loader.loadAndIndex(loader);
+
 	}
 
-	private void loadAndIndex(ModelLoader loader) throws Exception {
+	private Map<String, String> loadAndIndex(ModelLoader loader) throws Exception {
 		Map<String, VariableGroup> variableGroupByVarName = loader.init().build();
 		Map<String, String> variables = new HashMap<>();
 		loader.variablesByName.forEach((name, pd) -> {
@@ -68,6 +73,7 @@ public class ModelLoader {
 		});
 
 		variables.forEach((key, value) -> System.out.printf("%s = %s\n", key, value));
+		return variables;
 	}
 
 	public ModelLoader() {
@@ -76,7 +82,7 @@ public class ModelLoader {
 
 	public ModelLoader init() throws Exception {
 		loadModel("com.oracle.appstack.test.model");
-		loadTestDataFromCP("/com/oracle/appstack/test/resources/testdata.json");
+		loadTestDataFromCP("testdata.json");
 		return this;
 	}
 
@@ -168,7 +174,7 @@ public class ModelLoader {
 	}
 
 	private void loadTestDataFromCP(String resourcePath) throws Exception {
-		InputStream jsonStream = ModelLoader.class.getResourceAsStream(resourcePath);
+		InputStream jsonStream = ModelLoader.class.getClassLoader().getResourceAsStream(resourcePath);
 		testData = loadJson(jsonStream);
 		// jsonObject.getJsonObject("variables");
 		// System.out.println(variables);
