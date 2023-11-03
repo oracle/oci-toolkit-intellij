@@ -356,7 +356,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
       try {
         YamlLoader.Load();
-      } catch (IOException | IntrospectionException ex) {
+      } catch (IOException | IntrospectionException | InvocationTargetException | IllegalAccessException ex) {
         try {
           ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
           String compartmentId = SystemPreferences.getCompartmentId();
