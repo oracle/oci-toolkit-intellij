@@ -1,70 +1,33 @@
 package com.oracle.oci.intellij.ui.appstack.command;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-import com.oracle.bmc.resourcemanager.model.ApplyJobOperationDetails;
-import com.oracle.bmc.resourcemanager.model.ApplyJobPlanResolution;
+import com.oracle.bmc.resourcemanager.model.ApplyJobOperationDetails.ExecutionPlanStrategy;
 import com.oracle.bmc.resourcemanager.model.CreateApplyJobOperationDetails;
 import com.oracle.bmc.resourcemanager.model.CreateImportTfStateJobOperationDetails;
 import com.oracle.bmc.resourcemanager.model.CreateJobDetails;
 import com.oracle.bmc.resourcemanager.model.CreateJobOperationDetails;
 import com.oracle.bmc.resourcemanager.model.CreatePlanJobOperationDetails;
-import com.oracle.bmc.resourcemanager.model.ApplyJobOperationDetails.ExecutionPlanStrategy;
 import com.oracle.bmc.resourcemanager.model.Job.Operation;
 import com.oracle.bmc.resourcemanager.requests.CreateJobRequest;
 import com.oracle.bmc.resourcemanager.responses.CreateJobResponse;
 import com.oracle.bmc.resourcemanager.responses.CreateStackResponse;
-import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
 import com.oracle.bmc.resourcemanager.responses.GetJobTfStateResponse;
 import com.oracle.bmc.resourcemanager.responses.ListJobsResponse;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
-import com.oracle.oci.intellij.ui.appstack.command.CreateStackCommand.CreateResult;
 import com.oracle.oci.intellij.common.Utils;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand;
-import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result;
 
 public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 		private ResourceManagerClientProxy resourceManagerClient;
 		private String compartmentId;
 		@SuppressWarnings("unused")
     private String zipFileAsString;
-
-		public static class CreateResult extends Result {
-
-			private boolean classSealed = false;
-			private String stackId;
-
-			public CreateResult() {
-				super(com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Severity.NONE, 
-				      com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Status.OK);
-			}
-
-			public static CreateStackCommand.CreateResult create() {
-				return new CreateResult();
-			}
-
-			public CreateStackCommand.CreateResult stackId(String stackId) {
-				if (!isSealed()) {
-					this.stackId = stackId;
-				}
-				// TODO: throw?
-				return this;
-			}
-
-			public boolean isSealed() {
-				return classSealed;
-			}
-
-			public String getStackId() {
-				return stackId;
-			}
-
-			public CreateStackCommand.CreateResult build() {
-				this.classSealed = true;
-				return this;
-			}
-		}
+    private HashMap<String, String> variables;
 
 		public CreateStackCommand(ResourceManagerClientProxy resourceManagerClient, String compartmentId,
 				String zipFilePath) throws IOException {
@@ -81,12 +44,18 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
       this.zipFileAsString = Utils.GetBased64EncodingForAFile(classLoader, zipFilePath);
     }
 
+    public void setVariables(Map<String, String> variables) {
+      this.variables = new HashMap<String, String>(variables);
+    }
+    public Map<String, String> getVariables() {
+      return Collections.unmodifiableMap(this.variables);
+    }
 		@Override
 		protected CreateResult doExecute() throws Exception {
 //			CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails = CreateZipUploadConfigSourceDetails
 //      		.builder().zipFileBase64Encoded(zipFileAsString).build();
 
-			CreateStackResponse createStackResponse = resourceManagerClient.createStack();
+			CreateStackResponse createStackResponse = resourceManagerClient.createStack(this.variables);
       System.out.println("Created Stack : " + createStackResponse.getStack());
       final String stackId = createStackResponse.getStack().getId();
 
@@ -181,6 +150,11 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 //                        .createJobDetails(createApplyJobDetails)
 //                        .build();
 //      return resourceManagerClient.submitJob(applyJobRequest);
+    }
+
+    @Override
+    public boolean canExecute() {
+      return true;
     }
 
 	}

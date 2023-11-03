@@ -935,7 +935,7 @@ public class OracleCloudAccount {
       return resourceManagerClient.getJobTfState(getJobTfStateRequest);
     }
 
-    public CreateStackResponse createStack() throws IOException {
+    public CreateStackResponse createStack(Map<String, String> variables) throws IOException {
       CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
         CreateZipUploadConfigSourceDetails.builder()
         .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/cbateman/Downloads/appstackforjava.zip"))
@@ -946,6 +946,7 @@ public class OracleCloudAccount {
         CreateStackDetails.builder()
                           .compartmentId(compartmentId)
                           .configSource(zipUploadConfigSourceDetails)
+                          .variables(variables == null ? Collections.emptyMap() : variables)
                           .build();
       CreateStackRequest createStackRequest =
         CreateStackRequest.builder().createStackDetails(stackDetails).build();

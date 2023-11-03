@@ -12,8 +12,8 @@ import com.oracle.bmc.resourcemanager.responses.ListJobsResponse;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;
-import com.oracle.oci.intellij.appStackGroup.command.ListStackCommand;
-import com.oracle.oci.intellij.appStackGroup.command.ListStackCommand.ListStackResult;
+import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand;
+import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand.ListStackResult;
 import com.oracle.oci.intellij.appStackGroup.provider.AppStackContentProvider;
 import com.oracle.oci.intellij.appStackGroup.provider.AppStackContentProvider.AppStackContent;
 
@@ -50,8 +50,5 @@ public class ListAppStackTest {
         listJobs.getItems().forEach(job -> 
             System.out.printf("\t\t%s\t%s\t%s\n", job.getId(), job.getLifecycleState(), job.getJobOperationDetails().toString()));
       });
-
-    
-    
   }
 }

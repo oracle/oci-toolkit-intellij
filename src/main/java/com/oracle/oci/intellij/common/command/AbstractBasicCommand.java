@@ -12,6 +12,10 @@ public abstract class AbstractBasicCommand<RESULT extends AbstractBasicCommand.R
 		public CommandFailedException(Throwable cause) {
 			super(cause);
 		}
+
+    public CommandFailedException(String message) {
+      super(message);
+    }
 	}
 	
 	public static class Result {
@@ -80,7 +84,12 @@ public abstract class AbstractBasicCommand<RESULT extends AbstractBasicCommand.R
 	public final RESULT execute() throws Exception
 	{
 		try {
-			return doExecute();
+		  if (!canExecute()) {
+		    throw new CommandFailedException("");
+		  }
+			RESULT r =  doExecute();
+			hasExecuted = true;
+			return r;
 		}
 		catch (Exception e) {
 			throw e;
@@ -94,11 +103,21 @@ public abstract class AbstractBasicCommand<RESULT extends AbstractBasicCommand.R
 	public boolean hasExecuted( ) {
 		return this.hasExecuted;
 	}
-	public boolean canUndo() {
-		return false;
-	}
+
+  public boolean canUndo() {
+    return hasExecuted && hasUndo();
+  }
+
+  public boolean hasUndo() {
+    return true;
+  }
 	
-	public void undo() {
+	@Override
+  public boolean canExecute() {
+    return hasUndo() &&!hasExecuted();
+  }
+
+  public void undo() {
 		// do nothing
 		if (!canUndo()) {
 			throw new IllegalStateException();

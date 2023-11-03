@@ -12,6 +12,8 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.CommandFailedException;
+import com.oracle.oci.intellij.ui.appstack.models.Application.Application_source;
+import com.oracle.oci.intellij.ui.appstack.models.Application.Application_type;
 
 public class Utils {
 
@@ -48,10 +50,43 @@ public class Utils {
 		Object oldValue;
 		try {
 			oldValue = getPropertyValue(target, pd);
-			writeMethod.invoke(target, newValue);
+			Object converted = mapValue(oldValue, newValue, pd);
+			writeMethod.invoke(target, converted);
 			return oldValue;
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			throw new CommandFailedException(e);
 		}
 	}
+
+  private static Object mapValue(Object oldValue, Object newValue,
+                               PropertyDescriptor pd) {
+    if (newValue instanceof String) {
+      Class<?> propertyType = pd.getPropertyType();
+      if (propertyType == String.class)  {
+        return newValue;
+      }
+      else if (Integer.class.isAssignableFrom(propertyType)) {
+        return Integer.valueOf((String)newValue);
+      }
+      else if (Boolean.class.equals(propertyType)
+        || boolean.class.equals(propertyType)) {
+        return Boolean.valueOf((String) newValue);
+      }
+      else if (Enum.class.isAssignableFrom(propertyType)) {
+        return mapEnum((String) newValue, propertyType);
+      }
+    }
+    
+    return newValue;
+  }
+
+  private static Object mapEnum(String newValue, Class<?> propertyType) {
+    if (Application_source.class.equals(propertyType)) {
+      return Application_source.valueOf(newValue);
+    }
+    else if (Application_type.class.equals(propertyType)) {
+      return Application_type.valueOf(newValue);
+    }
+    return newValue;
+  }
 }

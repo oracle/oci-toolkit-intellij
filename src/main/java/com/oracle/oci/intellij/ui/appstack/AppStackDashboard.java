@@ -26,9 +26,16 @@ import com.intellij.notification.NotificationType;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;
-import com.oracle.oci.intellij.ui.appstack.actions.CreateAction;
-import com.oracle.oci.intellij.ui.appstack.actions.RefreshAction;
+import com.oracle.oci.intellij.common.command.AbstractBasicCommand.CommandFailedException;
+import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result;
+import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Severity;
+import com.oracle.oci.intellij.common.command.CommandStack;
+import com.oracle.oci.intellij.ui.appstack.command.CreateStackCommand;
+import com.oracle.oci.intellij.ui.appstack.command.DeleteStackCommand;
+import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand;
+import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand.ListStackResult;
 import com.oracle.oci.intellij.ui.appstack.uimodel.AppStackTableModel;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.explorer.ITabbedExplorerContent;
@@ -42,13 +49,17 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
   private JPanel mainPanel;
   //private JComboBox<String> workloadCombo;
+  // buttons bound in form
   private JButton refreshAppStackButton;
+  private JButton deleteAppStackButton;
+  private JButton createAppStackButton;
   private JTable appStacksTable;
   private JLabel profileValueLabel;
   private JLabel compartmentValueLabel;
   private JLabel regionValueLabel;
-  private JButton createAppStackButton;
   private List<StackSummary> appStackList;
+  private CommandStack commandStack = new CommandStack();
+
 
   private static final AppStackDashboard INSTANCE =
           new AppStackDashboard();
@@ -67,7 +78,11 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     }
     
     if (createAppStackButton != null) {
-      createAppStackButton.setAction(new CreateAction("Create New AppStack"));
+      createAppStackButton.setAction(new CreateAction("Create New AppStack", this));
+    }
+    
+    if (deleteAppStackButton != null) {
+      deleteAppStackButton.setAction(new DeleteAction(this, "Delete AppStack"));
     }
   }
 
@@ -205,8 +220,16 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     final Runnable fetchData = () -> {
       try {
         String compartmentId = SystemPreferences.getCompartmentId();
-        appStackList = OracleCloudAccount.getInstance()
-                .getResourceManagerClientProxy().listStacks(compartmentId);
+        ListStackCommand command = 
+          new ListStackCommand(OracleCloudAccount.getInstance().getResourceManagerClientProxy(), compartmentId);
+        ListStackResult result = (ListStackResult) commandStack.execute(command);
+        if (result.isOk()) {
+          appStackList =  result.getStacks();
+        }
+        else 
+        {
+          throw new CommandFailedException("Failed refreshing list of stacks");
+        }
       } catch (Exception exception) {
         appStackList = null;
         UIUtil.fireNotification(NotificationType.ERROR, exception.getMessage(), null);
@@ -301,9 +324,11 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
      * 
      */
     private static final long serialVersionUID = 1L;
+    private AppStackDashboard dashboard;
 
-    public CreateAction(String actionName) {
+    public CreateAction(String actionName, AppStackDashboard dashboard) {
       super(actionName);
+      this.dashboard = dashboard;
     }
 
     @Override
@@ -319,7 +344,53 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 //        // TODO Auto-generated catch block
 //        e1.printStackTrace();
 //      }
+
+      try {
+        YamlLoader.Load();
+      } catch (IOException | IntrospectionException ex) {
+        try {
+          ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+          String compartmentId = SystemPreferences.getCompartmentId();
+          ClassLoader cl = AppStackDashboard.class.getClassLoader();
+          CreateStackCommand command = 
+            new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
+          this.dashboard.commandStack.execute(command);
+        } catch (Exception e1) {
+          throw new RuntimeException(e1);
+        }
+      }
     }
+  }
+
+  public static class DeleteAction extends AbstractAction {
+
+    private static final long serialVersionUID = 7216149349340773007L;
+    private AppStackDashboard dashboard;
+    public DeleteAction(AppStackDashboard dashboard, String title) {
+      super("Delete");
+      this.dashboard = dashboard;
+    }
+    
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      int selectedRow = this.dashboard.appStacksTable.getSelectedRow();
+      // TODO: should be better way to get select row object
+      if (selectedRow >=0 && selectedRow < this.dashboard.appStackList.size()) {
+        StackSummary stackSummary = this.dashboard.appStackList.get(selectedRow);
+        ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+        DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId());
+        try {
+          Result r = this.dashboard.commandStack.execute(deleteCommand);
+          if (r.getSeverity() != Severity.ERROR) {
+            this.dashboard.populateTableData();
+          }
+        } catch (CommandFailedException e1) {
+          // TODO:
+          e1.printStackTrace();
+        }
+      }
+    }
+    
   }
 
   @Override
