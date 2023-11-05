@@ -3,6 +3,9 @@ package com.oracle.oci.intellij.ui.appstack.actions;
 
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.ui.ValidationInfo;
+import com.intellij.ui.DottedBorder;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.JBUI;
 import com.oracle.bmc.core.model.Subnet;
@@ -37,6 +40,7 @@ public class AppStackParametersDialog extends DialogWrapper {
     private static final String OK_TEXT = "Save";
     Map<String , JComponent> pdComponents = new LinkedHashMap<>();
     LinkedHashMap<String, PropertyDescriptor> descriptorsState;
+    List <JLabel> errorLabels = new ArrayList<>() ;
 
 
 
@@ -69,7 +73,7 @@ public class AppStackParametersDialog extends DialogWrapper {
             JPanel groupPanel = new JPanel();
             String className = varGroup.getClass().getSimpleName().replaceAll("_"," ");
             groupPanel.setBorder(BorderFactory.createTitledBorder(className));
-            groupPanel.setLayout(new GridLayout(0, 2));
+            groupPanel.setLayout(new GridLayout(0, 1));
 
             for (PropertyDescriptor pd : propertyDescriptors) {
                 if (pd.getName().equals("class")) {
@@ -91,7 +95,19 @@ public class AppStackParametersDialog extends DialogWrapper {
 
         JLabel label = new JLabel( pd.getDisplayName());
         label.setToolTipText( pd.getShortDescription());
+        JPanel varPanel = new JPanel(new BorderLayout());
+        JPanel componentErrorPan = new JPanel();
+        componentErrorPan.setLayout(new BoxLayout(componentErrorPan, BoxLayout.Y_AXIS));
+//        componentErrorPan.setBorder(new DottedBorder(Color.pink));
+        componentErrorPan.setPreferredSize(new Dimension(300,40));
+
+//        varPanel.setBorder(new DottedBorder(Color.pink));
         JComponent component ;
+        JLabel errorLabel = new JLabel();
+        errorLabels.add(errorLabel);
+        errorLabel.setVisible(false);
+        errorLabel.setForeground(JBColor.RED);
+
 
         // check if it's a required file
         if (pd.getValue("required") != null) {
@@ -102,16 +118,20 @@ public class AppStackParametersDialog extends DialogWrapper {
         }
 
         // create component
-        component = createComponentVariable(pd, varGroup);
+        component = createComponentVariable(pd, varGroup,errorLabel);
 
 
-        groupPanel.add(label);
-        groupPanel.add(component);
-
+        componentErrorPan.add(component);
+        componentErrorPan.add(errorLabel,BorderLayout.CENTER);
+        varPanel.add(label,BorderLayout.WEST);
+        varPanel.add(componentErrorPan,BorderLayout.EAST);
+//        varPanel.add(component);
+//        varPanel.add(errorLabel);
+        groupPanel.add(varPanel);
 
     }
 
-    private JComponent createComponentVariable(PropertyDescriptor pd,VariableGroup varGroup) {
+    private JComponent createComponentVariable(PropertyDescriptor pd,VariableGroup varGroup,JLabel errorLabel) {
 
         Class<?> propertyType = pd.getPropertyType();
         JComponent component ;
@@ -120,6 +140,7 @@ public class AppStackParametersDialog extends DialogWrapper {
 
             JCheckBox checkBox = new JCheckBox();
             component = checkBox;
+
             checkBox.addActionListener(e -> {
                 try {
                     pd.setValue("value",checkBox.isSelected());
@@ -137,7 +158,7 @@ public class AppStackParametersDialog extends DialogWrapper {
                 JPanel compartmentPanel = new JPanel();
                 JButton selectCompartmentBtn  = new JButton("select");
                 JTextField compartmentName = new JTextField("");
-                compartmentName.setPreferredSize(new Dimension(260,30));
+                compartmentName.setPreferredSize(new Dimension(200,30));
                 compartmentName.setEnabled(false);
                 compartmentPanel.add(compartmentName);
                 compartmentPanel.add(selectCompartmentBtn);
@@ -264,6 +285,7 @@ public class AppStackParametersDialog extends DialogWrapper {
                 }
             });
 
+
             component = spinner;
         } else {
 
@@ -276,6 +298,25 @@ public class AppStackParametersDialog extends DialogWrapper {
                 public void focusLost(FocusEvent e) {
                     try {
                         pd.setValue("value",textField.getText());
+
+                        if (textField.getText().isEmpty() && pd.getValue("required") != null && (boolean) pd.getValue("required")) {
+                            textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+                            errorLabel.setVisible(true);
+                            errorLabel.setText("This field is required");
+                            return;
+                        }
+                        if (pd.getValue("pattern") != null){
+                            if (!textField.getText().matches((String)pd.getValue("pattern"))) {
+                                textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+                                errorLabel.setText("invalid format ");
+                                return;
+                            }
+                        }
+
+                            errorLabel.setVisible(false);
+                            textField.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+                            errorLabel.setText("");
+
                         pd.getWriteMethod().invoke(varGroup, textField.getText());
                     } catch (IllegalAccessException | InvocationTargetException ex) {
                         throw new RuntimeException(ex);
@@ -368,6 +409,11 @@ public class AppStackParametersDialog extends DialogWrapper {
     @Override
     protected void doOKAction() {
         super.doOKAction();
+    }
+
+    @Override
+    protected @Nullable ValidationInfo doValidate() {
+        return super.doValidate();
     }
 }
 
