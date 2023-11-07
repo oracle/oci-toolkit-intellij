@@ -333,11 +333,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      try {
-        YamlLoader.Load();
-      } catch (IOException | IntrospectionException | InvocationTargetException | IllegalAccessException ex) {
-        throw new RuntimeException(ex);
-      }
+
 //      try {
 //        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack();
 //      } catch (IOException e1) {
@@ -346,7 +342,9 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 //      }
 
       try {
+        dashboard.createAppStackButton.setEnabled(false);
         YamlLoader.Load();
+        dashboard.createAppStackButton.setEnabled(true);
       } catch (IOException | IntrospectionException | InvocationTargetException | IllegalAccessException ex) {
         try {
           ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
