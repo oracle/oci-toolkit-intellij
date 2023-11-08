@@ -1,5 +1,6 @@
 package com.oracle.oci.intellij.ui.appstack.models;
 
+import com.oracle.oci.intellij.ui.appstack.actions.PropertyOrder;
 import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 
 import java.beans.PropertyChangeListener;
@@ -22,6 +23,47 @@ public class Application_URL extends VariableGroup {
 
     @VariableMetaData(title="Certificate OCID",description="You must have a SSL certificate available in OCI Certificates service. Provide the certificate OCID for the host name.",type="string",required=true,visible="create_fqdn")
     private java.lang.String certificate_ocid;
+
+    @PropertyOrder(1)
+    public boolean isCreate_fqdn() {
+        return create_fqdn;
+    }
+
+    public void setCreate_fqdn(boolean create_fqdn) {
+        this.create_fqdn = create_fqdn;
+    }
+    @PropertyOrder(2)
+    public Object getDns_compartment() {
+        return dns_compartment;
+    }
+
+    public void setDns_compartment(Object dns_compartment) {
+        this.dns_compartment = dns_compartment;
+    }
+    @PropertyOrder(3)
+    public String getZone() {
+        return zone;
+    }
+
+    public void setZone(String zone) {
+        this.zone = zone;
+    }
+    @PropertyOrder(4)
+    public String getSubdomain() {
+        return subdomain;
+    }
+
+    public void setSubdomain(String subdomain) {
+        this.subdomain = subdomain;
+    }
+    @PropertyOrder(5)
+    public String getCertificate_ocid() {
+        return certificate_ocid;
+    }
+
+    public void setCertificate_ocid(String certificate_ocid) {
+        this.certificate_ocid = certificate_ocid;
+    }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
          this.pcs.addPropertyChangeListener(listener);

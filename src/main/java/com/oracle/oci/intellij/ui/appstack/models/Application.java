@@ -1,5 +1,6 @@
 package com.oracle.oci.intellij.ui.appstack.models;
 
+import com.oracle.oci.intellij.ui.appstack.actions.PropertyOrder;
 import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 
 import java.beans.PropertyChangeListener;
@@ -14,21 +15,24 @@ public class Application extends VariableGroup {
     @VariableMetaData(title="Number of deployments",description="This is the number of container instances that will be deployed.",type="number",required=true)
     private int nb_copies;
 
-    @VariableMetaData(title="Application source",description="You can deploy an application that is either a container image, a Java artifact (JAR/WAR) or from the source code.",defaultVal="SOURCE_CODE",type="enum",required=true,enumValues ="[IMAGE, ARTIFACT, SOURCE_CODE]")
-    private enum application_source{
+    public enum Application_source{
         IMAGE,
         ARTIFACT,
         SOURCE_CODE,
     }
+    @VariableMetaData(title="Application source",description="You can deploy an application that is either a container image, a Java artifact (JAR/WAR) or from the source code.",defaultVal="SOURCE_CODE",type="enum",required=true,enumValues ="[IMAGE, ARTIFACT, SOURCE_CODE]")
+    private Application_source application_source;
 
 ;
 
-    @VariableMetaData(title="Artifact type",description="The stack can deploy either an executable JAR (using Java runtime) or a WAR (through Tomcat).",defaultVal="JAR",type="enum",required=true,enumValues ="[not selected, JAR, WAR]",visible="not(eq(application_source,'IMAGE'))")
-    private enum application_type{
+    public enum Application_type{
         not_selected,
         JAR,
         WAR,
     }
+    @VariableMetaData(title="Artifact type",description="The stack can deploy either an executable JAR (using Java runtime) or a WAR (through Tomcat).",defaultVal="JAR",type="enum",required=true,enumValues ="[not selected, JAR, WAR]",visible="not(eq(application_source,'IMAGE'))")
+
+    private Application_type application_type;
 
 ;
 
@@ -58,6 +62,110 @@ public class Application extends VariableGroup {
 
     @VariableMetaData(title="Exposed port",description="This is the backend port on which the application is listening.",defaultVal="8443",type="string",required=true,visible="eq(application_source,'IMAGE')")
     private java.lang.String exposed_port;
+    @PropertyOrder(1)
+    public String getApplication_name() {
+        return application_name;
+    }
+
+    public void setApplication_name(String application_name) {
+        this.application_name = application_name;
+    }
+    @PropertyOrder(2)
+    public int getNb_copies() {
+        return nb_copies;
+    }
+
+    public void setNb_copies(int nb_copies) {
+        this.nb_copies = nb_copies;
+    }
+    @PropertyOrder(3)
+    public Application_source getApplication_source() {
+        return application_source;
+    }
+
+    public void setApplication_source(Application_source application_source) {
+        this.application_source = application_source;
+    }
+    @PropertyOrder(4)
+    public Application_type getApplication_type() {
+        return application_type;
+    }
+
+    public void setApplication_type(Application_type application_type) {
+        this.application_type = application_type;
+    }
+    @PropertyOrder(5)
+    public Object getDevops_compartment() {
+        return devops_compartment;
+    }
+
+    public void setDevops_compartment(Object devops_compartment) {
+        this.devops_compartment = devops_compartment;
+    }
+    @PropertyOrder(6)
+    public String getRepo_name() {
+        return repo_name;
+    }
+
+    public void setRepo_name(String repo_name) {
+        this.repo_name = repo_name;
+    }
+    @PropertyOrder(7)
+    public String getBranch() {
+        return branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
+    }
+    @PropertyOrder(8)
+    public String getBuild_command() {
+        return build_command;
+    }
+
+    public void setBuild_command(String build_command) {
+        this.build_command = build_command;
+    }
+    @PropertyOrder(9)
+    public String getArtifact_location() {
+        return artifact_location;
+    }
+
+    public void setArtifact_location(String artifact_location) {
+        this.artifact_location = artifact_location;
+    }
+    @PropertyOrder(10)
+    public String getRegistry_id() {
+        return registry_id;
+    }
+
+    public void setRegistry_id(String registry_id) {
+        this.registry_id = registry_id;
+    }
+    @PropertyOrder(11)
+    public String getArtifact_id() {
+        return artifact_id;
+    }
+
+    public void setArtifact_id(String artifact_id) {
+        this.artifact_id = artifact_id;
+    }
+    @PropertyOrder(12)
+    public String getImage_path() {
+        return image_path;
+    }
+
+    public void setImage_path(String image_path) {
+        this.image_path = image_path;
+    }
+    @PropertyOrder(13)
+    public String getExposed_port() {
+        return exposed_port;
+    }
+
+    public void setExposed_port(String exposed_port) {
+        this.exposed_port = exposed_port;
+    }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
          this.pcs.addPropertyChangeListener(listener);
