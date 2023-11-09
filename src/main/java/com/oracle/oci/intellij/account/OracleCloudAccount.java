@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -919,7 +920,7 @@ public class OracleCloudAccount {
     }
     
     public ListJobsResponse listJobs(String compartmentId, String stackId) {
-      ListJobsRequest request = ListJobsRequest.builder().compartmentId(compartmentId).build();
+      ListJobsRequest request = ListJobsRequest.builder().compartmentId(compartmentId).stackId(stackId).build();
       return resourceManagerClient.listJobs(request);
     }
 
@@ -947,10 +948,17 @@ public class OracleCloudAccount {
         CreateStackDetails.builder()
                           .compartmentId(compartmentId)
                           .configSource(zipUploadConfigSourceDetails)
+                          .displayName("Create New AppStack")
+                          .description("Creates a new App Stack")
                           .variables(variables == null ? Collections.emptyMap() : variables)
                           .build();
       CreateStackRequest createStackRequest =
-        CreateStackRequest.builder().createStackDetails(stackDetails).build();
+        CreateStackRequest.builder().createStackDetails(stackDetails)
+        .opcRequestId("app-stack-test-create-stack-request-"
+          + UUID.randomUUID()
+              .toString())
+        .opcRetryToken("app-stack-test-create-stack-retry-token-" + UUID.randomUUID().toString())
+          .build();
       CreateStackResponse createStackResponse =
         resourceManagerClient.createStack(createStackRequest);
       System.out.println("Created Stack : " + createStackResponse.getStack());

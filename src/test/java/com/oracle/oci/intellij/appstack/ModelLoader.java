@@ -5,6 +5,7 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -58,19 +59,26 @@ public class ModelLoader {
 	private Map<String, String> loadAndIndex(ModelLoader loader) throws Exception {
 		Map<String, VariableGroup> variableGroupByVarName = loader.init().build();
 		Map<String, String> variables = new HashMap<>();
-		loader.variablesByName.forEach((name, pd) -> {
+		
+		for (Map.Entry<String, VariableGroup> entry : variableGroupByVarName.entrySet()) {
 			try {
-				VariableGroup target = variableGroupByVarName.get(name);
-				if (target != null) {
-					Object propertyValue = Utils.getPropertyValue(target, pd);
+			  String name = entry.getKey();
+			  VariableGroup vg = entry.getValue();
+
+ 			if (vg != null) {
+ 			    PropertyDescriptor pd = loader.variablesByName.get(name);
+					Object propertyValue = Utils.getPropertyValue(vg, pd);
 					Optional.ofNullable(propertyValue).ifPresent(p -> variables.put(name, p.toString()));
 				} else {
-					System.out.println("Missing property: "+name);
+					System.out.println("Missing target: "+name);
 				}
 			} catch (CommandFailedException e) {
 				throw new RuntimeException(e);
 			}
-		});
+		}
+    if (!variables.containsKey("project_id")) {
+      variables.put("project_id", "FooProject_"+System.currentTimeMillis());
+    }
 
 		variables.forEach((key, value) -> System.out.printf("%s = %s\n", key, value));
 		return variables;
@@ -100,8 +108,12 @@ public class ModelLoader {
 			VariableGroup varGroup = populatedGroups.get(varName);
 			if (varGroup == null) {
 				try {
-					varGroup = varGroupClass.newInstance();
+				  
+					Constructor<? extends VariableGroup> constructor = varGroupClass.getConstructor();
+					varGroup = constructor.newInstance(new Object[0]);
+					assert varGroup != null && varName != null;
 					populatedGroups.put(varName, varGroup);
+					
 				} catch (InstantiationException | IllegalAccessException e) {
 					throw new Exception("TODO");
 				}
@@ -116,10 +128,10 @@ public class ModelLoader {
 				System.out.println("Array/Object");
 				break;
 			case FALSE:
-				System.out.println("FALSE");
+			  command = new SetCommand<VariableGroup, Boolean>(varGroup, pd, Boolean.FALSE);
 				break;
 			case TRUE:
-				System.out.println("FALSE");
+        command = new SetCommand<VariableGroup, Boolean>(varGroup, pd, Boolean.TRUE);
 				break;
 			case NULL:
 				System.out.println("NULL");
@@ -140,7 +152,10 @@ public class ModelLoader {
 			}
 			if (command != null) {
 				SetCommandResult<?, ?> result = (SetCommandResult<?, ?>) command.execute();
-				System.out.println(result.toString());
+				System.out.println("Result for "+varName+ " "+result.toString());
+			}
+			else {
+			  System.out.println("Missing command:" +varName);
 			}
 		}
 		return populatedGroups;
@@ -167,8 +182,14 @@ public class ModelLoader {
 			BeanInfo beanInfo = Introspector.getBeanInfo(vgClass);
 			PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : propertyDescriptors) {
-				variablesByName.put(pd.getName(), pd);
-				variableGroupsByVarName.put(pd.getName(), vgClass);
+			  String name = pd.getName();
+        if ("class".equals(name)) {
+			    continue; // ignore the built-in class variable.
+			  }
+        variablesByName.put(name, pd);
+				variableGroupsByVarName.put(name, vgClass);
+				System.out.printf("varName %s, property %s, varGroup %s\n", 
+				   name, pd.getReadMethod(), vgClass.getName());
 			}
 		}
 	}
