@@ -9,13 +9,13 @@ import java.beans.PropertyChangeSupport;
 public class General_Configuration extends VariableGroup {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
-    @VariableMetaData(title="Compute Compartment",description="The compartment in which to create all Compute resources.",defaultVal="compartment_ocid",type="oci:identity:compartment:id",required=true)
     private java.lang.Object compartment_id;
 
-    @VariableMetaData(title="Availability domain",description="The availability domain in which to create all Compute resources.",type="oci:identity:availabilitydomain:name",dependsOn="{compartmentId=${compartment_id}}",required=true)
     private java.lang.Object availability_domain;
 
     @PropertyOrder(1)
+    @VariableMetaData(title="Compute Compartment",description="The compartment in which to create all Compute resources.",defaultVal="compartment_ocid",type="oci:identity:compartment:id",required=true)
+
     public Object getCompartment_id() {
         return compartment_id;
     }
@@ -24,6 +24,8 @@ public class General_Configuration extends VariableGroup {
         this.compartment_id = compartment_id;
     }
     @PropertyOrder(2)
+    @VariableMetaData(title="Availability domain",description="The availability domain in which to create all Compute resources.",type="oci:identity:availabilitydomain:name",dependsOn="{compartmentId=${compartment_id}}",required=true)
+
     public Object getAvailability_domain() {
         return availability_domain;
     }

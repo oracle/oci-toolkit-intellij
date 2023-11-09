@@ -8,6 +8,7 @@ import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersDialog;
+import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 import com.oracle.oci.intellij.ui.appstack.models.*;
 
 
@@ -29,11 +30,11 @@ public class YamlLoader {
     static LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
 
     public static void Load() throws StreamReadException, DatabindException, IOException, IntrospectionException, InvocationTargetException, IllegalAccessException {
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        LinkedHashMap readValue =
-                mapper.readValue(new File("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/interface.yaml"), LinkedHashMap.class);
+//        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+//        LinkedHashMap readValue =
+//                mapper.readValue(new File("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/interface.yaml"), LinkedHashMap.class);
 
-        LinkedHashMap variables = (LinkedHashMap) readValue.get("variables");
+//        LinkedHashMap variables = (LinkedHashMap) readValue.get("variables");
 
 
 //        List<LinkedHashMap> groups = (List<LinkedHashMap>) readValue.get("variableGroups");
@@ -60,7 +61,62 @@ public class YamlLoader {
 
 
 
-        mapToDescriptors(variables,varGroups);
+//        mapToDescriptors(variables,varGroups);
+
+        for (VariableGroup varGroup:varGroups){
+            Class<?> appVarGroupClazz = varGroup.getClass();
+            BeanInfo beanInfo = Introspector.getBeanInfo(appVarGroupClazz);
+            PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+            // create Map from group instance ....
+            Map <VariableGroup ,Map<String,Object> > GroupMetadata;
+            LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
+
+
+            for (PropertyDescriptor pd:propertyDescriptors){
+
+                VariableMetaData annotation = pd.getReadMethod().getAnnotation(VariableMetaData.class);
+                System.out.println(annotation);
+                VariableMetaData metaData = annotation;
+
+//            Map varMetaData = new LinkedHashMap();
+//            varMetaData.put("title",metaData.title());
+//            varMetaData.put("description",metaData.description());
+//            varMetaData.put("required",metaData.required());
+//            varMetaData.put("type",metaData.type());
+//            varMetaData.put("default",metaData.defaultVal());
+//            varMetaData.put("dependsOn",metaData.dependsOn());
+//            varMetaData.put("visible",metaData.visible());
+
+                if (pd.getName().equals("class")) {
+                    continue;
+                }
+                int pdOrder = 0;
+//                pd.getPropertyType()
+
+                pd.setDisplayName((metaData.title() != null)? metaData.title() : "");
+                pd.setShortDescription((metaData.description() != null) ? metaData.description() :  "" );
+//                // recheck this default value thing
+                if (metaData.defaultVal() != null) {
+                    pd.setValue("default", metaData.defaultVal());
+                }
+
+                pd.setValue("required", metaData.required());
+
+                if (metaData.enumValues() != null) {
+                    List<String> list = getEnumList(metaData.enumValues());
+                    pd.setValue("enum", list);
+                }
+                if (metaData.visible() != null) {
+                    pd.setValue("visible", metaData.visible());
+                }
+
+                descriptorsState.put(pd.getName(),pd);
+
+
+
+            }
+        }
         createUIForm(varGroups,descriptorsState);
 
 
@@ -68,6 +124,11 @@ public class YamlLoader {
 
 
 
+    }
+
+    private static List<String> getEnumList(String enums) {
+        String [] items = enums.replaceAll("\\[\\]","").split(",");
+        return List.of(items);
     }
 
     static void mapToDescriptors (LinkedHashMap<String, LinkedHashMap> variables,List<VariableGroup> groups) throws IntrospectionException, InvocationTargetException, IllegalAccessException {

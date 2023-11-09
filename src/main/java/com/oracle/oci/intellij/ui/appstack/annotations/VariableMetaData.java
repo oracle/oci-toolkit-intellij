@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
+@Target({ElementType.FIELD,ElementType.METHOD})
 public @interface VariableMetaData {
 
     String title() ;      // Variable name
