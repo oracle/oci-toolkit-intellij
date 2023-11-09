@@ -70,7 +70,7 @@ public class YamlLoader {
 
             // create Map from group instance ....
             Map <VariableGroup ,Map<String,Object> > GroupMetadata;
-            LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
+//            LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
 
 
             for (PropertyDescriptor pd:propertyDescriptors){
@@ -97,8 +97,20 @@ public class YamlLoader {
                 pd.setDisplayName((metaData.title() != null)? metaData.title() : "");
                 pd.setShortDescription((metaData.description() != null) ? metaData.description() :  "" );
 //                // recheck this default value thing
+//                if (metaData.defaultVal() != null) {
+//                    pd.setValue("default", metaData.defaultVal());
+//                }
+
                 if (metaData.defaultVal() != null) {
-                    pd.setValue("default", metaData.defaultVal());
+                    // fill default variables ....
+                    Object defaultValue =  getDefaultValue(pd,metaData);
+                    pd.setValue("default", defaultValue);
+                    pd.setValue("value",defaultValue);
+//                    pd.getWriteMethod().invoke(group,defaultValue);
+                }
+
+                if (metaData.defaultVal() != null) {
+                    pd.setValue("type", metaData.type());
                 }
 
                 pd.setValue("required", metaData.required());
@@ -130,55 +142,55 @@ public class YamlLoader {
         String [] items = enums.replaceAll("\\[\\]","").split(",");
         return List.of(items);
     }
-
-    static void mapToDescriptors (LinkedHashMap<String, LinkedHashMap> variables,List<VariableGroup> groups) throws IntrospectionException, InvocationTargetException, IllegalAccessException {
-        for (VariableGroup group : groups) {
-            Class<? extends VariableGroup> varGroupClazz = group.getClass();
-            BeanInfo beanInfo = Introspector.getBeanInfo(varGroupClazz);
-            PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
-
-            for (PropertyDescriptor pd : propertyDescriptors) {
-                if (pd.getName().equals("class")) {
-                    continue;
-                }
-                LinkedHashMap variable = variables.get(pd.getName());
-                pd.setDisplayName((variable.get("title") != null)? variable.get("title").toString() : "");
-                pd.setShortDescription((variable.get("description") != null) ? variable.get("description").toString() : "" );
-
-                //                // recheck this default value thing
-                if (variable.get("default") != null) {
-                    // fill default variables ....
-                   Object defaultValue =  getDefaultValue(pd,variable);
-                    pd.setValue("default", defaultValue);
-                    pd.setValue("value",defaultValue);
-//                    pd.getWriteMethod().invoke(group,defaultValue);
-                }
-                if (variable.get("type") != null) {
-                    pd.setValue("type", variable.get("type"));
-                }
-                if (variable.get("dependsOn") != null) {
-                    pd.setValue("dependsOn", variable.get("dependsOn"));
-                }
-                if (variable.get("required") != null) {
-                    pd.setValue("required", variable.get("required"));
-                }
-                if (variable.get("enum") != null) {
-                    pd.setValue("enum", variable.get("enum"));
-                }
-                if (variable.get("visible") != null) {
-                    pd.setValue("visible", variable.get("visible"));
-//                    isVisible(pd);
-                }else {
-                    pd.setHidden(false);
-                }
-
-                // visible logic
-
-
-                descriptorsState.put(pd.getName(),pd);
-            }
-        }
-    }
+//
+//    static void mapToDescriptors (LinkedHashMap<String, LinkedHashMap> variables,List<VariableGroup> groups) throws IntrospectionException, InvocationTargetException, IllegalAccessException {
+//        for (VariableGroup group : groups) {
+//            Class<? extends VariableGroup> varGroupClazz = group.getClass();
+//            BeanInfo beanInfo = Introspector.getBeanInfo(varGroupClazz);
+//            PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+//
+//            for (PropertyDescriptor pd : propertyDescriptors) {
+//                if (pd.getName().equals("class")) {
+//                    continue;
+//                }
+//                LinkedHashMap variable = variables.get(pd.getName());
+//                pd.setDisplayName((variable.get("title") != null)? variable.get("title").toString() : "");
+//                pd.setShortDescription((variable.get("description") != null) ? variable.get("description").toString() : "" );
+//
+//                //                // recheck this default value thing
+//                if (variable.get("default") != null) {
+//                    // fill default variables ....
+//                   Object defaultValue =  getDefaultValue(pd,);
+//                    pd.setValue("default", defaultValue);
+//                    pd.setValue("value",defaultValue);
+////                    pd.getWriteMethod().invoke(group,defaultValue);
+//                }
+//                if (variable.get("type") != null) {
+//                    pd.setValue("type", variable.get("type"));
+//                }
+//                if (variable.get("dependsOn") != null) {
+//                    pd.setValue("dependsOn", variable.get("dependsOn"));
+//                }
+//                if (variable.get("required") != null) {
+//                    pd.setValue("required", variable.get("required"));
+//                }
+//                if (variable.get("enum") != null) {
+//                    pd.setValue("enum", variable.get("enum"));
+//                }
+//                if (variable.get("visible") != null) {
+//                    pd.setValue("visible", variable.get("visible"));
+////                    isVisible(pd);
+//                }else {
+//                    pd.setHidden(false);
+//                }
+//
+//                // visible logic
+//
+//
+//                descriptorsState.put(pd.getName(),pd);
+//            }
+//        }
+//    }
 //
 //    private static boolean isVisible(PropertyDescriptor pd) {
 //        Object rules = pd.getValue("visible");
@@ -237,10 +249,10 @@ public class YamlLoader {
 //
 //    }
 
-    private static Object getDefaultValue(PropertyDescriptor pd, LinkedHashMap variable) {
-        if (variable.get("default").toString().contains("compartment_ocid") || variable.get("default").toString().contains("compartment_id"))
+    private static Object getDefaultValue(PropertyDescriptor pd,VariableMetaData metaData ) {
+        if (metaData.defaultVal().contains("compartment_ocid") || metaData.defaultVal().contains("compartment_id"))
             return OracleCloudAccount.getInstance().getIdentityClient().getCompartment(SystemPreferences.getCompartmentId());
-        return variable.get("default").toString();
+        return metaData.defaultVal();
     }
 
 

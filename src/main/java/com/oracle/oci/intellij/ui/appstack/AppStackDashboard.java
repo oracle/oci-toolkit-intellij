@@ -342,9 +342,9 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 //      }
 
       try {
-        dashboard.createAppStackButton.setEnabled(false);
+//        dashboard.createAppStackButton.setEnabled(false);
         YamlLoader.Load();
-        dashboard.createAppStackButton.setEnabled(true);
+//        dashboard.createAppStackButton.setEnabled(true);
       } catch (IOException | IntrospectionException | InvocationTargetException | IllegalAccessException ex) {
         try {
           ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();

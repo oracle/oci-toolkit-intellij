@@ -245,7 +245,7 @@ public class AppStackParametersDialog extends DialogWrapper {
                     comboBox.addItemListener(e -> {
                         if (e.getStateChange() == ItemEvent.SELECTED) {
 
-                            pd.setValue("value", comboBox.getItem());
+                            pd.setValue("value", comboBox.getSelectedItem());
                             updateDependencies(pd);
                         }
 
@@ -346,6 +346,8 @@ public class AppStackParametersDialog extends DialogWrapper {
                 for (ExplicitlySetBmcModel enumValue : suggestedvalues) {
                     jComboBox.addItem(enumValue);
                 }
+                jComboBox.setSelectedItem(suggestedvalues.get(0));
+                dependentPd.setValue("value",suggestedvalues.get(0));
                 jComboBox.repaint();
 
             }
