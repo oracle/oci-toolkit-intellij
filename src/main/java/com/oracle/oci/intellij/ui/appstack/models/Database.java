@@ -41,6 +41,9 @@ public class Database extends VariableGroup {
     private boolean use_password_env;
 
     private String password_env;
+    
+    private String db_compartment;
+
     @PropertyOrder(1)
     public boolean isUse_existing_database() {
         return use_existing_database;
@@ -185,4 +188,11 @@ public class Database extends VariableGroup {
     public void removePropertyChangeListener(PropertyChangeListener listener) {
          this.pcs.removePropertyChangeListener(listener);
      }
+    public String getDb_compartment() {
+      return db_compartment;
+    }
+    public void setDb_compartment(String db_compartment) {
+      this.db_compartment = db_compartment;
+    }
+    
 }

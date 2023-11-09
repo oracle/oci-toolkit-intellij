@@ -28,4 +28,6 @@ public class AppStackTableModel extends DefaultTableModel {
   public Class<?> getColumnClass(int column){
     return String.class; //(column == 2) ? JLabel.class : String.class;
   }
+  
+  
 }

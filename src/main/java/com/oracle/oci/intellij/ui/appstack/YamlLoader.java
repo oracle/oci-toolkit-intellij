@@ -1,28 +1,36 @@
 package com.oracle.oci.intellij.ui.appstack;
 
-import com.fasterxml.jackson.core.exc.StreamReadException;
-import com.fasterxml.jackson.databind.DatabindException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.oracle.bmc.identity.model.Compartment;
-import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.account.SystemPreferences;
-import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersDialog;
-import com.oracle.oci.intellij.ui.appstack.models.*;
-
-
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.account.SystemPreferences;
+import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersDialog;
+import com.oracle.oci.intellij.ui.appstack.models.Application;
+import com.oracle.oci.intellij.ui.appstack.models.Application_Performance_Monitoring;
+import com.oracle.oci.intellij.ui.appstack.models.Application_URL;
+import com.oracle.oci.intellij.ui.appstack.models.Application_configuration_SSL_communication_between_backends_and_load_balancer;
+import com.oracle.oci.intellij.ui.appstack.models.Container_instance_configuration;
+import com.oracle.oci.intellij.ui.appstack.models.Database;
+import com.oracle.oci.intellij.ui.appstack.models.General_Configuration;
+import com.oracle.oci.intellij.ui.appstack.models.Network;
+import com.oracle.oci.intellij.ui.appstack.models.Other_parameters;
+import com.oracle.oci.intellij.ui.appstack.models.Stack_authentication;
+import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 
 public class YamlLoader {
 
@@ -30,20 +38,15 @@ public class YamlLoader {
 
     public static void Load() throws StreamReadException, DatabindException, IOException, IntrospectionException, InvocationTargetException, IllegalAccessException {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        //"/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/interface.yaml"
+        InputStream is = YamlLoader.class.getClassLoader().getResourceAsStream("interface.yaml");
         LinkedHashMap readValue =
-                mapper.readValue(new File("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/interface.yaml"), LinkedHashMap.class);
+                mapper.readValue(is, LinkedHashMap.class);
 
         LinkedHashMap variables = (LinkedHashMap) readValue.get("variables");
 
 
 //        List<LinkedHashMap> groups = (List<LinkedHashMap>) readValue.get("variableGroups");
-
-
-
-
-
-
-
 
         List<VariableGroup> varGroups = new ArrayList<>();
         varGroups.add(new General_Configuration());
