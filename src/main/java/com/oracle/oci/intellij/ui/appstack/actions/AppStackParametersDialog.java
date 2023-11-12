@@ -31,6 +31,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AppStackParametersDialog extends DialogWrapper {
     JPanel mainPanel;
@@ -40,6 +42,8 @@ public class AppStackParametersDialog extends DialogWrapper {
     Map<String , JComponent> pdComponents = new LinkedHashMap<>();
     LinkedHashMap<String, PropertyDescriptor> descriptorsState;
     List <JLabel> errorLabels = new ArrayList<>() ;
+
+   static Map<String, VariableGroup> variableGroups;
 
 
 
@@ -52,13 +56,21 @@ public class AppStackParametersDialog extends DialogWrapper {
         setOKButtonText(OK_TEXT);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         this.descriptorsState =descriptorsState;
-        createGroupsPanels(varGroups);
+        this.variableGroups = new LinkedHashMap<>();
+        try {
+            createGroupsPanels(varGroups);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
 
-    private void createGroupsPanels(List<VariableGroup> varGroups) throws IntrospectionException {
+    private void createGroupsPanels(List<VariableGroup> varGroups) throws IntrospectionException, InvocationTargetException, IllegalAccessException {
         for (VariableGroup varGroup : varGroups) {
+
+            variableGroups.put(varGroup.getClass().getSimpleName(),varGroup);
+
             Class<? extends VariableGroup> varGroupClazz = varGroup.getClass();
             BeanInfo beanInfo = Introspector.getBeanInfo(varGroupClazz);
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
@@ -89,7 +101,7 @@ public class AppStackParametersDialog extends DialogWrapper {
     }
 
 
-    private void convertPdToUI(PropertyDescriptor pd,VariableGroup varGroup,JPanel groupPanel) {
+    private void convertPdToUI(PropertyDescriptor pd,VariableGroup varGroup,JPanel groupPanel) throws InvocationTargetException, IllegalAccessException {
 
 
         JLabel label = new JLabel( pd.getDisplayName());
@@ -130,7 +142,7 @@ public class AppStackParametersDialog extends DialogWrapper {
 
     }
 
-    private JComponent createComponentVariable(PropertyDescriptor pd,VariableGroup varGroup,JLabel errorLabel) {
+    private JComponent createComponentVariable(PropertyDescriptor pd,VariableGroup varGroup,JLabel errorLabel) throws InvocationTargetException, IllegalAccessException {
 
         Class<?> propertyType = pd.getPropertyType();
         JComponent component ;
@@ -148,7 +160,7 @@ public class AppStackParametersDialog extends DialogWrapper {
                     throw new RuntimeException(ex);
                 }
             });
-            checkBox.setSelected(Boolean.getBoolean((String) pd.getValue("default")) );
+            checkBox.setSelected( (boolean)pd.getValue("default") );
             // add this to the condition || ((String)pd.getValue("type")).startsWith("oci")
         } else if (propertyType.isEnum() || ((String)pd.getValue("type")).startsWith("oci") ) {
 
@@ -165,18 +177,20 @@ public class AppStackParametersDialog extends DialogWrapper {
 
                 compartmentSelection.setSelectedCompartment((Compartment) pd.getValue("default"));
                 compartmentName.setText(((Compartment) pd.getValue("default")).getName());
-                updateDependencies(pd);
+                updateDependencies(pd,varGroup);
 
 
                 selectCompartmentBtn.addActionListener(e->{
+                    final CompartmentSelection compartmentSelection1 = CompartmentSelection.newInstance();
 
-                    if (compartmentSelection.showAndGet()){
-                        final Compartment selected = compartmentSelection.getSelectedCompartment();
+
+                    if (compartmentSelection1.showAndGet()){
+                        final Compartment selected = compartmentSelection1.getSelectedCompartment();
                         try {
                             compartmentName.setText(selected.getName());
                             pd.setValue("value",selected);
                             pd.getWriteMethod().invoke(varGroup,selected);
-                            updateDependencies(pd);
+                            updateDependencies(pd, varGroup);
 
                         } catch (IllegalAccessException | InvocationTargetException ex) {
                             throw new RuntimeException(ex);
@@ -202,51 +216,66 @@ public class AppStackParametersDialog extends DialogWrapper {
                      *
                      */
                     // we need to set a custom renderer
-                    List<ExplicitlySetBmcModel> suggestedValues = (List<ExplicitlySetBmcModel>) getSuggestedValues(pd);
+                    List<ExplicitlySetBmcModel> suggestedValues = (List<ExplicitlySetBmcModel>) getSuggestedValues(pd,varGroup);
+                    System.out.println("\n\n\n\n\n hi \n\n\n\n\n");
 //                    enumValues.set(getSuggestedValues(pd));
 
-                    comboBox.setRenderer(new DefaultListCellRenderer(){
 
-                        //todo enhance this later
-                        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                            if (value instanceof AutonomousDatabaseSummary) {
-                            AutonomousDatabaseSummary adb = (AutonomousDatabaseSummary) value;
-                                setText(adb.getDisplayName()); // Set the display name of the instance
-                            } else if (value instanceof VaultSummary) {
-                                VaultSummary adb = (VaultSummary) value;
-                                setText(adb.getDisplayName()); // Set the display name of the instance
-                            }else if (value instanceof KeySummary) {
-                                KeySummary adb = (KeySummary) value;
-                                setText(adb.getDisplayName()); // Set the display name of the instance
-                            }else if (value instanceof AvailabilityDomain) {
-                                AvailabilityDomain adb = (AvailabilityDomain) value;
-                                setText(adb.getName()); // Set the display name of the instance
-                            }else if (value instanceof Subnet) {
-                                Subnet adb = (Subnet) value;
-                                setText(adb.getDisplayName()); // Set the display name of the instance
-                            }else if (value instanceof Vcn) {
-                                Vcn adb = (Vcn) value;
-                                setText(adb.getDisplayName()); // Set the display name of the instance
-                            }else if (value instanceof Compartment) {
-                                Compartment adb = (Compartment) value;
-                                setText(adb.getName()); // Set the display name of the instance
+                         comboBox.setRenderer(new DefaultListCellRenderer(){
+
+                            //todo enhance this later
+                            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                                if (value instanceof AutonomousDatabaseSummary) {
+                                    AutonomousDatabaseSummary adb = (AutonomousDatabaseSummary) value;
+                                    setText(adb.getDisplayName()); // Set the display name of the instance
+                                } else if (value instanceof VaultSummary) {
+                                    VaultSummary adb = (VaultSummary) value;
+                                    setText(adb.getDisplayName()); // Set the display name of the instance
+                                }else if (value instanceof KeySummary) {
+                                    KeySummary adb = (KeySummary) value;
+                                    setText(adb.getDisplayName()); // Set the display name of the instance
+                                }else if (value instanceof AvailabilityDomain) {
+                                    AvailabilityDomain adb = (AvailabilityDomain) value;
+                                    setText(adb.getName()); // Set the display name of the instance
+                                }else if (value instanceof Subnet) {
+                                    Subnet adb = (Subnet) value;
+                                    setText(adb.getDisplayName()); // Set the display name of the instance
+                                }else if (value instanceof Vcn) {
+                                    Vcn adb = (Vcn) value;
+                                    setText(adb.getDisplayName()); // Set the display name of the instance
+                                }else if (value instanceof Compartment) {
+                                    Compartment adb = (Compartment) value;
+                                    setText(adb.getName()); // Set the display name of the instance
+                                }
+                                return this;
                             }
-                            return this;
-                        }
-                    });
+                        });
 
                     if (suggestedValues != null) {
                         for (ExplicitlySetBmcModel enumValue : suggestedValues) {
                             comboBox.addItem(enumValue);
                         }
+                        if (!suggestedValues.isEmpty()){
+                            comboBox.setSelectedItem(suggestedValues.get(0));
+                            pd.setValue("value",suggestedValues.get(0));
+                            pd.getWriteMethod().invoke(varGroup,suggestedValues.get(0));
+                        }
+
                     }
+                    ListCellRenderer res = comboBox.getRenderer();
+                    System.out.println(res);
 
                     comboBox.addItemListener(e -> {
                         if (e.getStateChange() == ItemEvent.SELECTED) {
 
                             pd.setValue("value", comboBox.getSelectedItem());
-                            updateDependencies(pd);
+                            try {
+                                pd.getWriteMethod().invoke(varGroup,comboBox.getSelectedItem());
+                            } catch (IllegalAccessException | InvocationTargetException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                            updateDependencies(pd, varGroup);
                         }
 
                     });
@@ -297,6 +326,7 @@ public class AppStackParametersDialog extends DialogWrapper {
                 public void focusLost(FocusEvent e) {
                     try {
                         pd.setValue("value",textField.getText());
+                        pd.getWriteMethod().invoke(varGroup,textField.getText());
 
                         if (textField.getText().isEmpty() && pd.getValue("required") != null && (boolean) pd.getValue("required")) {
                             textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
@@ -332,7 +362,8 @@ public class AppStackParametersDialog extends DialogWrapper {
 
         return component;
     }
-    void updateDependencies(PropertyDescriptor pd){
+    void updateDependencies(PropertyDescriptor pd, VariableGroup varGroup){
+
         List<String> dependencies = Utils.depondsOn.get(pd.getName());
         if (dependencies != null) {
             for (String dependent : dependencies) {
@@ -341,22 +372,34 @@ public class AppStackParametersDialog extends DialogWrapper {
                 jComboBox.removeAllItems();
                 PropertyDescriptor dependentPd = descriptorsState.get(dependent);
 
-                List<? extends ExplicitlySetBmcModel> suggestedvalues = Utils.getSuggestedValuesOf((String) dependentPd.getValue("type")).apply(dependentPd, descriptorsState);
+                List<? extends ExplicitlySetBmcModel> suggestedvalues = null;
+                try {
+                    suggestedvalues = Utils.getSuggestedValuesOf((String) dependentPd.getValue("type")).apply(dependentPd, descriptorsState,varGroup);
+                } catch (InvocationTargetException | IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
                 if (suggestedvalues == null) return;
                 for (ExplicitlySetBmcModel enumValue : suggestedvalues) {
                     jComboBox.addItem(enumValue);
                 }
                 jComboBox.setSelectedItem(suggestedvalues.get(0));
                 dependentPd.setValue("value",suggestedvalues.get(0));
-                jComboBox.repaint();
+                // todo put the value in the variable
+//                jComboBox.repaint();
+               ListCellRenderer res = jComboBox.getRenderer();
+                System.out.println(res);
 
             }
         }
     }
 
-    private List<? extends ExplicitlySetBmcModel> getSuggestedValues(PropertyDescriptor pd) {
+    private List<? extends ExplicitlySetBmcModel> getSuggestedValues(PropertyDescriptor pd, VariableGroup varGroup) {
         String varType = (String) pd.getValue("type");
-        return Utils.getSuggestedValuesOf(varType).apply(pd,descriptorsState);
+        try {
+            return Utils.getSuggestedValuesOf(varType).apply(pd,descriptorsState,varGroup);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @NotNull
@@ -419,9 +462,9 @@ public class AppStackParametersDialog extends DialogWrapper {
 }
 
 class Utils{
-    static LinkedHashMap<String,SuggestConsumor<PropertyDescriptor,LinkedHashMap<String, PropertyDescriptor>,List<? extends ExplicitlySetBmcModel>>> suggestedValues = new LinkedHashMap<>();
+    static LinkedHashMap<String,SuggestConsumor<PropertyDescriptor,LinkedHashMap<String, PropertyDescriptor>,List<? extends ExplicitlySetBmcModel>,VariableGroup>> suggestedValues = new LinkedHashMap<>();
     static {
-        suggestedValues.put("oci:identity:compartment:id",(pd,pds)->{
+        suggestedValues.put("oci:identity:compartment:id",(pd,pds,varGroup)->{
             /* there are :
             * default: ${compartment_id}
             * default: compartment_ocid
@@ -433,57 +476,76 @@ class Utils{
             return compartmentList;
         });
 
-        suggestedValues.put("oci:core:vcn:id",(pd,pds)->{
-                String vcn_compartment_id = ( (Compartment)pds.get("vcn_compartment_id").getValue("value")).getId();
+        suggestedValues.put("oci:core:vcn:id",(pd,pds,varGroup)->{
+            PropertyDescriptor compartmentPd = pds.get("vcn_compartment_id");
+            String vcn_compartment_id ;
+            VariableGroup compartmentVarGroup = AppStackParametersDialog.variableGroups.get("Network");
+            vcn_compartment_id =((Compartment) compartmentPd.getReadMethod().invoke(compartmentVarGroup)).getId();
 
-                List<Vcn> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listVcns(vcn_compartment_id);
+
+            List<Vcn> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listVcns(vcn_compartment_id);
 
                 return vcn;
         });
 
-        suggestedValues.put("oci:core:subnet:id",(pd,pds)->{
-            String vcn_compartment_id=( (Compartment)pds.get("vcn_compartment_id").getValue("value")).getId();
-            Vcn vcn = (Vcn) pds.get("existing_vcn_id").getValue("value");
+        suggestedValues.put("oci:core:subnet:id",(pd,pds,varGroup)->{
+            PropertyDescriptor compartmentPd = pds.get("vcn_compartment_id");
+            VariableGroup networkVarGroup = AppStackParametersDialog.variableGroups.get("Network");
+
+            String vcn_compartment_id ;
+            vcn_compartment_id =((Compartment) compartmentPd.getReadMethod().invoke(networkVarGroup)).getId();
+            Vcn vcn = (Vcn) pds.get("existing_vcn_id").getReadMethod().invoke(networkVarGroup);
             if (vcn == null) return null;
             String existing_vcn_id =vcn.getId();;
 
 
             // todo
-            LinkedHashMap dependsOn = (LinkedHashMap) pd.getValue("dependsOn");
-            boolean hidePublicSubnet = (boolean) dependsOn.get("hidePublicSubnet");
+//            LinkedHashMap dependsOn = (LinkedHashMap) pd.getValue("dependsOn");
+//            boolean hidePublicSubnet = (boolean) dependsOn.get("hidePublicSubnet");
+            boolean hidePublicSubnet = Boolean.parseBoolean(getVaribaleValue("hidePublicSubnet",pd.getValue("dependsOn")));
             List<Subnet> subnets = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listSubnets(vcn_compartment_id,existing_vcn_id,hidePublicSubnet);
 
             return subnets;
 
         });
 
-        suggestedValues.put("oci:identity:availabilitydomain:name",(pd,pds)->{
-            String compartment_id =( (Compartment)pds.get("compartment_id").getValue("value")).getId();  ;
+        suggestedValues.put("oci:identity:availabilitydomain:name",(pd,pds,varGroup)->{
+            VariableGroup general_ConfigurationVarGroup = AppStackParametersDialog.variableGroups.get("General_Configuration");
+
+            String compartment_id =( (Compartment)pds.get("compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();  ;
             List<AvailabilityDomain> availabilityDomains = OracleCloudAccount.getInstance().getIdentityClient().getAvailabilityDomainsList(compartment_id);
             return availabilityDomains;
         });
 
-        suggestedValues.put("oci:database:autonomousdatabase:id",(pd,pds)->{
+        suggestedValues.put("oci:database:autonomousdatabase:id",(pd,pds,varGroup)->{
 
-            String compartment_id = ( (Compartment)pds.get("compartment_id").getValue("value")).getId();
+            VariableGroup general_ConfigurationVarGroup = AppStackParametersDialog.variableGroups.get("General_Configuration");
+
+
+            String compartment_id = ( (Compartment)pds.get("compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();
             if (compartment_id== null) return null;
             List<AutonomousDatabaseSummary> autonomousDatabases = OracleCloudAccount.getInstance().getDatabaseClient().getAutonomousDatabaseList(compartment_id);
             return autonomousDatabases;
 
         });
 
-        suggestedValues.put("oci:kms:vault:id",(pd,pds)->{
-            String vault_compartment_id = ( (Compartment) pds.get("vault_compartment_id").getValue("value")).getId();;
+        suggestedValues.put("oci:kms:vault:id",(pd,pds,varGroup)->{
+            VariableGroup general_ConfigurationVarGroup = AppStackParametersDialog.variableGroups.get("Stack_authentication");
+
+            String vault_compartment_id = ((Compartment) pds.get("vault_compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();;
 
             List<VaultSummary> vaultList = OracleCloudAccount.getInstance().getIdentityClient().getVaultsList(vault_compartment_id);
             return vaultList;
         });
 
-        suggestedValues.put("oci:kms:key:id",(pd,pds)->{
-            String vault_compartment_id = ( (Compartment) pds.get("vault_compartment_id").getValue("value")).getId();
-            VaultSummary vault =(VaultSummary) pds.get("vault_id").getValue("value");
+        suggestedValues.put("oci:kms:key:id",(pd,pds,varGroup)->{
+            VariableGroup general_ConfigurationVarGroup = AppStackParametersDialog.variableGroups.get("Stack_authentication");
+
+            String vault_compartment_id = ( (Compartment) pds.get("vault_compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();
+            VaultSummary vault =(VaultSummary) pds.get("vault_id").getReadMethod().invoke(varGroup);
             if (vault == null) return null ;
-            String vault_id = vault.getId();
+
+
             List<KeySummary> keyList = OracleCloudAccount.getInstance().getIdentityClient().getKeyList(vault_compartment_id,vault);
 
             return keyList;
@@ -491,6 +553,16 @@ class Utils{
         });
 
 
+    }
+
+    private static String getVaribaleValue(String variableName, Object dependsOn) {
+        Pattern pattern = Pattern.compile(variableName+"=([^,}]*)");
+        Matcher matcher = pattern.matcher(dependsOn.toString());
+
+        if (matcher.find()){
+           return matcher.group(1);
+        }
+        return "";
     }
 
     static public Map<String , List<String>> depondsOn = new LinkedHashMap<>(){{
@@ -501,15 +573,15 @@ class Utils{
         put("existing_vcn_id",List.of("existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
     }};
 
-    static SuggestConsumor<PropertyDescriptor,LinkedHashMap<String,PropertyDescriptor> ,List<? extends ExplicitlySetBmcModel>> getSuggestedValuesOf(String type){
+    static SuggestConsumor<PropertyDescriptor,LinkedHashMap<String,PropertyDescriptor> ,List<? extends ExplicitlySetBmcModel>,VariableGroup> getSuggestedValuesOf(String type){
         return suggestedValues.get(type);
     }
 
 
 }
 @FunctionalInterface
-interface SuggestConsumor<T,U,R> {
-    R apply(T t,U u);
+interface SuggestConsumor<T,U,R,O> {
+    R apply(T t,U u,O o) throws InvocationTargetException, IllegalAccessException;
 }
 
 

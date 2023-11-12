@@ -22,7 +22,7 @@ public class Container_instance_configuration extends VariableGroup {
     private int ocpus;
 
     @PropertyOrder(1)
-    @VariableMetaData(title="Container instance shape",description="A shape is a template that determines the number of OCPUs, amount of memory, and other resources that are allocated to a container instance.",defaultVal="CI.Standard.E3.Flex",type="enum",required=true,enumValues ="[CI.Standard.E3.Flex, CI.Standard.E4.Flex]")
+    @VariableMetaData(title="Container instance shape",description="A shape is a template that determines the number of OCPUs, amount of memory, and other resources that are allocated to a container instance.",defaultVal="CI.Standard.E3.Flex",type="enum",required=true,enumValues ="CI.Standard.E3.Flex, CI.Standard.E4.Flex")
     public Shape getShape() {
         return shape;
     }

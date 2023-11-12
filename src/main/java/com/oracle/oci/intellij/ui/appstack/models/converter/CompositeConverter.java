@@ -10,7 +10,7 @@ public class CompositeConverter<T extends Object> extends Converter<T> {
     Map<Class<?>, Converter<?>> converters = new HashMap<>();
     converters.put(Integer.class, new NumberConverter());
     converters.put(Enum.class, new EnumConverter());
-    
+
     DEFAULT_CONVERTERS = (CompositeConverter<Object>) Collections.unmodifiableMap(converters);
   }
 

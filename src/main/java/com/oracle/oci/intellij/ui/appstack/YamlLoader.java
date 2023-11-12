@@ -10,6 +10,8 @@ import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersDialog;
 import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 import com.oracle.oci.intellij.ui.appstack.models.*;
+import com.oracle.oci.intellij.ui.appstack.models.converter.CompositeConverter;
+import com.oracle.oci.intellij.ui.appstack.models.converter.Converter;
 
 
 import java.beans.BeanInfo;
@@ -101,13 +103,21 @@ public class YamlLoader {
 //                    pd.setValue("default", metaData.defaultVal());
 //                }
 
-                if (metaData.defaultVal() != null) {
+                if (metaData.defaultVal() != null && !metaData.defaultVal().isEmpty()) {
+                    System.out.println("hiiiii\n "+pd.getName());
                     // fill default variables ....
                     Object defaultValue =  getDefaultValue(pd,metaData);
                     pd.setValue("default", defaultValue);
-                    pd.setValue("value",defaultValue);
-//                    pd.getWriteMethod().invoke(group,defaultValue);
+
+//                    pd.setValue("value",defaultValue);
+
+                    pd.getWriteMethod().invoke(varGroup,defaultValue);
                 }
+
+                if (metaData.dependsOn() != null && !metaData.dependsOn().isEmpty()) {
+                    pd.setValue("dependsOn",metaData.dependsOn());
+                }
+
 
                 if (metaData.defaultVal() != null) {
                     pd.setValue("type", metaData.type());
@@ -116,11 +126,16 @@ public class YamlLoader {
                 pd.setValue("required", metaData.required());
 
                 if (metaData.enumValues() != null) {
-                    List<String> list = getEnumList(metaData.enumValues());
-                    pd.setValue("enum", list);
+                    if (!metaData.enumValues().isEmpty()){
+                        List<String> list = getEnumList(metaData.enumValues());
+                        pd.setValue("enum", list);
+                    }
+
                 }
                 if (metaData.visible() != null) {
-                    pd.setValue("visible", metaData.visible());
+                    if (!metaData.visible().isEmpty()){
+                        pd.setValue("visible", metaData.visible());
+                    }
                 }
 
                 descriptorsState.put(pd.getName(),pd);
@@ -249,9 +264,21 @@ public class YamlLoader {
 //
 //    }
 
-    private static Object getDefaultValue(PropertyDescriptor pd,VariableMetaData metaData ) {
+    private static Object getDefaultValue(PropertyDescriptor pd,VariableMetaData metaData )  {
         if (metaData.defaultVal().contains("compartment_ocid") || metaData.defaultVal().contains("compartment_id"))
             return OracleCloudAccount.getInstance().getIdentityClient().getCompartment(SystemPreferences.getCompartmentId());
+        if (metaData.type().equals("enum")){
+            Class<?> type = pd.getPropertyType();
+            String normalizedItem = metaData.defaultVal().replaceAll("\\.","_");
+            Enum<?> enumValue = Enum.valueOf((Class<Enum>) type, normalizedItem);
+            return enumValue;
+        }
+        if (metaData.type().equals("boolean")){
+            return Boolean.parseBoolean(metaData.defaultVal());
+        }
+        if (metaData.type().equals("number")){
+            return Integer.parseInt(metaData.defaultVal());
+        }
         return metaData.defaultVal();
     }
 
