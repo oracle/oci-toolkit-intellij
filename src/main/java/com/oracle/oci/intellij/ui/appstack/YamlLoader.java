@@ -93,8 +93,7 @@ public class YamlLoader {
                 if (pd.getName().equals("class")) {
                     continue;
                 }
-                int pdOrder = 0;
-//                pd.getPropertyType()
+
 
                 pd.setDisplayName((metaData.title() != null)? metaData.title() : "");
                 pd.setShortDescription((metaData.description() != null) ? metaData.description() :  "" );
@@ -286,7 +285,7 @@ public class YamlLoader {
 
     public static void createUIForm(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
         AppStackParametersDialog dialog =new AppStackParametersDialog(varGroups,descriptorsState) ;
-        dialog.showAndGet();
+
     }
     private static void generateVariableGroup(LinkedHashMap<String, Object> group, LinkedHashMap<String, Object> varMetadatas) throws IOException {
         String title = (String) group.get("title");

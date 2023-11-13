@@ -1,11 +1,17 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
 
+import com.intellij.ide.wizard.AbstractWizard;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.wizard.WizardDialog;
+import com.intellij.ui.wizard.WizardModel;
+import com.intellij.ui.wizard.WizardNavigationState;
+import com.intellij.ui.wizard.WizardStep;
 import com.intellij.util.ui.JBUI;
 import com.oracle.bmc.core.model.Subnet;
 import com.oracle.bmc.core.model.Vcn;
@@ -34,7 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AppStackParametersDialog extends DialogWrapper {
+public class AppStackParametersDialog  {
     JPanel mainPanel;
 
     private static final String WINDOW_TITLE = "App stack variables ";
@@ -44,24 +50,28 @@ public class AppStackParametersDialog extends DialogWrapper {
     List <JLabel> errorLabels = new ArrayList<>() ;
 
    static Map<String, VariableGroup> variableGroups;
+   WizardModel wizardModel ;
 
 
 
 
 
     public AppStackParametersDialog(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
-        super(true);
-        init();
-        setTitle(WINDOW_TITLE);
-        setOKButtonText(OK_TEXT);
+
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         this.descriptorsState =descriptorsState;
         this.variableGroups = new LinkedHashMap<>();
+
+         wizardModel = new WizardModel("AppstackVariables ");
+
         try {
             createGroupsPanels(varGroups);
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+
+        WizardDialog wizardDialog = new WizardDialog(ProjectManager.getInstance().getDefaultProject(), true,wizardModel);
+        wizardDialog.showAndGet();
 
     }
 
@@ -80,6 +90,7 @@ public class AppStackParametersDialog extends DialogWrapper {
                 return (annotation != null) ? annotation.value() : Integer.MAX_VALUE;
             }));
 
+
             // create group panel
             JPanel groupPanel = new JPanel();
             String className = varGroup.getClass().getSimpleName().replaceAll("_"," ");
@@ -90,18 +101,27 @@ public class AppStackParametersDialog extends DialogWrapper {
                 if (pd.getName().equals("class")) {
                     continue;
                 }
-                convertPdToUI(pd,varGroup,groupPanel);
+                groupPanel.add(convertPdToUI(pd,varGroup))  ;
             }
+            WizardStep wizardStep = new WizardStep(varGroup.getClass().getSimpleName()) {
+                @Override
+                public JComponent prepare(WizardNavigationState state) {
+                    return groupPanel;
+                }
+            };
 
-            mainPanel.add(groupPanel);
-            JPanel spacer = new JPanel();
-            spacer.setBorder(JBUI.Borders.empty(0, 20));
-            mainPanel.add(spacer);
+            wizardModel.add(wizardStep);
+
+
+//            mainPanel.add(groupPanel);
+//            JPanel spacer = new JPanel();
+//            spacer.setBorder(JBUI.Borders.empty(0, 20));
+//            mainPanel.add(spacer);
         }
     }
 
 
-    private void convertPdToUI(PropertyDescriptor pd,VariableGroup varGroup,JPanel groupPanel) throws InvocationTargetException, IllegalAccessException {
+    private JComponent convertPdToUI(PropertyDescriptor pd,VariableGroup varGroup) throws InvocationTargetException, IllegalAccessException {
 
 
         JLabel label = new JLabel( pd.getDisplayName());
@@ -136,10 +156,8 @@ public class AppStackParametersDialog extends DialogWrapper {
         componentErrorPan.add(errorLabel,BorderLayout.CENTER);
         varPanel.add(label,BorderLayout.WEST);
         varPanel.add(componentErrorPan,BorderLayout.EAST);
-//        varPanel.add(component);
-//        varPanel.add(errorLabel);
-        groupPanel.add(varPanel);
 
+        return varPanel;
     }
 
     private JComponent createComponentVariable(PropertyDescriptor pd,VariableGroup varGroup,JLabel errorLabel) throws InvocationTargetException, IllegalAccessException {
@@ -445,20 +463,20 @@ public class AppStackParametersDialog extends DialogWrapper {
     }
 
 
-    @Override
-    protected @Nullable JComponent createCenterPanel() {
-        return new JBScrollPane(mainPanel);
-    }
-
-    @Override
-    protected void doOKAction() {
-        super.doOKAction();
-    }
-
-    @Override
-    protected @Nullable ValidationInfo doValidate() {
-        return super.doValidate();
-    }
+//    @Override
+//    protected @Nullable JComponent createCenterPanel() {
+//        return new JBScrollPane(mainPanel);
+//    }
+//
+//    @Override
+//    protected void doOKAction() {
+//        super.doOKAction();
+//    }
+//
+//    @Override
+//    protected @Nullable ValidationInfo doValidate() {
+//        return super.doValidate();
+//    }
 }
 
 class Utils{

@@ -4,6 +4,7 @@
  */
 package com.oracle.oci.intellij.ui.appstack;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.beans.IntrospectionException;
@@ -23,6 +24,12 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.ui.wizard.WizardDialog;
+import com.intellij.ui.wizard.WizardModel;
+import com.intellij.ui.wizard.WizardNavigationState;
+import com.intellij.ui.wizard.WizardStep;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
@@ -334,29 +341,55 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     @Override
     public void actionPerformed(ActionEvent e) {
 
-//      try {
-//        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack();
-//      } catch (IOException e1) {
-//        // TODO Auto-generated catch block
-//        e1.printStackTrace();
-//      }
 
-      try {
-//        dashboard.createAppStackButton.setEnabled(false);
-        YamlLoader.Load();
-//        dashboard.createAppStackButton.setEnabled(true);
+////      try {
+//      WizardModel wizardModel = new WizardModel("New Model");
+//      WizardStep wizardStep = new WizardStep() {
+//        @Override
+//        public JComponent prepare(WizardNavigationState state) {
+//         JPanel panel = new JPanel();
+//         panel.add(new Label("hi all"));
+//         panel.add(new TextField());
+//          return panel;
+//        }
+//
+//        @Override
+//        public WizardStep onNext(WizardModel model) {
+//         this.
+//          return super.onNext(model);
+//        }
+//      };
+//
+//      WizardStep wizardStep2 = new WizardStep() {
+//        @Override
+//        public JComponent prepare(WizardNavigationState state) {
+//          JPanel panel = new JPanel();
+//          panel.add(new Label(" hi one!"));
+//          panel.add(new TextField());
+//          return panel;
+//        }
+//
+//      };
+//      wizardModel.add(wizardStep2);
+//      wizardModel.add(wizardStep);
+//        Wizarrd new1 = new Wizarrd(ProjectManager.getInstance().getDefaultProject(),true,wizardModel);
+ try {
+
+   YamlLoader.Load();
       } catch (IOException | IntrospectionException | InvocationTargetException | IllegalAccessException ex) {
         try {
           ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
           String compartmentId = SystemPreferences.getCompartmentId();
           ClassLoader cl = AppStackDashboard.class.getClassLoader();
-          CreateStackCommand command = 
+          CreateStackCommand command =
             new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
           this.dashboard.commandStack.execute(command);
         } catch (Exception e1) {
           throw new RuntimeException(e1);
         }
       }
+
+//      new1.showAndGet();
     }
   }
 
@@ -394,6 +427,15 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   @Override
   public String getTitle() {
     return "Application Stack";
+  }
+
+}
+
+
+class Wizarrd extends WizardDialog{
+
+  public Wizarrd(Project project, boolean canBeParent, WizardModel model) {
+    super(project, canBeParent, model);
   }
 
 }
