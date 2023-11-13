@@ -31,6 +31,7 @@ public enum Icons {
     REGION_MEXICO("/icons/regions/mexico.png"),
     REGION_NETHERLANDS("/icons/regions/netherlands.png"),
     REGION_SAUDI_ARABIA("/icons/regions/saudi_arabia.png"),
+    REGION_SERBIA("/icons/region/wales.png"),
     REGION_SINGAPORE("/icons/regions/singapore.png"),
     REGION_SOUTH_AFRICA("/icons/regions/south_africa.png"),
     REGION_SPAIN("/icons/regions/spain.png"),
