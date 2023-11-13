@@ -25,7 +25,7 @@ public class Other_parameters extends VariableGroup {
         this.other_environment_variables = other_environment_variables;
     }
     @PropertyOrder(2)
-    @VariableMetaData(title="JVM options",description="For example : -Xms=2G -Dspring.sql.init.data-locations=/temp/script.sql",type="string",visible="not(eq(application_source,'IMAGE',")
+    @VariableMetaData(title="JVM options",description="For example : -Xms=2G -Dspring.sql.init.data-locations=/temp/script.sql",type="string",visible="not(eq(application_source,'IMAGE'))")
 
     public String getVm_options() {
         return vm_options;
@@ -35,7 +35,7 @@ public class Other_parameters extends VariableGroup {
         this.vm_options = vm_options;
     }
     @PropertyOrder(3)
-    @VariableMetaData(title="Program arguments",description="These space-separated program arguments are passed to the java process at startup.",type="string",visible="and(eq(application_type,'JAR',not(eq(application_source,'IMAGE',")
+    @VariableMetaData(title="Program arguments",description="These space-separated program arguments are passed to the java process at startup.",type="string",visible="and(eq(application_type,'JAR'),not(eq(application_source,'IMAGE')))")
     public String getProgram_arguments() {
         return program_arguments;
     }

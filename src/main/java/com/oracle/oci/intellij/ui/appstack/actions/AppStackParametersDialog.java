@@ -42,7 +42,6 @@ import java.util.regex.Pattern;
 
 public class AppStackParametersDialog  {
     JPanel mainPanel;
-
     private static final String WINDOW_TITLE = "App stack variables ";
     private static final String OK_TEXT = "Save";
     Map<String , JComponent> pdComponents = new LinkedHashMap<>();
@@ -156,7 +155,9 @@ public class AppStackParametersDialog  {
         componentErrorPan.add(errorLabel,BorderLayout.CENTER);
         varPanel.add(label,BorderLayout.WEST);
         varPanel.add(componentErrorPan,BorderLayout.EAST);
-
+        // visibility
+        boolean  isVisible = isVisible((String) pd.getValue("visible"));
+        varPanel.setVisible(isVisible);
         return varPanel;
     }
 
@@ -164,6 +165,7 @@ public class AppStackParametersDialog  {
 
         Class<?> propertyType = pd.getPropertyType();
         JComponent component ;
+
 
         if (propertyType.getName().equals("boolean")) {
 
@@ -224,8 +226,13 @@ public class AppStackParametersDialog  {
                 AtomicReference<List<String>> enumValues = new AtomicReference<>((List<String>) pd.getValue("enum"));
                 if (enumValues.get() != null) {
                     for (String enumValue : enumValues.get()) {
-                        comboBox.addItem(enumValue);
+                        Class<?> type = pd.getPropertyType();
+                        String normalizedItem =enumValue.trim().replaceAll("[. ]","_");
+
+                        Enum<?> enumValue1 = Enum.valueOf((Class<Enum>) type, normalizedItem);
+                        comboBox.addItem(enumValue1);
                     }
+
                 } else {
                     //todo  suggest values from account of user   in a combobox depending on  type
                     /* example
@@ -235,7 +242,6 @@ public class AppStackParametersDialog  {
                      */
                     // we need to set a custom renderer
                     List<ExplicitlySetBmcModel> suggestedValues = (List<ExplicitlySetBmcModel>) getSuggestedValues(pd,varGroup);
-                    System.out.println("\n\n\n\n\n hi \n\n\n\n\n");
 //                    enumValues.set(getSuggestedValues(pd));
 
 
@@ -303,6 +309,7 @@ public class AppStackParametersDialog  {
                 if (pd.getValue("default") != null) {
                     comboBox.setSelectedItem(pd.getValue("default"));
                 }
+
                 component = comboBox;
             }
 
@@ -378,6 +385,7 @@ public class AppStackParametersDialog  {
         pdComponents.put(pd.getName(),component);
         component.setPreferredSize(new Dimension(200,30));
 
+
         return component;
     }
     void updateDependencies(PropertyDescriptor pd, VariableGroup varGroup){
@@ -438,29 +446,61 @@ public class AppStackParametersDialog  {
         return textField;
     }
 
-    private boolean visible(PropertyDescriptor pd) {
-        if (pd.getValue("visible") == null) {
+    private  boolean isVisible(String rule) {
+        if (rule == null){
             return true;
         }
-        if (pd.getValue("visible") instanceof String) {
-            // there is just varible
-            System.out.println(pd.getValue("visible"));
-            return true;
+        if (rule.startsWith("not(")){
+            return !isVisible(rule.substring(4,rule.length()-1));
         }
+        if (rule.startsWith("and(")){
+            return evaluateAnd(rule.substring(4, rule.lastIndexOf(')')));
+        }
+        if (rule.startsWith("eq(")){
+            String[] parts = rule.substring(3,rule.length()-1).split(",");
+            String variable = parts[0];
+            String value = parts[1].trim().replaceAll("'","");
 
+           Enum varValue = (Enum) descriptorsState.get(variable).getValue("value");
 
-        LinkedHashMap visible = (LinkedHashMap) pd.getValue("visible");
-        if (visible.containsKey("and")) {
-            if (visible.get("and") instanceof String) {
-                // there is just variable
-                System.out.println(pd.getValue("and"));
-                return true;
+            return varValue.toString().equals(value);
+        }
+        boolean varValue = (boolean) descriptorsState.get(rule.trim()).getValue("value");
+        return varValue;
+    }
+
+    private  boolean evaluateAnd(String rule) {
+        int parenCount = 0;
+        StringBuilder part = new StringBuilder();
+        List<String> parts = new ArrayList<>();
+
+        for (char c : rule.toCharArray()) {
+            if (c == '(') {
+                parenCount++;
+            } else if (c == ')') {
+                parenCount--;
             }
-            LinkedHashMap andCondition = (LinkedHashMap) visible.get("and");
-        }
 
+            if (c == ',' && parenCount == 0) {
+                parts.add(part.toString());
+                part = new StringBuilder();
+            } else {
+                part.append(c);
+            }
+        }
+        parts.add(part.toString()); // Add the last part
+
+        for (String p : parts) {
+            if (!isVisible(p.trim())) {
+                return false;
+            }
+        }
         return true;
     }
+
+//    String getValue(PropertyDescriptor pd){
+//        if(pd.)
+//    }
 
 
 //    @Override

@@ -30,6 +30,7 @@ import java.util.Map;
 public class YamlLoader {
 
     static LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
+    static Compartment compartment ;
 
     public static void Load() throws StreamReadException, DatabindException, IOException, IntrospectionException, InvocationTargetException, IllegalAccessException {
 //        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -108,7 +109,7 @@ public class YamlLoader {
                     Object defaultValue =  getDefaultValue(pd,metaData);
                     pd.setValue("default", defaultValue);
 
-//                    pd.setValue("value",defaultValue);
+                    pd.setValue("value",defaultValue);
 
                     pd.getWriteMethod().invoke(varGroup,defaultValue);
                 }
@@ -264,11 +265,15 @@ public class YamlLoader {
 //    }
 
     private static Object getDefaultValue(PropertyDescriptor pd,VariableMetaData metaData )  {
-        if (metaData.defaultVal().contains("compartment_ocid") || metaData.defaultVal().contains("compartment_id"))
-            return OracleCloudAccount.getInstance().getIdentityClient().getCompartment(SystemPreferences.getCompartmentId());
+
+        if (metaData.defaultVal().contains("compartment_ocid") || metaData.defaultVal().contains("compartment_id")) {
+            if (compartment == null)
+                return compartment = OracleCloudAccount.getInstance().getIdentityClient().getCompartment(SystemPreferences.getCompartmentId());
+            return compartment;
+        }
         if (metaData.type().equals("enum")){
             Class<?> type = pd.getPropertyType();
-            String normalizedItem = metaData.defaultVal().replaceAll("\\.","_");
+            String normalizedItem = metaData.defaultVal().trim().replaceAll("\\.","_");
             Enum<?> enumValue = Enum.valueOf((Class<Enum>) type, normalizedItem);
             return enumValue;
         }

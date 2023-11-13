@@ -69,7 +69,7 @@ public class Application extends VariableGroup {
         this.nb_copies = nb_copies;
     }
     @PropertyOrder(3)
-    @VariableMetaData(title="Application source",description="You can deploy an application that is either a container image, a Java artifact (JAR/WAR) or from the source code.",defaultVal="SOURCE_CODE",type="enum",required=true,enumValues ="IMAGE, ARTIFACT, SOURCE_CODE")
+    @VariableMetaData(title="Application source",description="You can deploy an application that is either a container image, a Java artifact (JAR/WAR) or from the source code.",defaultVal="SOURCE_CODE",type="enum",required=true,enumValues ="IMAGE,ARTIFACT,SOURCE_CODE")
 
     public Application_source getApplication_source() {
         return application_source;
@@ -79,7 +79,7 @@ public class Application extends VariableGroup {
         this.application_source = application_source;
     }
     @PropertyOrder(4)
-    @VariableMetaData(title="Artifact type",description="The stack can deploy either an executable JAR (using Java runtime) or a WAR (through Tomcat).",defaultVal="JAR",type="enum",required=true,enumValues ="not selected, JAR, WAR",visible="not(eq(application_source,'IMAGE'))")
+    @VariableMetaData(title="Artifact type",description="The stack can deploy either an executable JAR (using Java runtime) or a WAR (through Tomcat).",defaultVal="JAR",type="enum",required=true,enumValues ="not_selected,JAR,WAR",visible="not(eq(application_source,'IMAGE'))")
 
     public Application_type getApplication_type() {
         return application_type;
