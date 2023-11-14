@@ -400,6 +400,7 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
       final DialogWrapper wizard = new CreateAutonomousDatabaseDialog();
       wizard.showAndGet();
     }
+
   }
 
   private static class DeployAction extends AbstractAction {

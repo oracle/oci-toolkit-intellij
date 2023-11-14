@@ -479,7 +479,6 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         }
       }
     }
-  
 
   public static class DeleteAction extends AbstractAction {
 

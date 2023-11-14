@@ -973,6 +973,7 @@ public class OracleCloudAccount {
       byte[] fileDataBase64Encoded = Base64.getEncoder().encode(fileData);
       return new String(fileDataBase64Encoded, StandardCharsets.UTF_8);
     }
+
     public CreateJobResponse submitJob(CreateJobRequest createPlanJobRequest) {
       return resourceManagerClient.createJob(createPlanJobRequest);
     }

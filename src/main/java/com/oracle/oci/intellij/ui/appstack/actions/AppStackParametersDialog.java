@@ -44,6 +44,8 @@ public class AppStackParametersDialog extends DialogWrapper {
 
 
 
+
+
     public AppStackParametersDialog(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
         super(true);
         init();
