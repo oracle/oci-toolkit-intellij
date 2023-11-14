@@ -479,7 +479,8 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         }
       }
     }
-
+  }
+  
   public static class DeleteAction extends AbstractAction {
 
     private static final long serialVersionUID = 7216149349340773007L;
@@ -508,12 +509,12 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         }
       }
     }
-    
   }
 
   @Override
   public String getTitle() {
     return "Application Stack";
   }
+
 
 }
