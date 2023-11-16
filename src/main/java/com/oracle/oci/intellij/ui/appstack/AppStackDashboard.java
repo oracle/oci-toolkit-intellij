@@ -93,7 +93,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     }
     
     if (createAppStackButton != null) {
-      createAppStackButton.setAction(new CreateAction("Create New AppStack", this));
+      createAppStackButton.setAction(new CreateAction(this, "Create New AppStack"));
     }
     
     if (deleteAppStackButton != null) {
@@ -448,7 +448,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     private static final long serialVersionUID = 1L;
     private AppStackDashboard dashboard;
 
-    public CreateAction(String actionName, AppStackDashboard dashboard) {
+    public CreateAction(AppStackDashboard dashboard, String actionName) {
       super(actionName);
       this.dashboard = dashboard;
     }
