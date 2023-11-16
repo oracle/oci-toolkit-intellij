@@ -96,7 +96,7 @@ public class AppStackParametersDialog  {
             groupPanel.setLayout(new GridLayout(0, 1));
 
             for (PropertyDescriptor pd : propertyDescriptors) {
-                if (pd.getName().equals("class")) {
+                if (pd.getName().equals("class") || pd.getName().equals("db_compartment")) {
                     continue;
                 }
                 groupPanel.add(convertPdToUI(pd,varGroup))  ;
@@ -166,7 +166,7 @@ public class AppStackParametersDialog  {
 
         Class<?> propertyType = pd.getPropertyType();
         JComponent component ;
-
+        System.out.println(pd.getName());
         if (propertyType.getName().equals("boolean")) {
 
             JCheckBox checkBox = new JCheckBox();

@@ -72,7 +72,6 @@ public class YamlLoader {
             for (PropertyDescriptor pd:propertyDescriptors){
 
                 VariableMetaData annotation = pd.getReadMethod().getAnnotation(VariableMetaData.class);
-                System.out.println(annotation);
                 VariableMetaData metaData = annotation;
 
 //            Map varMetaData = new LinkedHashMap();
@@ -84,11 +83,11 @@ public class YamlLoader {
 //            varMetaData.put("dependsOn",metaData.dependsOn());
 //            varMetaData.put("visible",metaData.visible());
 
-                if (pd.getName().equals("class")) {
+                if (pd.getName().equals("class") || metaData == null) {
                     continue;
                 }
 
-
+                System.out.println(pd.getName());
                 pd.setDisplayName((metaData.title() != null)? metaData.title() : "");
                 pd.setShortDescription((metaData.description() != null) ? metaData.description() :  "" );
 //                // recheck this default value thing
