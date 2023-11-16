@@ -42,13 +42,6 @@ public class YamlLoader {
 
 //        List<LinkedHashMap> groups = (List<LinkedHashMap>) readValue.get("variableGroups");
 
-
-
-
-
-
-
-
         List<VariableGroup> varGroups = new ArrayList<>();
         varGroups.add(new General_Configuration());
         varGroups.add(new Application());

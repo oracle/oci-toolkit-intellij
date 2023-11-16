@@ -8,23 +8,20 @@ import java.util.UUID;
 
 import com.oracle.bmc.resourcemanager.model.ApplyJobOperationDetails.ExecutionPlanStrategy;
 import com.oracle.bmc.resourcemanager.model.CreateApplyJobOperationDetails;
-import com.oracle.bmc.resourcemanager.model.CreateImportTfStateJobOperationDetails;
 import com.oracle.bmc.resourcemanager.model.CreateJobDetails;
-import com.oracle.bmc.resourcemanager.model.CreateJobOperationDetails;
-import com.oracle.bmc.resourcemanager.model.CreatePlanJobOperationDetails;
 import com.oracle.bmc.resourcemanager.model.Job.Operation;
 import com.oracle.bmc.resourcemanager.requests.CreateJobRequest;
 import com.oracle.bmc.resourcemanager.responses.CreateJobResponse;
 import com.oracle.bmc.resourcemanager.responses.CreateStackResponse;
 import com.oracle.bmc.resourcemanager.responses.GetJobTfStateResponse;
-import com.oracle.bmc.resourcemanager.responses.ListJobsResponse;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
 import com.oracle.oci.intellij.common.Utils;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand;
 
 public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 		private ResourceManagerClientProxy resourceManagerClient;
-		private String compartmentId;
+		@SuppressWarnings("unused")
+    private String compartmentId;
 		@SuppressWarnings("unused")
     private String zipFileAsString;
     private HashMap<String, String> variables;
@@ -60,31 +57,9 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
       final String stackId = createStackResponse.getStack().getId();
 
       System.out.println(stackId);
-
-		 // Provide initial state file 
-			CreateJobResponse importStateJobResponse = 
-			  createImportStateJob(resourceManagerClient, stackId); 
-			final String importStateJobId = importStateJobResponse.getJob().getId();
-			System.out.println("Import State Job Id: "+importStateJobId);
-
-			ListJobsResponse listJobs = resourceManagerClient.listJobs(compartmentId, stackId);
-			System.out.println(listJobs.getItems());
- 		 //waitForJobToComplete(resourceManagerClient, importStateJobId);
-
-			// Create Plan Job 
-//			CreateJobResponse createPlanJobResponse =
-//			  createPlanJob(resourceManagerClient, stackId);
-//			final String planJobId = createPlanJobResponse.getJob().getId();
-//			System.out.println(planJobId);
-			//waitForJobToComplete(resourceManagerClient, planJobId);
-
-			// Get Job logs GetJobLogsRequest getJobLogsRequest =
-//			GetJobLogsResponse getJobLogsResponse = resourceManagerClient.getJobLogs(planJobId);
-//			System.out.println(getJobLogsResponse.getItems());
 			
 			CreateJobResponse createApplyJobResponse = createApplyJob(resourceManagerClient, stackId);
 			String applyJobId = createApplyJobResponse.getJob().getId();
-//				//waitForJobToComplete(resourceManagerClient, applyJobId);
 			System.out.println(applyJobId);
 
 			// Get Job Terraform state GetJobTfStateRequest getJobTfStateRequest =
@@ -93,27 +68,18 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 
       return CreateResult.create().stackId(stackId).build();
 		}
-		
-	  private static CreateJobResponse createImportStateJob(ResourceManagerClientProxy resourceManagerClient, String stackId) {
-	    CreateJobOperationDetails operationDetails = CreateImportTfStateJobOperationDetails.builder()
-	        .tfStateBase64Encoded(new byte[] {}).build();
-	    CreateJobDetails createImportStateJobDetails = CreateJobDetails.builder().stackId(stackId)
-	        .jobOperationDetails(operationDetails).build();
-	    CreateJobRequest createImportStateJobRequest = CreateJobRequest.builder()
-	        .createJobDetails(createImportStateJobDetails).build();
-	    return resourceManagerClient.submitJob(createImportStateJobRequest);
-	  }
-	  
-	  private static CreateJobResponse createPlanJob(ResourceManagerClientProxy resourceManagerClient, String stackId) {
-	    CreateJobOperationDetails operationDetails = CreatePlanJobOperationDetails.builder().build();
-	    CreateJobDetails planJobDetails = CreateJobDetails.builder().stackId(stackId)
-	        .jobOperationDetails(operationDetails).build();
-	    CreateJobRequest jobPlanRequest = CreateJobRequest.builder().createJobDetails(planJobDetails).build();
-	    return resourceManagerClient.submitJob(jobPlanRequest);
-	  }
+			  
+//	  private static CreateJobResponse createPlanJob(ResourceManagerClientProxy resourceManagerClient, String stackId) {
+//	    CreateJobOperationDetails operationDetails = CreatePlanJobOperationDetails.builder().build();
+//	    CreateJobDetails planJobDetails = CreateJobDetails.builder().stackId(stackId)
+//	        .jobOperationDetails(operationDetails).build();
+//	    CreateJobRequest jobPlanRequest = CreateJobRequest.builder().createJobDetails(planJobDetails).build();
+//	    return resourceManagerClient.submitJob(jobPlanRequest);
+//	  }
 
     private static CreateJobResponse createApplyJob(ResourceManagerClientProxy resourceManagerClient,
                                                     String stackId) {
+      
       CreateJobDetails createJobDetails = CreateJobDetails.builder()
         .stackId(stackId)
         .displayName("app-stack-test-apply-job-" + UUID.randomUUID().toString())

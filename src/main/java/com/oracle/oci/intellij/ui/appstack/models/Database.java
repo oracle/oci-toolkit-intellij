@@ -11,9 +11,9 @@ public class Database extends VariableGroup {
 
     private boolean use_existing_database;
 
-    private java.lang.String autonomous_database_display_name;
+    private String autonomous_database_display_name;
 
-    private java.lang.Object autonomous_database_admin_password;
+    private Object autonomous_database_admin_password;
 
     private int data_storage_size_in_tbs;
 
@@ -21,27 +21,29 @@ public class Database extends VariableGroup {
 
     private int ocpu_count;
 
-    private java.lang.Object autonomous_database;
+    private Object autonomous_database;
 
-    private java.lang.String autonomous_database_user;
+    private String autonomous_database_user;
 
-    private java.lang.Object autonomous_database_password;
+    private Object autonomous_database_password;
 
     private boolean use_connection_url_env;
 
-    private java.lang.String connection_url_env;
+    private String connection_url_env;
 
     private boolean use_tns_admin_env;
 
-    private java.lang.String tns_admin_env;
+    private String tns_admin_env;
 
     private boolean use_username_env;
 
-    private java.lang.String username_env;
+    private String username_env;
 
     private boolean use_password_env;
 
-    private java.lang.String password_env;
+    private String password_env;
+
+    private String db_compartment;
 
     @PropertyOrder(1)
     @VariableMetaData(title="Use existing database (Autonomous Database Serverless)",defaultVal="true",type="boolean",required=true)
@@ -221,4 +223,11 @@ public class Database extends VariableGroup {
     public void removePropertyChangeListener(PropertyChangeListener listener) {
          this.pcs.removePropertyChangeListener(listener);
      }
+    public String getDb_compartment() {
+      return db_compartment;
+    }
+    public void setDb_compartment(String db_compartment) {
+      this.db_compartment = db_compartment;
+    }
+
 }

@@ -20,14 +20,35 @@ repositories {
 }
 
 dependencies {
-    implementation("com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey:3.2.0") {
+    implementation("com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey:3.24.0") {
         exclude(group="org.slf4j", module="slf4j-api")
     }
-    implementation(files("lib/sdk/oci-java-sdk-full-3.12.0.jar"))
-    implementation(fileTree("lib/thirdparty/lib") { include("*.jar") })
-    implementation(fileTree("lib/thirdparty/jersey/lib") { include("*.jar") })
+    implementation("com.oracle.oci.sdk:oci-java-sdk-common:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-core:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-database:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-identity:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-identitydataplane:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-resourcemanager:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-vault:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-keymanagement:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
 
-    implementation ("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0") // Use the latest version
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0") // Use the latest version
     
     testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")

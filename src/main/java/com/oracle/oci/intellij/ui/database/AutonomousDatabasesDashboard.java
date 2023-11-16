@@ -4,30 +4,41 @@
  */
 package com.oracle.oci.intellij.ui.database;
 
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.List;
+import java.util.function.Function;
+
+import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.remoteServer.impl.runtime.ui.tree.actions.DeployAction;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
-import com.oracle.oci.intellij.ui.appstack.YamlLoader;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
-import com.oracle.oci.intellij.util.LogHandler;
 import com.oracle.oci.intellij.ui.common.UIUtil;
-import com.oracle.oci.intellij.ui.database.actions.*;
+import com.oracle.oci.intellij.ui.database.actions.AutonomousDatabaseBasicActions;
+import com.oracle.oci.intellij.ui.database.actions.AutonomousDatabaseMoreActions;
+import com.oracle.oci.intellij.ui.database.actions.CreateAutonomousDatabaseDialog;
 import com.oracle.oci.intellij.ui.explorer.ITabbedExplorerContent;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.beans.IntrospectionException;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.util.List;
-import java.util.function.Function;
+import com.oracle.oci.intellij.util.LogHandler;
 
 public final class AutonomousDatabasesDashboard implements PropertyChangeListener, ITabbedExplorerContent {
 
@@ -72,6 +83,7 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
     if (createADBInstanceButton != null) {
       createADBInstanceButton.setAction(new CreateAction("Create Autonomous Database"));
     }
+
   }
 
   private void initializeLabels() {
@@ -402,13 +414,24 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
 
   }
 
+//  private static class DeployAction extends AbstractAction {
+//    /**
+//     *
+//     */
+//    private static final long serialVersionUID = 1L;
+//
+//    @Override
+//    public void actionPerformed(ActionEvent e) {
+//      // TODO Auto-generated method stub
+//      
+//    }
+//
+//   }
 
 
-
-
-    @Override
-    public String getTitle() {
-        return "Autonomouse Database";
-    }
+  @Override
+  public String getTitle() {
+    return "Autonomouse Database";
+  }
 
 }

@@ -20,12 +20,14 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -84,6 +86,7 @@ import com.oracle.bmc.database.responses.ListDbVersionsResponse;
 import com.oracle.bmc.identity.IdentityClient;
 import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.identity.model.Compartment;
+import com.oracle.bmc.identity.model.Compartment.LifecycleState;
 import com.oracle.bmc.identity.model.CreateCompartmentDetails;
 import com.oracle.bmc.identity.model.RegionSubscription;
 import com.oracle.bmc.identity.requests.CreateCompartmentRequest;
@@ -134,6 +137,7 @@ import com.oracle.oci.intellij.util.LogHandler;
  */
 public class OracleCloudAccount {
   private static final AtomicReference<OracleCloudAccount> ORACLE_CLOUD_ACCOUNT_INSTANCE = new AtomicReference<>();
+  public static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
 
   private AuthenticationDetailsProvider authenticationDetailsProvider = null;
   private final IdentityClientProxy identityClientProxy = new IdentityClientProxy();
@@ -287,36 +291,55 @@ public class OracleCloudAccount {
      * @return the root compartment.
      */
     public Compartment getRootCompartment() {
-      // here i am still getting all the compartments
-      Compartment rootCompartment = getCompartmentList(authenticationDetailsProvider.getTenantId()).get(0);
-
-      String rootCompartmentName =rootCompartment.getName();
-      String tenantId = authenticationDetailsProvider.getTenantId();
-      return Compartment.builder()
-              .compartmentId(tenantId)
-              .id(rootCompartment.getId())
-              .name(rootCompartmentName + " (root)")
-              .lifecycleState(Compartment.LifecycleState.Active)
+      String compartmentId = authenticationDetailsProvider.getTenantId();
+      Compartment rootComp = Compartment.builder()
+              .compartmentId(compartmentId)
+              .id(compartmentId)
+              .name(ROOT_COMPARTMENT_NAME)
+              .lifecycleState(LifecycleState.Active)
               .build();
+      return rootComp;
     }
 
+    public List<Compartment> getCompartmentList(Compartment compartment) {
+      List<Compartment> compartmentList = new ArrayList<Compartment>();
 
-
-    public List<Compartment> getCompartmentList(String compartmentId) {
-      final List<Compartment> compartmentList = new ArrayList<>();
-
-      final ListCompartmentsResponse response = identityClient.listCompartments(
-              ListCompartmentsRequest.builder()
-                      .compartmentId(compartmentId)
-                      .lifecycleState(Compartment.LifecycleState.Active)
-                      .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible)
-                      .build());
-
-      if (response != null) {
-        compartmentList.addAll(response.getItems());
+      try {
+          ListCompartmentsResponse response = identityClient
+                  .listCompartments(ListCompartmentsRequest.builder().compartmentId(compartment.getId())
+                          .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible).build());
+          if (response != null) {
+              compartmentList = response.getItems()
+                      .stream()
+                      .filter(predicate -> !predicate.getLifecycleState().equals(LifecycleState.Deleted))
+                      .filter(predicate -> !predicate.getLifecycleState().equals(LifecycleState.Deleting))
+                      .sorted(Comparator.comparing(Compartment::getName))
+                      .collect(Collectors.toList());
+          }
+      } catch (Exception ex) {
+          ex.printStackTrace();
       }
+
+
       return compartmentList;
-    }
+  }
+
+//
+//    public List<Compartment> getCompartmentList(String compartmentId) {
+//      final List<Compartment> compartmentList = new ArrayList<>();
+//
+//      final ListCompartmentsResponse response = identityClient.listCompartments(
+//              ListCompartmentsRequest.builder()
+//                      .compartmentId(compartmentId)
+//                      .lifecycleState(Compartment.LifecycleState.Active)
+//                      .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible)
+//                      .build());
+//
+//      if (response != null) {
+//        compartmentList.addAll(response.getItems());
+//      }
+//      return compartmentList;
+//    }
 
     /**
      * Returns the list of regions.
@@ -399,6 +422,7 @@ public class OracleCloudAccount {
         identityClient.setRegion(propertyChangeEvent.getNewValue().toString());
       }
     }
+
 
     private void reset() {
       if (identityClient != null) {
@@ -916,9 +940,9 @@ public class OracleCloudAccount {
       List<StackSummary> items = listStacks.getItems();
       return items;
     }
-
+    
     public ListJobsResponse listJobs(String compartmentId, String stackId) {
-      ListJobsRequest request = ListJobsRequest.builder().compartmentId(compartmentId).build();
+      ListJobsRequest request = ListJobsRequest.builder().compartmentId(compartmentId).stackId(stackId).build();
       return resourceManagerClient.listJobs(request);
     }
 
@@ -946,10 +970,17 @@ public class OracleCloudAccount {
         CreateStackDetails.builder()
                           .compartmentId(compartmentId)
                           .configSource(zipUploadConfigSourceDetails)
+                          .displayName("Create New AppStack")
+                          .description("Creates a new App Stack")
                           .variables(variables == null ? Collections.emptyMap() : variables)
                           .build();
       CreateStackRequest createStackRequest =
-        CreateStackRequest.builder().createStackDetails(stackDetails).build();
+        CreateStackRequest.builder().createStackDetails(stackDetails)
+        .opcRequestId("app-stack-test-create-stack-request-"
+          + UUID.randomUUID()
+              .toString())
+        .opcRetryToken("app-stack-test-create-stack-retry-token-" + UUID.randomUUID().toString())
+          .build();
       CreateStackResponse createStackResponse =
         resourceManagerClient.createStack(createStackRequest);
       System.out.println("Created Stack : " + createStackResponse.getStack());
@@ -958,13 +989,13 @@ public class OracleCloudAccount {
       System.out.println(stack.getId());
       return createStackResponse;
     }
-
+    
     private String getBase64EncodingForAFile(String filePath) throws IOException {
       byte[] fileData = Files.readAllBytes(Paths.get(filePath));
       byte[] fileDataBase64Encoded = Base64.getEncoder().encode(fileData);
       return new String(fileDataBase64Encoded, StandardCharsets.UTF_8);
     }
-    
+
     public CreateJobResponse submitJob(CreateJobRequest createPlanJobRequest) {
       return resourceManagerClient.createJob(createPlanJobRequest);
     }

@@ -545,7 +545,7 @@ class Utils{
              */
             // we have to pop up the compartment selection ....
             Compartment rootCompartment = OracleCloudAccount.getInstance().getIdentityClient().getRootCompartment();
-            List<Compartment> compartmentList = OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(rootCompartment.getCompartmentId());
+            List<Compartment> compartmentList = OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(rootCompartment);
 
             return compartmentList;
         });

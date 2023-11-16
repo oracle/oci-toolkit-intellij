@@ -4,34 +4,40 @@
  */
 package com.oracle.oci.intellij.ui.appstack;
 
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.IntrospectionException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractAction;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.table.DefaultTableModel;
 
+import org.jetbrains.annotations.Nullable;
+
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
-import com.intellij.ui.wizard.WizardDialog;
-import com.intellij.ui.wizard.WizardModel;
-import com.intellij.ui.wizard.WizardNavigationState;
-import com.intellij.ui.wizard.WizardStep;
+import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary.LifecycleState;
+import com.oracle.bmc.resourcemanager.model.JobSummary;
+import com.oracle.bmc.resourcemanager.model.LogEntry;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
+import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;
@@ -41,6 +47,8 @@ import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Severi
 import com.oracle.oci.intellij.common.command.CommandStack;
 import com.oracle.oci.intellij.ui.appstack.command.CreateStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.DeleteStackCommand;
+import com.oracle.oci.intellij.ui.appstack.command.GetStackJobsCommand;
+import com.oracle.oci.intellij.ui.appstack.command.GetStackJobsCommand.GetStackJobsResult;
 import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand.ListStackResult;
 import com.oracle.oci.intellij.ui.appstack.uimodel.AppStackTableModel;
@@ -85,7 +93,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     }
     
     if (createAppStackButton != null) {
-      createAppStackButton.setAction(new CreateAction("Create New AppStack", this));
+      createAppStackButton.setAction(new CreateAction(this, "Create New AppStack"));
     }
     
     if (deleteAppStackButton != null) {
@@ -118,39 +126,147 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 //    });
 
     appStacksTable.addMouseListener(new MouseAdapter() {
-//      @Override
-//      public void mouseClicked(MouseEvent e){
-//        if (e.getButton() == 3) {
-//          JPopupMenu popupMenu;
-//          AutonomousDatabaseSummary selectedSummary = null;
-//          if (appStacksTable.getSelectedRowCount() == 1) {
-//            Object selectedObject = appStacksTable.getModel()
-//                    .getValueAt(appStacksTable.getSelectedRow(), 2);
-//            if (selectedObject instanceof AutonomousDatabaseSummary) {
-//              selectedSummary = (AutonomousDatabaseSummary) appStacksTable
-//                      .getModel().getValueAt(appStacksTable.getSelectedRow(), 2);
-//            }
-//          }
-//          // TODO:
-//          System.out.println("Pop!");
-////          popupMenu = getADBActionMenu(selectedSummary);
-////          popupMenu.show(e.getComponent(), e.getX(), e.getY());
-//        }
-//      }
+      @Override
+      public void mouseClicked(MouseEvent e){
+        if (e.getButton() == 3) {
+          JPopupMenu popupMenu;
+          StackSummary selectedSummary = null;
+          if (appStacksTable.getSelectedRowCount() == 1) {
+            Object selectedObject = appStackList.get(appStacksTable.getSelectedRow());
+            if (selectedObject instanceof StackSummary) {
+              selectedSummary = (StackSummary) selectedObject;
+            }
+          }
+          // TODO:
+          System.out.println("Pop!");
+          popupMenu = getStackSummaryActionMenu(selectedSummary);
+          popupMenu.show(e.getComponent(), e.getX(), e.getY());
+        }
+      }
     });
   }
 
-//  private JPopupMenu getADBActionMenu(AutonomousDatabaseSummary selectedSummary) {
-//    final JPopupMenu popupMenu = new JPopupMenu();
+  private static class StackJobDialog extends DialogWrapper {
+
+    private final List<JobSummary> jobs;
+
+    protected StackJobDialog(List<JobSummary> jobs) {
+      super(true);
+      this.jobs = new ArrayList<>(jobs);
+      init();
+      setTitle("Stack Job");
+      setOKButtonText("Ok");
+    }
+
+    @Override
+    protected @Nullable JComponent createCenterPanel() {
+      JPanel centerPanel = new JPanel();
+      centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+
+      DefaultTableModel jobsModel = new DefaultTableModel();
+      jobsModel.addColumn("Name");
+      jobsModel.addColumn("Operation");
+      jobsModel.addColumn("Status");
+      jobsModel.addColumn("Time Created");
+      List<Object> row = new ArrayList<>();
+      this.jobs.forEach(j -> {
+        row.add(j.getDisplayName());
+        row.add(j.getOperation());
+        row.add(j.getLifecycleState());
+        row.add(j.getTimeCreated());
+        jobsModel.addRow(row.toArray());
+        row.clear();
+      });
+
+      JTable jobsTable = new JTable();
+      jobsTable.setModel(jobsModel);
+      centerPanel.add(jobsTable);
+      
+      JTextArea textArea = new JTextArea();
+//      textArea.setText("Hello!");
+      textArea.setLineWrap(true);
+      textArea.setEditable(false);
+      textArea.setVisible(true);
+
+      JScrollPane scroll = new JScrollPane (textArea);
+      scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+            scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+
+      centerPanel.add(scroll);
+  //    centerPanel.add(textArea);
+
+      jobsTable.addMouseListener(new  MouseAdapter() {
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+          if (e.getButton() == MouseEvent.BUTTON1) {
+            if (jobsTable.getSelectedRowCount() == 1) {
+              int selectedRow = jobsTable.getSelectedRow();
+              JobSummary jobSummary = jobs.get(selectedRow);
+              String id = jobSummary.getId();
+              GetJobLogsResponse jobLogs = 
+                OracleCloudAccount.getInstance().getResourceManagerClientProxy().getJobLogs(id);
+              List<LogEntry> items = jobLogs.getItems();
+              textArea.setText(null);
+              StringBuilder builder = new StringBuilder();
+              for (LogEntry logEntry : items) {
+                builder.append(logEntry.getMessage());
+                builder.append("\n");
+              }
+              textArea.setText(builder.toString());
+            }
+          }
+        }
+      });
+
+      return centerPanel;
+    }
+  }
+
+  private static class LoadStackJobsAction extends AbstractAction {
+
+    private static final long serialVersionUID = 1463690182909882687L;
+    private StackSummary stack;
+    
+    public LoadStackJobsAction(StackSummary stack) {
+      super("View Jobs..");
+      this.stack = stack;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      ResourceManagerClientProxy resourceManagerClientProxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+      GetStackJobsCommand command = new GetStackJobsCommand(resourceManagerClientProxy, 
+                                        stack.getCompartmentId(), stack.getId());
+      // TODO: bother with command stack?
+      try {
+        GetStackJobsResult execute = command.execute();
+        if (execute.isOk()) {
+          
+          execute.getJobs().forEach(job -> System.out.println(job));
+          StackJobDialog dialog = new StackJobDialog(execute.getJobs());
+          dialog.show();
+
+        }
+        else if (execute.getException() != null) {
+          throw execute.getException();
+        }
+      } catch (Throwable e1) {
+        throw new RuntimeException(e1);
+      }
+    }
+  }
+  
+  private JPopupMenu getStackSummaryActionMenu(StackSummary selectedSummary) {
+    final JPopupMenu popupMenu = new JPopupMenu();
 //
 //    popupMenu.add(new JMenuItem(new RefreshAction(this, "Refresh")));
 //    popupMenu.addSeparator();
 //
-//    if (selectedSummary != null) {
+    if (selectedSummary != null) {
+      popupMenu.add(new JMenuItem(new LoadStackJobsAction(selectedSummary)));
 //      if (selectedSummary.getLifecycleState() == LifecycleState.Available) {
-//        popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(selectedSummary,
-//                AutonomousDatabaseBasicActions.ActionType.STOP)));
-//
+
 //        popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(
 //                AutonomousDatabaseMoreActions.Action.RESTORE_ADB,
 //                selectedSummary, "Restore")));
@@ -213,10 +329,9 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 //
 //      popupMenu.add(new JMenuItem(new AutonomousDatabaseBasicActions(
 //              selectedSummary, AutonomousDatabaseBasicActions.ActionType.SERVICE_CONSOLE)));
-//    }
-//
-//    return popupMenu;
-//  }
+    }
+    return popupMenu;
+  }
 
   public void populateTableData() {
     ((DefaultTableModel) appStacksTable.getModel()).setRowCount(0);
@@ -333,66 +448,39 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     private static final long serialVersionUID = 1L;
     private AppStackDashboard dashboard;
 
-    public CreateAction(String actionName, AppStackDashboard dashboard) {
+    public CreateAction(AppStackDashboard dashboard, String actionName) {
       super(actionName);
       this.dashboard = dashboard;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
+//      try {
+//        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack();
+//      } catch (IOException e1) {
+//        // TODO Auto-generated catch block
+//        e1.printStackTrace();
+//      }
 
-
-////      try {
-//      WizardModel wizardModel = new WizardModel("New Model");
-//      WizardStep wizardStep = new WizardStep() {
-//        @Override
-//        public JComponent prepare(WizardNavigationState state) {
-//         JPanel panel = new JPanel();
-//         panel.add(new Label("hi all"));
-//         panel.add(new TextField());
-//          return panel;
-//        }
-//
-//        @Override
-//        public WizardStep onNext(WizardModel model) {
-//         this.
-//          return super.onNext(model);
-//        }
-//      };
-//
-//      WizardStep wizardStep2 = new WizardStep() {
-//        @Override
-//        public JComponent prepare(WizardNavigationState state) {
-//          JPanel panel = new JPanel();
-//          panel.add(new Label(" hi one!"));
-//          panel.add(new TextField());
-//          return panel;
-//        }
-//
-//      };
-//      wizardModel.add(wizardStep2);
-//      wizardModel.add(wizardStep);
-//        Wizarrd new1 = new Wizarrd(ProjectManager.getInstance().getDefaultProject(),true,wizardModel);
- try {
-
-   YamlLoader.Load();
+      try {
+        dashboard.createAppStackButton.setEnabled(false);
+        YamlLoader.Load();
+        dashboard.createAppStackButton.setEnabled(true);
       } catch (IOException | IntrospectionException | InvocationTargetException | IllegalAccessException ex) {
         try {
           ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
           String compartmentId = SystemPreferences.getCompartmentId();
           ClassLoader cl = AppStackDashboard.class.getClassLoader();
-          CreateStackCommand command =
+          CreateStackCommand command = 
             new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
           this.dashboard.commandStack.execute(command);
         } catch (Exception e1) {
           throw new RuntimeException(e1);
         }
       }
-
-//      new1.showAndGet();
     }
   }
-
+  
   public static class DeleteAction extends AbstractAction {
 
     private static final long serialVersionUID = 7216149349340773007L;
@@ -421,7 +509,6 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         }
       }
     }
-    
   }
 
   @Override
@@ -429,13 +516,5 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     return "Application Stack";
   }
 
-}
-
-
-class Wizarrd extends WizardDialog{
-
-  public Wizarrd(Project project, boolean canBeParent, WizardModel model) {
-    super(project, canBeParent, model);
-  }
 
 }

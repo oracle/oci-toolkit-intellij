@@ -4,6 +4,22 @@
  */
 package com.oracle.oci.intellij.ui.account;
 
+import java.awt.event.MouseEvent;
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+
+import org.jetbrains.annotations.NotNull;
+
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.oracle.bmc.Region;
@@ -11,14 +27,6 @@ import com.oracle.bmc.identity.model.RegionSubscription;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.common.Icons;
-import org.jetbrains.annotations.NotNull;
-
-import javax.swing.*;
-import java.awt.event.MouseEvent;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Action handler for selection event of UI component 'Region'.
@@ -87,7 +95,10 @@ public class RegionAction extends AnAction {
         put("eu-dcc-dublin-1", Icons.REGION_IRELAND.getPath());
         put("eu-dcc-rating-2",Icons.REGION_GERMANY.getPath());
         put("eu-dcc-rating-1",Icons.REGION_GERMANY.getPath());
-
+        put("eu-jovanovac-1", Icons.REGION_SERBIA.getPath());
+        put("eu-madrid-2", Icons.REGION_SPAIN.getPath());
+        put("eu-frankfurt-2", Icons.REGION_GERMANY.getPath());
+        put("mx-monterrey-1", Icons.REGION_MEXICO.getPath());
       }
     };
     String regionName = SystemPreferences.getRegionName();
@@ -111,8 +122,8 @@ public static ImageIcon getCurrentRegionIcon(String regionName) {
     return   new ImageIcon(RegionAction.class.getResource(Icons.DEFAULT_REGION.getPath()));
   }
 
-  public static HashMap<String,String> getIcons(){
-    return iconMap;
+  public static Map<String,String> getIcons(){
+    return Collections.unmodifiableMap(iconMap);
   }
 
   public RegionAction(){
