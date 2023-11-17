@@ -7,7 +7,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
-import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersDialog;
+import com.oracle.oci.intellij.ui.appstack.actions.AppStackParameterWizardDialog;
+import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardModel;
+import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardStep;
 import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 import com.oracle.oci.intellij.ui.appstack.models.*;
 import com.oracle.oci.intellij.ui.appstack.models.converter.CompositeConverter;
@@ -33,14 +35,6 @@ public class YamlLoader {
     static Compartment compartment ;
 
     public static void Load() throws StreamReadException, DatabindException, IOException, IntrospectionException, InvocationTargetException, IllegalAccessException {
-//        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-//        LinkedHashMap readValue =
-//                mapper.readValue(new File("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/interface.yaml"), LinkedHashMap.class);
-
-//        LinkedHashMap variables = (LinkedHashMap) readValue.get("variables");
-
-
-//        List<LinkedHashMap> groups = (List<LinkedHashMap>) readValue.get("variableGroups");
 
         List<VariableGroup> varGroups = new ArrayList<>();
         varGroups.add(new General_Configuration());
@@ -57,9 +51,10 @@ public class YamlLoader {
 
 
 
-//        mapToDescriptors(variables,varGroups);
-
+        CustomWizardStep.variableGroups = new LinkedHashMap<>();
         for (VariableGroup varGroup:varGroups){
+
+            CustomWizardStep.variableGroups.put(varGroup.getClass().getSimpleName(),varGroup);
             Class<?> appVarGroupClazz = varGroup.getClass();
             BeanInfo beanInfo = Introspector.getBeanInfo(appVarGroupClazz);
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
@@ -281,8 +276,9 @@ public class YamlLoader {
 
 
     public static void createUIForm(List<VariableGroup> varGroups,LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
-        AppStackParametersDialog dialog =new AppStackParametersDialog(varGroups,descriptorsState) ;
-
+        CustomWizardModel customWizardModel = new CustomWizardModel(varGroups,descriptorsState);
+        AppStackParameterWizardDialog dialog = new AppStackParameterWizardDialog(customWizardModel);
+        dialog.show();
     }
     private static void generateVariableGroup(LinkedHashMap<String, Object> group, LinkedHashMap<String, Object> varMetadatas) throws IOException {
         String title = (String) group.get("title");
