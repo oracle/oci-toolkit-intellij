@@ -3,6 +3,7 @@ package com.oracle.oci.intellij.ui.appstack.actions;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.wizard.WizardModel;
 import com.intellij.ui.wizard.WizardStep;
+
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 
 import java.beans.BeanInfo;
@@ -13,8 +14,7 @@ import java.util.*;
 
 public class CustomWizardModel extends WizardModel {
     private final List<WizardStep> mySteps = new ArrayList<>();
-    private JBList<String> groupMenuList = new JBList<>() ;
-
+    private  JBList<String> groupMenuList = new JBList<>() ;
 
 
     List<VariableGroup> varGroups;

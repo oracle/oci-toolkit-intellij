@@ -29,6 +29,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.table.DefaultTableModel;
 
+import com.oracle.oci.intellij.ui.appstack.test.YamlLoader;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.notification.NotificationType;
@@ -464,9 +465,10 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
       try {
 //        dashboard.createAppStackButton.setEnabled(false);
-        YamlLoader.Load();
+//        YamlLoader.Load();
+        YamlLoader.load();
 //        dashboard.createAppStackButton.setEnabled(true);
-      } catch (IOException | IntrospectionException | InvocationTargetException | IllegalAccessException ex) {
+      } catch (IntrospectionException ex) {
         try {
           ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
           String compartmentId = SystemPreferences.getCompartmentId();
@@ -477,6 +479,8 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         } catch (Exception e1) {
           throw new RuntimeException(e1);
         }
+      } catch (InvocationTargetException | IllegalAccessException ex) {
+          throw new RuntimeException(ex);
       }
     }
   }

@@ -15,11 +15,15 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.lang.reflect.Method;
 
-public class AppStackParameterWizardDialog extends WizardDialog {
-    public AppStackParameterWizardDialog( WizardModel model) {
-        super(true, model);
+public class AppStackParametersWizardDialog extends WizardDialog {
+    public static  boolean isProgramaticChange = false;
+
+    public AppStackParametersWizardDialog(WizardModel wizardModel){
+        super(true ,  wizardModel);
     }
-    public static boolean isProgrammaticChange = false;
+
+
+
 
     @Override
     protected JComponent createCenterPanel() {
@@ -29,7 +33,7 @@ public class AppStackParameterWizardDialog extends WizardDialog {
 
         mainPanel.add(leftPanel,BorderLayout.EAST);
         mainPanel.add(wizard,BorderLayout.WEST);
-        mainPanel.setPreferredSize(new JBDimension(930,600));
+        mainPanel.setPreferredSize(new JBDimension(980,600));
         return mainPanel;
     }
 
@@ -44,17 +48,15 @@ public class AppStackParameterWizardDialog extends WizardDialog {
             listModel.addElement(var.getClass().getSimpleName().replaceAll("_"," "));
         }
 
-
-        JBList<String> menuList = new JBList<>(listModel);
-        CustomWizardModel customWizardModel = ((CustomWizardModel) this.myModel);
-        customWizardModel.setGroupMenuList(menuList);
-        isProgrammaticChange = true;
+        JBList menuList = new JBList<>(listModel);
+        appStackModel.setGroupMenuList(menuList);
+        isProgramaticChange = true;
         menuList.setSelectedIndex(0);
-        isProgrammaticChange = false;
+        isProgramaticChange = false;
         menuList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting() && !isProgrammaticChange) {
+                if (!e.getValueIsAdjusting() && !isProgramaticChange) {
                     int selectedIndex = menuList.getSelectedIndex();
                     WizardStep nextStep =  appStackModel.getMySteps().get(selectedIndex);
                     if (nextStep == WizardStep.FORCED_GOAL_DROPPED) {
@@ -91,12 +93,10 @@ public class AppStackParameterWizardDialog extends WizardDialog {
                 itemPanel.setOpaque(true);
                 Color bg = isSelected ? UIUtil.getListSelectionBackground(true) : UIUtil.getListBackground();
                 itemPanel.setBackground(bg);
-//                VariableGroup variableGroup = (VariableGroup) value;
-
-                JLabel label = (JLabel) super.getListCellRendererComponent(list,value, index, isSelected, cellHasFocus);
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 label.setBackground(bg);
                 label.setForeground(UIUtil.getListForeground());
-                label.setFont(label.getFont().deriveFont(Font.BOLD));
+                label.setFont(label.getFont().deriveFont(1));
                 label.setBorder(JBUI.Borders.emptyLeft(20));
                 itemPanel.add(label, "West");
                 itemPanel.setPreferredSize(new JBDimension(240,30));
@@ -116,4 +116,6 @@ public class AppStackParameterWizardDialog extends WizardDialog {
     }
 
 
+
 }
+
