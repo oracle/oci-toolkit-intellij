@@ -33,7 +33,7 @@ public class AppStackParametersWizardDialog extends WizardDialog {
 
         mainPanel.add(leftPanel,BorderLayout.EAST);
         mainPanel.add(wizard,BorderLayout.WEST);
-        mainPanel.setPreferredSize(new JBDimension(980,600));
+        mainPanel.setPreferredSize(new JBDimension(1100,780));
         return mainPanel;
     }
 
@@ -94,12 +94,14 @@ public class AppStackParametersWizardDialog extends WizardDialog {
                 Color bg = isSelected ? UIUtil.getListSelectionBackground(true) : UIUtil.getListBackground();
                 itemPanel.setBackground(bg);
                 JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                itemPanel.setToolTipText((String) value);
                 label.setBackground(bg);
                 label.setForeground(UIUtil.getListForeground());
                 label.setFont(label.getFont().deriveFont(1));
                 label.setBorder(JBUI.Borders.emptyLeft(20));
                 itemPanel.add(label, "West");
-                itemPanel.setPreferredSize(new JBDimension(240,30));
+                setPreferredSize(new JBDimension(270,30));
+//                itemPanel.setPreferredSize(new JBDimension(340,30));
 
                 return itemPanel;
             }

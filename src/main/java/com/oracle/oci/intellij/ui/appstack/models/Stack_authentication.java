@@ -13,6 +13,7 @@ public class Stack_authentication extends VariableGroup {
 
     private java.lang.Object current_user_token;
 
+
     private boolean use_existing_vault;
 
     private java.lang.String new_vault_display_name;

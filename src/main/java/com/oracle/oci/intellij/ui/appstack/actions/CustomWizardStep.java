@@ -2,6 +2,7 @@ package com.oracle.oci.intellij.ui.appstack.actions;
 
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
+import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.wizard.WizardModel;
 import com.intellij.ui.wizard.WizardNavigationState;
 import com.intellij.ui.wizard.WizardStep;
@@ -25,33 +26,38 @@ import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CustomWizardStep extends WizardStep {
+    JBScrollPane mainScrollPane;
     JPanel mainPanel;
     LinkedHashMap <String, JComponent> varPanels= new LinkedHashMap<>();
     static Map<String , JComponent> pdComponents = new LinkedHashMap<>();
     LinkedHashMap<String, PropertyDescriptor> descriptorsState;
-    List <JLabel> errorLabels = new ArrayList<>() ;
+//    List <JLabel> errorLabels = new ArrayList<>() ;
+    static Map<String , JComponent> errorLabels = new LinkedHashMap<>();
+
 
     public static Map<String, VariableGroup> variableGroups ;
 
 
 
     public CustomWizardStep(VariableGroup varGroup, PropertyDescriptor[] propertyDescriptors, LinkedHashMap<String, PropertyDescriptor> descriptorsState, List<VariableGroup> varGroups) {
+        mainPanel = new JPanel();
+        mainScrollPane = new JBScrollPane(mainPanel);
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
 
         this.descriptorsState = descriptorsState;
 
         String className = varGroup.getClass().getSimpleName().replaceAll("_"," ");
         mainPanel.setBorder(BorderFactory.createTitledBorder(className));
-        mainPanel.setLayout(new GridLayout(propertyDescriptors.length, 1));
+//        mainPanel.setLayout(new GridLayout(propertyDescriptors.length, 1));
+
 
         for (PropertyDescriptor pd : propertyDescriptors) {
             if (pd.getName().equals("class") || pd.getName().equals("db_compartment")) {
@@ -68,7 +74,11 @@ public class CustomWizardStep extends WizardStep {
 
     private JPanel createVarPanel( PropertyDescriptor pd,VariableGroup variableGroup) throws InvocationTargetException, IllegalAccessException {
         JPanel varPanel = new JPanel(new BorderLayout());
+        varPanel.setPreferredSize(new Dimension(760, 60));
+        varPanel.setMaximumSize(varPanel.getPreferredSize());
 
+
+        JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel label = new JLabel(pd.getDisplayName());
         label.setToolTipText( pd.getShortDescription());
         if (pd.getValue("required") != null) {
@@ -77,14 +87,20 @@ public class CustomWizardStep extends WizardStep {
                 label.setText(label.getText() + " *");
             }
         }
+        labelPanel.add(label);
+        label.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
+
+        JPanel componentErrorPanelFlow = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JPanel componentErrorPanel = new JPanel();
-        componentErrorPanel.setLayout(new BoxLayout(componentErrorPanel, BoxLayout.Y_AXIS));
+        componentErrorPanel.setLayout(new BorderLayout());
 
         JLabel errorLabel = new JLabel();
-        errorLabels.add(errorLabel);
+        errorLabels.put(pd.getName(), errorLabel);
         errorLabel.setVisible(false);
         errorLabel.setForeground(JBColor.RED);
+        errorLabel.setBorder(BorderFactory.createEmptyBorder(0,80,0,0));
+
 
 
 
@@ -97,10 +113,11 @@ public class CustomWizardStep extends WizardStep {
         component.setEnabled(isVisible);
 
 
-        varPanel.add(label, BorderLayout.WEST);
-        varPanel.add(componentErrorPanel,BorderLayout.EAST);
-        varPanel.setPreferredSize(new JBDimension(660,30));
-        varPanel.setMaximumSize( new JBDimension(660,30));
+        varPanel.add(labelPanel, BorderLayout.WEST);
+        componentErrorPanelFlow.add(componentErrorPanel);
+        varPanel.add(componentErrorPanelFlow,BorderLayout.EAST);
+//        varPanel.setPreferredSize(new JBDimension(660,30));
+//        varPanel.setMaximumSize( new JBDimension(660,30));
         return varPanel;
     }
 
@@ -169,7 +186,7 @@ public class CustomWizardStep extends WizardStep {
                 pd.setValue("value",checkBox.isSelected());
                 try {
                     pd.getWriteMethod().invoke(varGroup,checkBox.isSelected());
-                    updateVisibility(pd);
+                    updateVisibility(pd,varGroup);
 
                 } catch (IllegalAccessException | InvocationTargetException ex) {
                     throw new RuntimeException(ex);
@@ -188,7 +205,7 @@ public class CustomWizardStep extends WizardStep {
                 JPanel compartmentPanel = new JPanel();
                 JButton selectCompartmentBtn  = new JButton("select");
                 JTextField compartmentName = new JTextField("");
-                compartmentName.setPreferredSize(new Dimension(200,30));
+                compartmentName.setPreferredSize(new Dimension(260,30));
                 compartmentName.setEnabled(false);
                 compartmentPanel.add(compartmentName);
                 compartmentPanel.add(selectCompartmentBtn);
@@ -288,22 +305,37 @@ public class CustomWizardStep extends WizardStep {
                     ListCellRenderer res = comboBox.getRenderer();
                     System.out.println(res);
 
-                    comboBox.addItemListener(e -> {
-                        if (e.getStateChange() == ItemEvent.SELECTED) {
-
-                            pd.setValue("value", comboBox.getSelectedItem());
-                            try {
-                                pd.getWriteMethod().invoke(varGroup,comboBox.getSelectedItem());
-                            } catch (IllegalAccessException | InvocationTargetException ex) {
-                                throw new RuntimeException(ex);
-                            }
-                            updateDependencies(pd, varGroup);
-                            updateVisibility(pd);
-                        }
-
-                    });
+//                    comboBox.addItemListener(e -> {
+//                        if (e.getStateChange() == ItemEvent.SELECTED) {
+//
+//                            pd.setValue("value", comboBox.getSelectedItem());
+//                            try {
+//                                pd.getWriteMethod().invoke(varGroup,comboBox.getSelectedItem());
+//                            } catch (IllegalAccessException | InvocationTargetException ex) {
+//                                throw new RuntimeException(ex);
+//                            }
+//                            updateDependencies(pd, varGroup);
+//                            updateVisibility(pd);
+//                        }
+//
+//                    });
 
                 }
+
+                comboBox.addItemListener(e -> {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+
+                        pd.setValue("value", comboBox.getSelectedItem());
+                        try {
+                            pd.getWriteMethod().invoke(varGroup,comboBox.getSelectedItem());
+                        } catch (IllegalAccessException | InvocationTargetException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        updateDependencies(pd, varGroup);
+                        updateVisibility(pd,varGroup);
+                    }
+
+                });
 
                 if (pd.getValue("default") != null) {
                     comboBox.setSelectedItem(pd.getValue("default"));
@@ -380,7 +412,7 @@ public class CustomWizardStep extends WizardStep {
             component = textField;
         }
         pdComponents.put(pd.getName(),component);
-        component.setPreferredSize(new JBDimension(270,30));
+        component.setPreferredSize(new JBDimension(350,40));
 
 
         return component;
@@ -395,14 +427,53 @@ public class CustomWizardStep extends WizardStep {
         }
     }
 
-    private void updateVisibility(PropertyDescriptor pd) {
+    private void updateVisibility(PropertyDescriptor pd,VariableGroup variableGroup) {
         List<String> dependencies = Utils.visibilty.get(pd.getName());
         if (dependencies != null) {
 
             for (String dependency : dependencies) {
-                JComponent varPanel = pdComponents.get(dependency);
+                JComponent dependencyComponent  = pdComponents.get(dependency);
+                if (dependencyComponent == null) continue;
+
                 PropertyDescriptor dependentPd = descriptorsState.get(dependency);
-                varPanel.setEnabled(isVisible((String) dependentPd.getValue("visible")));
+                boolean isVisible = isVisible((String) dependentPd.getValue("visible"));
+                dependencyComponent.setEnabled(isVisible);
+
+                if (dependencyComponent instanceof JPanel){
+                    JPanel dependencyComponentP = (JPanel) dependencyComponent;
+                    Component[] components = dependencyComponentP.getComponents();
+                    for (Component component:
+                            components) {
+                        if (component instanceof JButton){
+                            component.setEnabled(false);
+                        }
+                    }
+                }
+                if (!isVisible){
+                    // empty the field from it's value
+
+                    JLabel errorLabel = (JLabel) errorLabels.get(dependency);
+                    if (errorLabel == null) continue;
+                    if (dependencyComponent instanceof JTextField){
+                        errorLabel.setVisible(false);
+                        dependencyComponent.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+                        ((JTextField) dependencyComponent).setText("");
+                        dependentPd.setValue("value","");
+                        String className = dependentPd.getReadMethod().getDeclaringClass().getSimpleName();
+
+                        VariableGroup varGroup = variableGroups.get(className);
+                        try {
+                            dependentPd.getWriteMethod().invoke(varGroup,"");
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+                        errorLabel.setText("");
+                    }
+
+
+                }
+
+
             }
         }
     }
@@ -457,7 +528,7 @@ public class CustomWizardStep extends WizardStep {
 
     @Override
     public JComponent prepare(WizardNavigationState state) {
-        return mainPanel;
+        return mainScrollPane;
     }
 
     @Override
