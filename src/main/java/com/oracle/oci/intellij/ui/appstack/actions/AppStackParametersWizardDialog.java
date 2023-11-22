@@ -53,12 +53,21 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         isProgramaticChange = true;
         menuList.setSelectedIndex(0);
         isProgramaticChange = false;
+        final int[] lastSelectedIndex = {0}; // Initialize with -1 to indicate no selection initially
         menuList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 if (!e.getValueIsAdjusting() && !isProgramaticChange) {
                     int selectedIndex = menuList.getSelectedIndex();
-                    WizardStep nextStep =  appStackModel.getMySteps().get(selectedIndex);
+                    WizardStep nextStep =null;
+                    boolean ischangeValide = true;
+                    CustomWizardStep currentStep = (CustomWizardStep) appStackModel.getMySteps().get(lastSelectedIndex[0]);
+                    nextStep = currentStep.doValidate();
+                    if (nextStep != null){
+                        ischangeValide = false;
+                    }
+
+                    nextStep = nextStep != null ? nextStep: appStackModel.getMySteps().get(selectedIndex);
                     if (nextStep == WizardStep.FORCED_GOAL_DROPPED) {
                         appStackModel.cancel();
                         return;
@@ -82,6 +91,15 @@ public class AppStackParametersWizardDialog extends WizardDialog {
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
+                    if (!ischangeValide){
+                        isProgramaticChange = true;
+                        menuList.setSelectedIndex(lastSelectedIndex[0]);
+                        isProgramaticChange = false;
+                    }else {
+                        lastSelectedIndex[0] = selectedIndex;
+                    }
+
+
                 }
             }
         });

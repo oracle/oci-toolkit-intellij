@@ -1,5 +1,6 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
@@ -43,6 +44,7 @@ public class CustomWizardStep extends WizardStep {
 
 
     public static Map<String, VariableGroup> variableGroups ;
+    List<PropertyDescriptor> stepPropertyDescriptors;
 
 
 
@@ -50,6 +52,7 @@ public class CustomWizardStep extends WizardStep {
         mainPanel = new JPanel();
         mainScrollPane = new JBScrollPane(mainPanel);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        stepPropertyDescriptors = new ArrayList<>();
 
 
         this.descriptorsState = descriptorsState;
@@ -64,6 +67,7 @@ public class CustomWizardStep extends WizardStep {
                 continue;
             }
             try {
+                stepPropertyDescriptors.add(pd);
                 mainPanel.add(createVarPanel(pd,varGroup))  ;
             } catch (InvocationTargetException | IllegalAccessException e) {
                 throw new RuntimeException(e);
@@ -328,6 +332,9 @@ public class CustomWizardStep extends WizardStep {
                         pd.setValue("value", comboBox.getSelectedItem());
                         try {
                             pd.getWriteMethod().invoke(varGroup,comboBox.getSelectedItem());
+                            errorLabel.setVisible(false);
+                            comboBox.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+                            errorLabel.setText("");
                         } catch (IllegalAccessException | InvocationTargetException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -363,6 +370,21 @@ public class CustomWizardStep extends WizardStep {
                 try {
                     pd.setValue("value",spinner.getValue());
                     pd.getWriteMethod().invoke(varGroup,spinner.getValue());
+
+
+
+                        if ( pd.getValue("required") != null && (boolean) pd.getValue("required") && (int)spinner.getValue() == 0 ) {
+                            spinner.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+                            errorLabel.setVisible(true);
+                            errorLabel.setText("This field is required");
+                            return;
+                        }
+
+                        errorLabel.setVisible(false);
+                        spinner.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+                        errorLabel.setText("");
+
+
                 } catch (IllegalAccessException | InvocationTargetException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -445,7 +467,7 @@ public class CustomWizardStep extends WizardStep {
                     for (Component component:
                             components) {
                         if (component instanceof JButton){
-                            component.setEnabled(false);
+                            component.setEnabled(isVisible);
                         }
                     }
                 }
@@ -533,6 +555,12 @@ public class CustomWizardStep extends WizardStep {
 
     @Override
     public WizardStep onNext(WizardModel model) {
+        WizardStep nextWizardStep = doValidate();
+        if (nextWizardStep != null){
+            return nextWizardStep;
+        }
+
+
         CustomWizardModel appStackWizardModel = (CustomWizardModel) model;
         AppStackParametersWizardDialog.isProgramaticChange = true;
         appStackWizardModel.getGroupMenuList().setSelectedIndex(appStackWizardModel.getGroupMenuList().getSelectedIndex()+1);
@@ -540,13 +568,45 @@ public class CustomWizardStep extends WizardStep {
         return super.onNext(model);
     }
 
+    public  WizardStep doValidate() {
+        boolean isvalide = true ;
+        JComponent errorComponent = null;
+        PropertyDescriptor errorPd = null;
+        for (PropertyDescriptor pd:
+                stepPropertyDescriptors) {
+            if (pdComponents.get(pd.getName()).isEnabled() && (boolean)pd.getValue("required")){
+                if (pd.getValue("value")== null || pd.getValue("value").equals("")){
+                    errorPd = pd;
+                    errorComponent = pdComponents.get(pd.getName());
+                    isvalide = false;
+                    break;
+                }
+            }
+        }
+        if (!isvalide){
+            errorComponent.grabFocus();
+            errorComponent.requestFocusInWindow();
+            JLabel errorLabel = (JLabel) errorLabels.get(errorPd.getName());
+            errorLabel.setVisible(true);
+            errorLabel.setText("This field is required");
+            errorComponent.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+            return this;
+        }
+        return null;
+    }
+
     @Override
     public WizardStep onPrevious(WizardModel model) {
+        WizardStep previousWizardStep = doValidate();
+        if (previousWizardStep != null){
+            return previousWizardStep;
+        }
+
+
         CustomWizardModel appStackWizardModel = (CustomWizardModel) model;
         AppStackParametersWizardDialog.isProgramaticChange = true;
         appStackWizardModel.getGroupMenuList().setSelectedIndex(appStackWizardModel.getGroupMenuList().getSelectedIndex()-1);
         AppStackParametersWizardDialog.isProgramaticChange = false;
-
         return super.onPrevious(model);
     }
 }
