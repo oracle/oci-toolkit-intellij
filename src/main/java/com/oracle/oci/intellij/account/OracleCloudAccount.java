@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -81,6 +83,7 @@ import com.oracle.bmc.identity.IdentityClient;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.CreateCompartmentDetails;
 import com.oracle.bmc.identity.model.RegionSubscription;
+import com.oracle.bmc.identity.model.Compartment.LifecycleState;
 import com.oracle.bmc.identity.requests.CreateCompartmentRequest;
 import com.oracle.bmc.identity.requests.DeleteCompartmentRequest;
 import com.oracle.bmc.identity.requests.GetCompartmentRequest;
@@ -99,6 +102,7 @@ import com.oracle.oci.intellij.util.LogHandler;
  * The Oracle Cloud account configurator and accessor.
  */
 public class OracleCloudAccount {
+  public static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
   private static final AtomicReference<OracleCloudAccount> ORACLE_CLOUD_ACCOUNT_INSTANCE = new AtomicReference<>();
 
   private AuthenticationDetailsProvider authenticationDetailsProvider = null;
@@ -245,36 +249,38 @@ public class OracleCloudAccount {
      * @return the root compartment.
      */
     public Compartment getRootCompartment() {
-      // here i am still getting all the compartments
-      Compartment rootCompartment = getCompartmentList(authenticationDetailsProvider.getTenantId()).get(0);
-
-      String rootCompartmentName =rootCompartment.getName();
-      String tenantId = authenticationDetailsProvider.getTenantId();
-      return Compartment.builder()
-              .compartmentId(tenantId)
-              .id(rootCompartment.getId())
-              .name(rootCompartmentName + " (root)")
-              .lifecycleState(Compartment.LifecycleState.Active)
+      String compartmentId = authenticationDetailsProvider.getTenantId();
+      Compartment rootComp = Compartment.builder()
+              .compartmentId(compartmentId)
+              .id(compartmentId)
+              .name(ROOT_COMPARTMENT_NAME)
+              .lifecycleState(LifecycleState.Active)
               .build();
-    }
+      return rootComp;
+  }
 
+    public List<Compartment> getCompartmentList(Compartment compartment) {
+      List<Compartment> compartmentList = new ArrayList<Compartment>();
 
-
-    public List<Compartment> getCompartmentList(String compartmentId) {
-      final List<Compartment> compartmentList = new ArrayList<>();
-
-      final ListCompartmentsResponse response = identityClient.listCompartments(
-              ListCompartmentsRequest.builder()
-                      .compartmentId(compartmentId)
-                      .lifecycleState(Compartment.LifecycleState.Active)
-                      .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible)
-                      .build());
-
-      if (response != null) {
-        compartmentList.addAll(response.getItems());
+      try {
+          ListCompartmentsResponse response = identityClient
+                  .listCompartments(ListCompartmentsRequest.builder().compartmentId(compartment.getId())
+                          .accessLevel(ListCompartmentsRequest.AccessLevel.Accessible).build());
+          if (response != null) {
+              compartmentList = response.getItems()
+                      .stream()
+                      .filter(predicate -> !predicate.getLifecycleState().equals(LifecycleState.Deleted))
+                      .filter(predicate -> !predicate.getLifecycleState().equals(LifecycleState.Deleting))
+                      .sorted(Comparator.comparing(Compartment::getName))
+                      .collect(Collectors.toList());
+          }
+      } catch (Exception ex) {
+          ex.printStackTrace();
       }
+
+
       return compartmentList;
-    }
+  }
 
     /**
      * Returns the list of regions.
