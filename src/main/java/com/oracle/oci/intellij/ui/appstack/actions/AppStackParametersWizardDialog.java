@@ -14,6 +14,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
 
 public class AppStackParametersWizardDialog extends WizardDialog {
     public static  boolean isProgramaticChange = false;
@@ -57,7 +58,7 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         menuList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting() && !isProgramaticChange) {
+                if ( e.getValueIsAdjusting() && !isProgramaticChange) {
                     int selectedIndex = menuList.getSelectedIndex();
                     WizardStep nextStep =null;
                     boolean ischangeValide = true;
@@ -135,7 +136,13 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         return leftPanel;
     }
 
-
-
+    @Override
+    protected void doOKAction() {
+        // create hashMap that contains all the variables and it's value .....
+        CustomWizardModel appStackModel = (CustomWizardModel)myModel;
+        LinkedHashMap<String,String> variables = appStackModel.collectVariables();
+        System.out.println(variables);
+        super.doOKAction();
+    }
 }
 

@@ -470,15 +470,18 @@ public class CustomWizardStep extends WizardStep {
                             component.setEnabled(isVisible);
                         }
                     }
+                    continue;
                 }
                 if (!isVisible){
-                    // empty the field from it's value
 
+                    // empty the error labels
                     JLabel errorLabel = (JLabel) errorLabels.get(dependency);
                     if (errorLabel == null) continue;
+                    errorLabel.setVisible(false);
+                    dependencyComponent.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+                    errorLabel.setText("");
+                    // empty the value
                     if (dependencyComponent instanceof JTextField){
-                        errorLabel.setVisible(false);
-                        dependencyComponent.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
                         ((JTextField) dependencyComponent).setText("");
                         dependentPd.setValue("value","");
                         String className = dependentPd.getReadMethod().getDeclaringClass().getSimpleName();
@@ -489,7 +492,6 @@ public class CustomWizardStep extends WizardStep {
                         } catch (IllegalAccessException | InvocationTargetException e) {
                             throw new RuntimeException(e);
                         }
-                        errorLabel.setText("");
                     }
 
 
@@ -575,7 +577,16 @@ public class CustomWizardStep extends WizardStep {
         for (PropertyDescriptor pd:
                 stepPropertyDescriptors) {
             if (pdComponents.get(pd.getName()).isEnabled() && (boolean)pd.getValue("required")){
-                if (pd.getValue("value")== null || pd.getValue("value").equals("")){
+                String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
+
+                VariableGroup varGroup = variableGroups.get(className);
+                Object value = null;
+                try {
+                   value  = pd.getReadMethod().invoke(varGroup);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException(e);
+                }
+                if (value== null || value.equals("")){
                     errorPd = pd;
                     errorComponent = pdComponents.get(pd.getName());
                     isvalide = false;
@@ -608,6 +619,12 @@ public class CustomWizardStep extends WizardStep {
         appStackWizardModel.getGroupMenuList().setSelectedIndex(appStackWizardModel.getGroupMenuList().getSelectedIndex()-1);
         AppStackParametersWizardDialog.isProgramaticChange = false;
         return super.onPrevious(model);
+    }
+
+    static  public VariableGroup getVariableGroup(PropertyDescriptor pd){
+        String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
+
+        return variableGroups.get(className);
     }
 }
 
