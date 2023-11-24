@@ -29,7 +29,6 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.table.DefaultTableModel;
 
-import com.oracle.oci.intellij.ui.appstack.test.YamlLoader;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.notification.NotificationType;
@@ -466,7 +465,8 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
       try {
 //        dashboard.createAppStackButton.setEnabled(false);
 //        YamlLoader.Load();
-        YamlLoader.load();
+        YamlLoader loader = new YamlLoader();
+        loader.load();
 //        dashboard.createAppStackButton.setEnabled(true);
       } catch (IntrospectionException ex) {
         try {

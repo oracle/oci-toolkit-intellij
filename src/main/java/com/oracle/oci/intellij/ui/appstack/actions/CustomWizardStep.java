@@ -1,6 +1,5 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
-import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
@@ -29,6 +28,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -260,8 +260,8 @@ public class CustomWizardStep extends WizardStep {
                      *
                      */
                     // we need to set a custom renderer
-                    List<ExplicitlySetBmcModel> suggestedValues = (List<ExplicitlySetBmcModel>) getSuggestedValues(pd,varGroup);
-//                    enumValues.set(getSuggestedValues(pd));
+                    loadComboBoxValues(pd,varGroup,comboBox);
+                    System.out.println("----------"+pd.getName()+"----------------");
 
 
                     comboBox.setRenderer(new DefaultListCellRenderer(){
@@ -295,34 +295,6 @@ public class CustomWizardStep extends WizardStep {
                         }
                     });
 
-                    if (suggestedValues != null) {
-                        for (ExplicitlySetBmcModel enumValue : suggestedValues) {
-                            comboBox.addItem(enumValue);
-                        }
-                        if (!suggestedValues.isEmpty()){
-                            comboBox.setSelectedItem(suggestedValues.get(0));
-                            pd.setValue("value",suggestedValues.get(0));
-                            pd.getWriteMethod().invoke(varGroup,suggestedValues.get(0));
-                        }
-
-                    }
-                    ListCellRenderer res = comboBox.getRenderer();
-                    System.out.println(res);
-
-//                    comboBox.addItemListener(e -> {
-//                        if (e.getStateChange() == ItemEvent.SELECTED) {
-//
-//                            pd.setValue("value", comboBox.getSelectedItem());
-//                            try {
-//                                pd.getWriteMethod().invoke(varGroup,comboBox.getSelectedItem());
-//                            } catch (IllegalAccessException | InvocationTargetException ex) {
-//                                throw new RuntimeException(ex);
-//                            }
-//                            updateDependencies(pd, varGroup);
-//                            updateVisibility(pd);
-//                        }
-//
-//                    });
 
                 }
 
@@ -438,6 +410,43 @@ public class CustomWizardStep extends WizardStep {
 
 
         return component;
+    }
+
+    private void loadComboBoxValues(PropertyDescriptor pd, VariableGroup varGroup, ComboBox comboBox) {
+        new SwingWorker<List, Void>() {
+            @Override
+            protected List doInBackground() throws Exception {
+                return getSuggestedValues(pd,varGroup);
+            }
+
+            @Override
+            protected void done() {
+                List<ExplicitlySetBmcModel> suggestedValues;
+                try {
+                    suggestedValues = (List<ExplicitlySetBmcModel>) get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+
+                if (suggestedValues != null) {
+                    for (ExplicitlySetBmcModel enumValue : suggestedValues) {
+                        comboBox.addItem(enumValue);
+                    }
+                    if (!suggestedValues.isEmpty()){
+                        comboBox.setSelectedItem(suggestedValues.get(0));
+                        pd.setValue("value",suggestedValues.get(0));
+                        try {
+                            pd.getWriteMethod().invoke(varGroup,suggestedValues.get(0));
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            }
+        }.execute();
+
+
+
     }
 
     private List<? extends ExplicitlySetBmcModel> getSuggestedValues(PropertyDescriptor pd, VariableGroup varGroup) {

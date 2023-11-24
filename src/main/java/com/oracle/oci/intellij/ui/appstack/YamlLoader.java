@@ -1,11 +1,10 @@
-package com.oracle.oci.intellij.ui.appstack.test;
+package com.oracle.oci.intellij.ui.appstack;
 
 
 
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
-import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersDialog;
 import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersWizardDialog;
 import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardModel;
 import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardStep;
@@ -22,34 +21,33 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 
 
 public class YamlLoader {
     static List<VariableGroup> varGroups;
-    static Compartment compartment ;
+      final ExecutorService executorService = Executors.newSingleThreadExecutor();
+      Compartment compartment ;
 
-    public static void load() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
+    public  void load() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
 
         varGroups = init();
         LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
 
 
         CustomWizardStep.variableGroups = new LinkedHashMap<>();
-        for (VariableGroup appVarGroup:varGroups){
+        for (VariableGroup appVarGroup : varGroups){
             CustomWizardStep.variableGroups.put(appVarGroup.getClass().getSimpleName(),appVarGroup);
 
             Class<?> appVarGroupClazz = appVarGroup.getClass();
             BeanInfo beanInfo = Introspector.getBeanInfo(appVarGroupClazz);
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
 
-            // create Map from group instance ....
-            Map <VariableGroup, Map<String,Object>> GroupMetadata;
 
 
             for (PropertyDescriptor pd:propertyDescriptors){
 
                 VariableMetaData annotation = pd.getReadMethod().getAnnotation(VariableMetaData.class);
-                System.out.println(pd.getName());
 
                 if (pd.getName().equals("class") || annotation == null ) {
                     continue;
@@ -60,7 +58,9 @@ public class YamlLoader {
                 pd.setShortDescription((annotation.description() != null) ? annotation.description() :  "" );
                 //                // recheck this default value thing
                 if (annotation.defaultVal() != null  && !annotation.defaultVal().isEmpty()) {
+
                     Object defaultValue =  getDefaultValue(pd, annotation);
+                    System.out.println(pd.getName());
                     pd.setValue("default", defaultValue);
 
                     pd.setValue("value",defaultValue);
@@ -128,12 +128,12 @@ public class YamlLoader {
 
     }
 
-    private static List<String> getEnumList(String enums) {
+    private  List<String> getEnumList(String enums) {
         String [] items = enums.replaceAll("\\[\\]","").split(",");
         return List.of(items);
     }
 
-    private static Object getDefaultValue(PropertyDescriptor pd,VariableMetaData metaData )  {
+    private  Object getDefaultValue(PropertyDescriptor pd,VariableMetaData metaData )  {
 
 
         if (metaData.defaultVal().contains("compartment_ocid") || metaData.defaultVal().contains("compartment_id")) {
