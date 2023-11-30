@@ -7,7 +7,6 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 public class Network extends VariableGroup {
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     private boolean create_new_vcn;
 
@@ -189,92 +188,136 @@ public class Network extends VariableGroup {
         return session_affinity_cookie_name;
     }
 
-    public void setCreate_new_vcn(boolean create_new_vcn) {
-        this.create_new_vcn = create_new_vcn;
+    public void setCreate_new_vcn(boolean newValue) {
+        Object oldValue = this.create_new_vcn;
+        this.create_new_vcn = newValue;
+        pcs.firePropertyChange("create_new_vcn", oldValue, newValue);
     }
 
-    public void setVcn_compartment_id(Object vcn_compartment_id) {
-        this.vcn_compartment_id = vcn_compartment_id;
+    public void setVcn_compartment_id(Object newValue) {
+        Object oldValue = this.vcn_compartment_id;
+        this.vcn_compartment_id = newValue;
+        pcs.firePropertyChange("vcn_compartment_id", oldValue, newValue);
     }
 
-    public void setExisting_vcn_id(Object existing_vcn_id) {
-        this.existing_vcn_id = existing_vcn_id;
+    public void setExisting_vcn_id(Object newValue) {
+        Object oldValue = this.existing_vcn_id;
+        this.existing_vcn_id = newValue;
+        pcs.firePropertyChange("existing_vcn_id", oldValue, newValue);
     }
 
-    public void setVcn_cidr(String vcn_cidr) {
-        this.vcn_cidr = vcn_cidr;
+    public void setVcn_cidr(String newValue) {
+        Object oldValue = this.vcn_cidr;
+        this.vcn_cidr = newValue;
+        pcs.firePropertyChange("vcn_cidr", oldValue, newValue);
     }
 
-    public void setUse_existing_app_subnet(boolean use_existing_app_subnet) {
-        this.use_existing_app_subnet = use_existing_app_subnet;
+    public void setUse_existing_app_subnet(boolean newValue) {
+        Object oldValue = this.use_existing_app_subnet;
+        this.use_existing_app_subnet = newValue;
+        pcs.firePropertyChange("use_existing_app_subnet", oldValue, newValue);
     }
 
-    public void setExisting_app_subnet_id(Object existing_app_subnet_id) {
-        this.existing_app_subnet_id = existing_app_subnet_id;
+    public void setExisting_app_subnet_id(Object newValue) {
+        Object oldValue = this.existing_app_subnet_id;
+        this.existing_app_subnet_id = newValue;
+        pcs.firePropertyChange("existing_app_subnet_id", oldValue, newValue);
     }
 
-    public void setApp_subnet_cidr(String app_subnet_cidr) {
-        this.app_subnet_cidr = app_subnet_cidr;
+    public void setApp_subnet_cidr(String newValue) {
+        Object oldValue = this.app_subnet_cidr;
+        this.app_subnet_cidr = newValue;
+        pcs.firePropertyChange("app_subnet_cidr", oldValue, newValue);
     }
 
-    public void setUse_existing_db_subnet(boolean use_existing_db_subnet) {
-        this.use_existing_db_subnet = use_existing_db_subnet;
+    public void setUse_existing_db_subnet(boolean newValue) {
+        Object oldValue = this.use_existing_db_subnet;
+        this.use_existing_db_subnet = newValue;
+        pcs.firePropertyChange("use_existing_db_subnet", oldValue, newValue);
     }
 
-    public void setExisting_db_subnet_id(Object existing_db_subnet_id) {
-        this.existing_db_subnet_id = existing_db_subnet_id;
+    public void setExisting_db_subnet_id(Object newValue) {
+        Object oldValue = this.use_existing_db_subnet;
+        this.existing_db_subnet_id = newValue;
+        pcs.firePropertyChange("existing_db_subnet_id", oldValue, newValue);
     }
 
-    public void setDb_subnet_cidr(String db_subnet_cidr) {
-        this.db_subnet_cidr = db_subnet_cidr;
+    public void setDb_subnet_cidr(String newValue) {
+        Object oldValue = this.db_subnet_cidr;
+        this.db_subnet_cidr = newValue;
+        pcs.firePropertyChange("db_subnet_cidr", oldValue, newValue);
     }
 
-    public void setUse_existing_lb_subnet(boolean use_existing_lb_subnet) {
-        this.use_existing_lb_subnet = use_existing_lb_subnet;
+    public void setUse_existing_lb_subnet(boolean newValue) {
+        Object oldValue = this.use_existing_lb_subnet;
+        this.use_existing_lb_subnet = newValue;
+        pcs.firePropertyChange("use_existing_lb_subnet", oldValue, newValue);
     }
 
-    public void setExisting_lb_subnet_id(Object existing_lb_subnet_id) {
-        this.existing_lb_subnet_id = existing_lb_subnet_id;
+    public void setExisting_lb_subnet_id(Object newValue) {
+        Object oldValue = this.existing_lb_subnet_id;
+        this.existing_lb_subnet_id = newValue;
+        pcs.firePropertyChange("existing_lb_subnet_id", oldValue, newValue);
     }
 
-    public void setLb_subnet_cidr(String lb_subnet_cidr) {
-        this.lb_subnet_cidr = lb_subnet_cidr;
+    public void setLb_subnet_cidr(String newValue) {
+        Object oldValue = this.lb_subnet_cidr;
+        this.lb_subnet_cidr = newValue;
+        pcs.firePropertyChange("lb_subnet_cidr", oldValue, newValue);
     }
 
-    public void setOpen_https_port(boolean open_https_port) {
-        this.open_https_port = open_https_port;
+    public void setOpen_https_port(boolean newValue) {
+        Object oldValue = this.open_https_port;
+        this.open_https_port = newValue;
+        pcs.firePropertyChange("open_https_port", oldValue, newValue);
     }
 
-    public void setUse_default_lb_configuration(boolean use_default_lb_configuration) {
-        this.use_default_lb_configuration = use_default_lb_configuration;
+    public void setUse_default_lb_configuration(boolean newValue) {
+        Object oldValue = this.use_default_lb_configuration;
+        this.use_default_lb_configuration = newValue;
+        pcs.firePropertyChange("use_default_lb_configuration", oldValue, newValue);
     }
 
-    public void setMaximum_bandwidth_in_mbps(int maximum_bandwidth_in_mbps) {
-        this.maximum_bandwidth_in_mbps = maximum_bandwidth_in_mbps;
+    public void setMaximum_bandwidth_in_mbps(int newValue) {
+        Object oldValue = this.maximum_bandwidth_in_mbps;
+        this.maximum_bandwidth_in_mbps = newValue;
+        pcs.firePropertyChange("maximum_bandwidth_in_mbps", oldValue, newValue);
     }
 
-    public void setMinimum_bandwidth_in_mbps(int minimum_bandwidth_in_mbps) {
-        this.minimum_bandwidth_in_mbps = minimum_bandwidth_in_mbps;
+    public void setMinimum_bandwidth_in_mbps(int newValue) {
+        Object oldValue = this.minimum_bandwidth_in_mbps;
+        this.minimum_bandwidth_in_mbps = newValue;
+        pcs.firePropertyChange("minimum_bandwidth_in_mbps", oldValue, newValue);
     }
 
-    public void setHealth_checker_url_path(String health_checker_url_path) {
-        this.health_checker_url_path = health_checker_url_path;
+    public void setHealth_checker_url_path(String newValue) {
+        Object oldValue = this.health_checker_url_path;
+        this.health_checker_url_path = newValue;
+        pcs.firePropertyChange("health_checker_url_path", oldValue, newValue);
     }
 
-    public void setHealth_checker_return_code(int health_checker_return_code) {
-        this.health_checker_return_code = health_checker_return_code;
+    public void setHealth_checker_return_code(int newValue) {
+        Object oldValue = this.health_checker_return_code;
+        this.health_checker_return_code = newValue;
+        pcs.firePropertyChange("health_checker_return_code", oldValue, newValue);
     }
 
-    public void setEnable_session_affinity(boolean enable_session_affinity) {
-        this.enable_session_affinity = enable_session_affinity;
+    public void setEnable_session_affinity(boolean newValue) {
+        Object oldValue = this.enable_session_affinity;
+        this.enable_session_affinity = newValue;
+        pcs.firePropertyChange("enable_session_affinity", oldValue, newValue);
     }
 
-    public void setSession_affinity(Session_affinity session_affinity) {
-        this.session_affinity = session_affinity;
+    public void setSession_affinity(Session_affinity newValue) {
+        Object oldValue = this.session_affinity;
+        this.session_affinity = newValue;
+        pcs.firePropertyChange("session_affinity", oldValue, newValue);
     }
 
-    public void setSession_affinity_cookie_name(String session_affinity_cookie_name) {
-        this.session_affinity_cookie_name = session_affinity_cookie_name;
+    public void setSession_affinity_cookie_name(String newValue) {
+        Object oldValue = this.session_affinity_cookie_name;
+        this.session_affinity_cookie_name = newValue;
+        pcs.firePropertyChange("session_affinity_cookie_name", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

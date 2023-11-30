@@ -4,7 +4,6 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 public class Hide_constants_and_internal_variables extends VariableGroup {
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     private String tenancy_ocid;
 

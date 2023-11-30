@@ -7,7 +7,6 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 public class Container_instance_configuration extends VariableGroup {
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     public enum Shape{
         CI_Standard_E3_Flex,
@@ -39,16 +38,22 @@ public class Container_instance_configuration extends VariableGroup {
         return ocpus;
     }
 
-    public void setShape(Shape shape) {
-        this.shape = shape;
+    public void setShape(Shape newValue) {
+        Object oldValue = this.shape;
+        this.shape = newValue;
+        pcs.firePropertyChange("shape", oldValue, newValue);
     }
 
-    public void setMemory_in_gbs(int memory_in_gbs) {
-        this.memory_in_gbs = memory_in_gbs;
+    public void setMemory_in_gbs(int newValue) {
+        Object oldValue = this.memory_in_gbs;
+        this.memory_in_gbs = newValue;
+        pcs.firePropertyChange("memory_in_gbs", oldValue, newValue);
     }
 
-    public void setOcpus(int ocpus) {
-        this.ocpus = ocpus;
+    public void setOcpus(int newValue) {
+        Object oldValue = this.ocpus;
+        this.ocpus = newValue;
+        pcs.firePropertyChange("ocpus", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

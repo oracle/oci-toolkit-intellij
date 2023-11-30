@@ -34,9 +34,11 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return use_default_ssl_configuration;
     }
 
-    public void setUse_default_ssl_configuration(boolean use_default_ssl_configuration) {
-        this.use_default_ssl_configuration = use_default_ssl_configuration;
-    }
+    public void setUse_default_ssl_configuration(boolean newValue) {
+        Object oldValue = this.use_default_ssl_configuration;
+        this.use_default_ssl_configuration = newValue;
+        pcs.firePropertyChange("use_default_ssl_configuration", oldValue, newValue);
+     }
     @PropertyOrder(2)
     @VariableMetaData(title="Server port number property name",description="Assuming that your application can consume a property to configure the server port, this field can be used to specify the name of the property.",defaultVal="server.port",type="string",required=true,visible="not(use_default_ssl_configuration)")
 
@@ -44,8 +46,10 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return port_property;
     }
 
-    public void setPort_property(String port_property) {
-        this.port_property = port_property;
+    public void setPort_property(String newValue) {
+        Object oldValue = this.port_property;
+        this.port_property = newValue;
+        pcs.firePropertyChange("port_property", oldValue, newValue);
     }
     @PropertyOrder(3)
     @VariableMetaData(title="SSL keystore filename property name",description="Assuming that your application can consume a property to configure the SSL keystore filename, this field can be used to specify the name of the property.",defaultVal="server.ssl.key-store",type="string",required=true,visible="not(use_default_ssl_configuration)")
@@ -54,8 +58,10 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return keystore_property;
     }
 
-    public void setKeystore_property(String keystore_property) {
-        this.keystore_property = keystore_property;
+    public void setKeystore_property(String newValue) {
+        Object oldValue = this.keystore_property;
+        this.keystore_property = newValue;
+        pcs.firePropertyChange("keystore_property", oldValue, newValue);
     }
     @PropertyOrder(4)
     @VariableMetaData(title="SSL key alias property name",description="Assuming that your application can consume a property to configure the SSL key alias property name, this field can be used to specify the name of the property.",defaultVal="server.ssl.key-alias",type="string",required=true,visible="not(use_default_ssl_configuration)")
@@ -64,8 +70,10 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return key_alias_property;
     }
 
-    public void setKey_alias_property(String key_alias_property) {
-        this.key_alias_property = key_alias_property;
+    public void setKey_alias_property(String newValue) {
+        Object oldValue = this.key_alias_property;
+        this.key_alias_property = newValue;
+        pcs.firePropertyChange("key_alias_property", oldValue, newValue);
     }
     @PropertyOrder(5)
     @VariableMetaData(title="SSL keystore password property name",description="Assuming that your application can consume a property to configure the SSL keystore password property name, this field can be used to specify the name of the property.",defaultVal="server.ssl.key-store-password",type="string",required=true,visible="not(use_default_ssl_configuration)")
@@ -74,8 +82,10 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return keystore_password_property;
     }
 
-    public void setKeystore_password_property(String keystore_password_property) {
-        this.keystore_password_property = keystore_password_property;
+    public void setKeystore_password_property(String newValue) {
+        Object oldValue = this.keystore_password_property;
+        this.keystore_password_property = newValue;
+        pcs.firePropertyChange("keystore_password_property", oldValue, newValue);
     }
     @PropertyOrder(6)
     @VariableMetaData(title="SSL keystore type property name",description="Assuming that your application can consume a property to configure the SSL keystore type property name, this field can be used to specify the name of the property.",defaultVal="server.ssl.key-store-type",type="string",required=true,visible="not(use_default_ssl_configuration)")
@@ -84,8 +94,10 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return keystore_type_property;
     }
 
-    public void setKeystore_type_property(String keystore_type_property) {
-        this.keystore_type_property = keystore_type_property;
+    public void setKeystore_type_property(String newValue) {
+        Object oldValue = this.keystore_type_property;
+        this.keystore_type_property = newValue;
+        pcs.firePropertyChange("keystore_type_property", oldValue, newValue);
     }
     @VariableMetaData(title="SSL certificate",type="text",required=true,visible="eq(application_source,'IMAGE')")
     @PropertyOrder(7)
@@ -94,8 +106,10 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return cert_pem;
     }
 
-    public void setCert_pem(Object cert_pem) {
-        this.cert_pem = cert_pem;
+    public void setCert_pem(Object newValue) {
+        Object oldValue = this.cert_pem;
+        this.cert_pem = newValue;
+        pcs.firePropertyChange("cert_pem", oldValue, newValue);
     }
 
     @VariableMetaData(title="Private key",type="text",required=true,visible="eq(application_source,'IMAGE')")
@@ -105,8 +119,10 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return private_key_pem;
     }
 
-    public void setPrivate_key_pem(Object private_key_pem) {
-        this.private_key_pem = private_key_pem;
+    public void setPrivate_key_pem(Object newValue) {
+        Object oldValue = this.private_key_pem;
+        this.private_key_pem = newValue;
+        pcs.firePropertyChange("private_key_pem", oldValue, newValue);
     }
     @PropertyOrder(9)
     @VariableMetaData(title="CA certificate",type="text",required=true,visible="eq(application_source,'IMAGE')")
@@ -115,8 +131,10 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return ca_pem;
     }
 
-    public void setCa_pem(Object ca_pem) {
-        this.ca_pem = ca_pem;
+    public void setCa_pem(Object newValue) {
+        Object oldValue = this.ca_pem;
+        this.ca_pem = newValue;
+        pcs.firePropertyChange("ca_pem", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

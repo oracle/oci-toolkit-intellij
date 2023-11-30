@@ -11,6 +11,7 @@ import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.keymanagement.model.KeySummary;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
+import com.oracle.oci.intellij.ui.appstack.models.Controller;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 
 import java.beans.BeanInfo;
@@ -33,8 +34,6 @@ public class CustomWizardModel extends WizardModel {
         super("App Stack Variable");
         this.varGroups = varGroups;
         this.descriptorsState = descriptorsState;
-
-
 
         // create the wizard steps
         initWizardSteps();
@@ -71,7 +70,7 @@ public class CustomWizardModel extends WizardModel {
     public LinkedHashMap<String,String> collectVariables(){
         LinkedHashMap<String,String> vars = new LinkedHashMap<>();
         descriptorsState.forEach((key,value)->{
-            boolean isEnabled = CustomWizardStep.pdComponents.get(value.getName()).isEnabled();
+            boolean isEnabled = Controller.getInstance().getPdComponents().get(value.getName()).isEnabled();
             if (isEnabled && (boolean)value.getValue("required")){
                 String mappedValue = mapValue(value);
                 vars.put(value.getName(),mappedValue);
@@ -81,7 +80,7 @@ public class CustomWizardModel extends WizardModel {
     }
 
     private String mapValue(PropertyDescriptor pd) {
-        VariableGroup variableGroup = CustomWizardStep.getVariableGroup(pd);
+        VariableGroup variableGroup = Controller.getInstance().getVariableGroup(pd);
         Object value;
         try {
             value = pd.getReadMethod().invoke(variableGroup);

@@ -34,10 +34,11 @@ public class YamlLoader {
         varGroups = init();
         LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
 
+        Map<String, VariableGroup> variableGroups = new LinkedHashMap<>(); ;
 
-        CustomWizardStep.variableGroups = new LinkedHashMap<>();
+        Controller.getInstance().setVariableGroups(variableGroups);
         for (VariableGroup appVarGroup : varGroups){
-            CustomWizardStep.variableGroups.put(appVarGroup.getClass().getSimpleName(),appVarGroup);
+            Controller.getInstance().getVariableGroups().put(appVarGroup.getClass().getSimpleName(),appVarGroup);
 
             Class<?> appVarGroupClazz = appVarGroup.getClass();
             BeanInfo beanInfo = Introspector.getBeanInfo(appVarGroupClazz);

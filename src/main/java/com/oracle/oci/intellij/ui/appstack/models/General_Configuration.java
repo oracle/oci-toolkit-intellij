@@ -7,7 +7,6 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 public class General_Configuration extends VariableGroup {
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     private java.lang.Object compartment_id;
 
@@ -20,8 +19,10 @@ public class General_Configuration extends VariableGroup {
         return compartment_id;
     }
 
-    public void setCompartment_id(Object compartment_id) {
-        this.compartment_id = compartment_id;
+    public void setCompartment_id(Object newValue) {
+        Object oldValue = this.compartment_id;
+        this.compartment_id = newValue;
+        pcs.firePropertyChange("compartment_id", oldValue, newValue);
     }
     @PropertyOrder(2)
     @VariableMetaData(title="Availability domain",description="The availability domain in which to create all Compute resources.",type="oci:identity:availabilitydomain:name",dependsOn="{compartmentId=${compartment_id}}",required=true)
@@ -30,8 +31,10 @@ public class General_Configuration extends VariableGroup {
         return availability_domain;
     }
 
-    public void setAvailability_domain(Object availability_domain) {
-        this.availability_domain = availability_domain;
+    public void setAvailability_domain(Object newValue) {
+        Object oldValue = this.availability_domain;
+        this.availability_domain = newValue;
+        pcs.firePropertyChange("availability_domain", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

@@ -16,6 +16,8 @@ import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.keymanagement.model.KeySummary;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.ui.appstack.models.Controller;
+import com.oracle.oci.intellij.ui.appstack.models.Utils;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 import com.oracle.oci.intellij.ui.common.CompartmentSelection;
 
@@ -24,6 +26,8 @@ import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -33,18 +37,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CustomWizardStep extends WizardStep {
+public class CustomWizardStep extends WizardStep implements PropertyChangeListener {
     JBScrollPane mainScrollPane;
     JPanel mainPanel;
-    LinkedHashMap <String, JComponent> varPanels= new LinkedHashMap<>();
-    static Map<String , JComponent> pdComponents = new LinkedHashMap<>();
-    LinkedHashMap<String, PropertyDescriptor> descriptorsState;
-//    List <JLabel> errorLabels = new ArrayList<>() ;
-    static Map<String , JComponent> errorLabels = new LinkedHashMap<>();
-
-
-    public static Map<String, VariableGroup> variableGroups ;
+    VariableGroup variableGroup;
     List<PropertyDescriptor> stepPropertyDescriptors;
+    Controller controller = Controller.getInstance();
 
 
 
@@ -53,9 +51,11 @@ public class CustomWizardStep extends WizardStep {
         mainScrollPane = new JBScrollPane(mainPanel);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         stepPropertyDescriptors = new ArrayList<>();
+        varGroup.addPropertyChangeListener(this);
+        this.variableGroup = varGroup;
 
 
-        this.descriptorsState = descriptorsState;
+        controller.setDescriptorsState(descriptorsState) ;
 
         String className = varGroup.getClass().getSimpleName().replaceAll("_"," ");
         mainPanel.setBorder(BorderFactory.createTitledBorder(className));
@@ -100,7 +100,7 @@ public class CustomWizardStep extends WizardStep {
         componentErrorPanel.setLayout(new BorderLayout());
 
         JLabel errorLabel = new JLabel();
-        errorLabels.put(pd.getName(), errorLabel);
+        controller.getErrorLabels().put(pd.getName(), errorLabel);
         errorLabel.setVisible(false);
         errorLabel.setForeground(JBColor.RED);
         errorLabel.setBorder(BorderFactory.createEmptyBorder(0,80,0,0));
@@ -113,7 +113,7 @@ public class CustomWizardStep extends WizardStep {
         componentErrorPanel.add(component,BorderLayout.NORTH);
         componentErrorPanel.add(errorLabel,BorderLayout.SOUTH);
 
-        boolean  isVisible = isVisible((String) pd.getValue("visible"));
+        boolean  isVisible = controller.isVisible((String) pd.getValue("visible"));
         component.setEnabled(isVisible);
 
 
@@ -125,57 +125,7 @@ public class CustomWizardStep extends WizardStep {
         return varPanel;
     }
 
-    private  boolean isVisible(String rule) {
-        if (rule == null || rule.isEmpty()){
-            return true;
-        }
-        if (rule.startsWith("not(")){
-            return !isVisible(rule.substring(4,rule.length()-1));
-        }
-        if (rule.startsWith("and(")){
-            return evaluateAnd(rule.substring(4, rule.lastIndexOf(')')));
-        }
-        if (rule.startsWith("eq(")){
-            String[] parts = rule.substring(3,rule.length()-1).split(",");
-            String variable = parts[0];
-            String value = parts[1].trim().replaceAll("'","");
 
-            Enum varValue = (Enum) descriptorsState.get(variable).getValue("value");
-
-            return varValue.toString().equals(value);
-        }
-        boolean varValue = (boolean) descriptorsState.get(rule.trim()).getValue("value");
-        return varValue;
-    }
-
-    private  boolean evaluateAnd(String rule) {
-        int parenCount = 0;
-        StringBuilder part = new StringBuilder();
-        List<String> parts = new ArrayList<>();
-
-        for (char c : rule.toCharArray()) {
-            if (c == '(') {
-                parenCount++;
-            } else if (c == ')') {
-                parenCount--;
-            }
-
-            if (c == ',' && parenCount == 0) {
-                parts.add(part.toString());
-                part = new StringBuilder();
-            } else {
-                part.append(c);
-            }
-        }
-        parts.add(part.toString()); // Add the last part
-
-        for (String p : parts) {
-            if (!isVisible(p.trim())) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     private JComponent createVarComponent(PropertyDescriptor pd,VariableGroup varGroup,JLabel errorLabel) throws InvocationTargetException, IllegalAccessException {
         Class<?> propertyType = pd.getPropertyType();
@@ -190,7 +140,7 @@ public class CustomWizardStep extends WizardStep {
                 pd.setValue("value",checkBox.isSelected());
                 try {
                     pd.getWriteMethod().invoke(varGroup,checkBox.isSelected());
-                    updateVisibility(pd,varGroup);
+//                    controller.updateVisibility(pd.getName(),varGroup);
 
                 } catch (IllegalAccessException | InvocationTargetException ex) {
                     throw new RuntimeException(ex);
@@ -214,10 +164,12 @@ public class CustomWizardStep extends WizardStep {
                 compartmentPanel.add(compartmentName);
                 compartmentPanel.add(selectCompartmentBtn);
                 final CompartmentSelection compartmentSelection = CompartmentSelection.newInstance();
+                Compartment selectedCompartment = (Compartment) pd.getReadMethod().invoke(varGroup);
 
-                compartmentSelection.setSelectedCompartment((Compartment) pd.getValue("default"));
-                compartmentName.setText(((Compartment) pd.getValue("default")).getName());
-                updateDependencies(pd,varGroup);
+                compartmentSelection.setSelectedCompartment(selectedCompartment);
+                compartmentName.setText(selectedCompartment.getName());
+
+//                controller.updateDependencies(pd.getName(),varGroup);
 
 
                 selectCompartmentBtn.addActionListener(e->{
@@ -228,16 +180,16 @@ public class CustomWizardStep extends WizardStep {
                         final Compartment selected = compartmentSelection1.getSelectedCompartment();
                         try {
                             compartmentName.setText(selected.getName());
-                            pd.setValue("value",selected);
+//                            pd.setValue("value",selected);
                             pd.getWriteMethod().invoke(varGroup,selected);
-                            updateDependencies(pd, varGroup);
+//                            controller.updateDependencies(pd.getName(), varGroup);
 
                         } catch (IllegalAccessException | InvocationTargetException ex) {
                             throw new RuntimeException(ex);
                         }
                     }
                 });
-                pdComponents.put(pd.getName(),compartmentPanel);
+                controller.getPdComponents().put(pd.getName(),compartmentPanel);
                 return compartmentPanel;
             }else {
 
@@ -301,7 +253,7 @@ public class CustomWizardStep extends WizardStep {
                 comboBox.addItemListener(e -> {
                     if (e.getStateChange() == ItemEvent.SELECTED) {
 
-                        pd.setValue("value", comboBox.getSelectedItem());
+//                        pd.setValue("value", comboBox.getSelectedItem());
                         try {
                             pd.getWriteMethod().invoke(varGroup,comboBox.getSelectedItem());
                             errorLabel.setVisible(false);
@@ -310,8 +262,8 @@ public class CustomWizardStep extends WizardStep {
                         } catch (IllegalAccessException | InvocationTargetException ex) {
                             throw new RuntimeException(ex);
                         }
-                        updateDependencies(pd, varGroup);
-                        updateVisibility(pd,varGroup);
+//                        controller.updateDependencies(pd.getName(), varGroup);
+//                        controller.updateVisibility(pd.getName(),varGroup);
                     }
 
                 });
@@ -340,7 +292,7 @@ public class CustomWizardStep extends WizardStep {
             }
             spinner.addChangeListener(e->{
                 try {
-                    pd.setValue("value",spinner.getValue());
+//                    pd.setValue("value",spinner.getValue());
                     pd.getWriteMethod().invoke(varGroup,spinner.getValue());
 
 
@@ -374,7 +326,7 @@ public class CustomWizardStep extends WizardStep {
                                            @Override
                                            public void focusLost(FocusEvent e) {
                                                try {
-                                                   pd.setValue("value",textField.getText());
+//                                                   pd.setValue("value",textField.getText());
                                                    pd.getWriteMethod().invoke(varGroup,textField.getText());
 
                                                    if (textField.getText().isEmpty() && pd.getValue("required") != null && (boolean) pd.getValue("required")) {
@@ -405,7 +357,7 @@ public class CustomWizardStep extends WizardStep {
             );
             component = textField;
         }
-        pdComponents.put(pd.getName(),component);
+        controller.getPdComponents().put(pd.getName(),component);
         component.setPreferredSize(new JBDimension(350,40));
 
 
@@ -416,7 +368,7 @@ public class CustomWizardStep extends WizardStep {
         new SwingWorker<List, Void>() {
             @Override
             protected List doInBackground() throws Exception {
-                return getSuggestedValues(pd,varGroup);
+                return controller.getSuggestedValues(pd,varGroup);
             }
 
             @Override
@@ -434,7 +386,7 @@ public class CustomWizardStep extends WizardStep {
                     }
                     if (!suggestedValues.isEmpty()){
                         comboBox.setSelectedItem(suggestedValues.get(0));
-                        pd.setValue("value",suggestedValues.get(0));
+//                        pd.setValue("value",suggestedValues.get(0));
                         try {
                             pd.getWriteMethod().invoke(varGroup,suggestedValues.get(0));
                         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -449,97 +401,11 @@ public class CustomWizardStep extends WizardStep {
 
     }
 
-    private List<? extends ExplicitlySetBmcModel> getSuggestedValues(PropertyDescriptor pd, VariableGroup varGroup) {
-        String varType = (String) pd.getValue("type");
-        try {
-            return Utils.getSuggestedValuesOf(varType).apply(pd,descriptorsState,varGroup);
-        } catch (InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void updateVisibility(PropertyDescriptor pd,VariableGroup variableGroup) {
-        List<String> dependencies = Utils.visibilty.get(pd.getName());
-        if (dependencies != null) {
-
-            for (String dependency : dependencies) {
-                JComponent dependencyComponent  = pdComponents.get(dependency);
-                if (dependencyComponent == null) continue;
-
-                PropertyDescriptor dependentPd = descriptorsState.get(dependency);
-                boolean isVisible = isVisible((String) dependentPd.getValue("visible"));
-                dependencyComponent.setEnabled(isVisible);
-
-                if (dependencyComponent instanceof JPanel){
-                    JPanel dependencyComponentP = (JPanel) dependencyComponent;
-                    Component[] components = dependencyComponentP.getComponents();
-                    for (Component component:
-                            components) {
-                        if (component instanceof JButton){
-                            component.setEnabled(isVisible);
-                        }
-                    }
-                    continue;
-                }
-                if (!isVisible){
-
-                    // empty the error labels
-                    JLabel errorLabel = (JLabel) errorLabels.get(dependency);
-                    if (errorLabel == null) continue;
-                    errorLabel.setVisible(false);
-                    dependencyComponent.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
-                    errorLabel.setText("");
-                    // empty the value
-                    if (dependencyComponent instanceof JTextField){
-                        ((JTextField) dependencyComponent).setText("");
-                        dependentPd.setValue("value","");
-                        String className = dependentPd.getReadMethod().getDeclaringClass().getSimpleName();
-
-                        VariableGroup varGroup = variableGroups.get(className);
-                        try {
-                            dependentPd.getWriteMethod().invoke(varGroup,"");
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-
-
-                }
-
-
-            }
-        }
-    }
-
-    private void updateDependencies(PropertyDescriptor pd, VariableGroup varGroup) {
-        List<String> dependencies = Utils.depondsOn.get(pd.getName());
-        if (dependencies != null) {
-            for (String dependent : dependencies) {
-                ComboBox jComboBox = (ComboBox) pdComponents.get(dependent);
-                if (jComboBox == null) continue;
-                jComboBox.removeAllItems();
-                PropertyDescriptor dependentPd = descriptorsState.get(dependent);
-
-                List<? extends ExplicitlySetBmcModel> suggestedvalues = null;
-                try {
-                    suggestedvalues = Utils.getSuggestedValuesOf((String) dependentPd.getValue("type")).apply(dependentPd, descriptorsState,varGroup);
-                } catch (InvocationTargetException | IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-                if (suggestedvalues == null) return;
-                for (ExplicitlySetBmcModel enumValue : suggestedvalues) {
-                    jComboBox.addItem(enumValue);
-                }
-                if (!suggestedvalues.isEmpty()){
-                    jComboBox.setSelectedItem(suggestedvalues.get(0));
-                    dependentPd.setValue("value",suggestedvalues.get(0));
-                }
 
 
 
-            }
-        }
-    }
+
+
 
     private static JTextField getjTextField(PropertyDescriptor pd, VariableGroup varGroup) {
         JTextField textField = new JTextField();
@@ -548,7 +414,7 @@ public class CustomWizardStep extends WizardStep {
             public void focusLost(FocusEvent focusEvent) {
                 try {
                     String value = textField.getText();
-                    pd.setValue("value",value);
+//                    pd.setValue("value",value);
                     pd.getWriteMethod().invoke(varGroup, value);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
@@ -566,7 +432,7 @@ public class CustomWizardStep extends WizardStep {
 
     @Override
     public WizardStep onNext(WizardModel model) {
-        WizardStep nextWizardStep = doValidate();
+        WizardStep nextWizardStep = controller.doValidate(this);
         if (nextWizardStep != null){
             return nextWizardStep;
         }
@@ -579,45 +445,15 @@ public class CustomWizardStep extends WizardStep {
         return super.onNext(model);
     }
 
-    public  WizardStep doValidate() {
-        boolean isvalide = true ;
-        JComponent errorComponent = null;
-        PropertyDescriptor errorPd = null;
-        for (PropertyDescriptor pd:
-                stepPropertyDescriptors) {
-            if (pdComponents.get(pd.getName()).isEnabled() && (boolean)pd.getValue("required")){
-                String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
-
-                VariableGroup varGroup = variableGroups.get(className);
-                Object value = null;
-                try {
-                   value  = pd.getReadMethod().invoke(varGroup);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException(e);
-                }
-                if (value== null || value.equals("")){
-                    errorPd = pd;
-                    errorComponent = pdComponents.get(pd.getName());
-                    isvalide = false;
-                    break;
-                }
-            }
-        }
-        if (!isvalide){
-            errorComponent.grabFocus();
-            errorComponent.requestFocusInWindow();
-            JLabel errorLabel = (JLabel) errorLabels.get(errorPd.getName());
-            errorLabel.setVisible(true);
-            errorLabel.setText("This field is required");
-            errorComponent.setBorder(BorderFactory.createLineBorder(JBColor.RED));
-            return this;
-        }
-        return null;
+    public List<PropertyDescriptor> getStepPropertyDescriptors() {
+        return stepPropertyDescriptors;
     }
+
+
 
     @Override
     public WizardStep onPrevious(WizardModel model) {
-        WizardStep previousWizardStep = doValidate();
+        WizardStep previousWizardStep = controller.doValidate(this);
         if (previousWizardStep != null){
             return previousWizardStep;
         }
@@ -630,153 +466,19 @@ public class CustomWizardStep extends WizardStep {
         return super.onPrevious(model);
     }
 
-    static  public VariableGroup getVariableGroup(PropertyDescriptor pd){
-        String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
+      public VariableGroup getVariableGroup(PropertyDescriptor pd){
+        return controller.getVariableGroup(pd);
+    }
 
-        return variableGroups.get(className);
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        // execute the updateDependency ...
+        // execute update-visibility ..... for the pd that changed
+        controller.updateDependencies(evt.getPropertyName(),variableGroup);
+        controller.updateVisibility(evt.getPropertyName(),variableGroup);
     }
 }
 
-class Utils{
-    static LinkedHashMap<String, SuggestConsumor<PropertyDescriptor,LinkedHashMap<String, PropertyDescriptor>,List<? extends ExplicitlySetBmcModel>,VariableGroup>> suggestedValues = new LinkedHashMap<>();
-    static {
-        suggestedValues.put("oci:identity:compartment:id",(pd,pds,varGroup)->{
-            /* there are :
-             * default: ${compartment_id}
-             * default: compartment_ocid
-             */
-            // we have to pop up the compartment selection ....
-            Compartment rootCompartment = OracleCloudAccount.getInstance().getIdentityClient().getRootCompartment();
-            List<Compartment> compartmentList = OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(rootCompartment);
-
-            return compartmentList;
-        });
-
-        suggestedValues.put("oci:core:vcn:id",(pd,pds,varGroup)->{
-            PropertyDescriptor compartmentPd = pds.get("vcn_compartment_id");
-            String vcn_compartment_id ;
-            VariableGroup compartmentVarGroup =  CustomWizardStep.variableGroups.get("Network");
-            vcn_compartment_id =((Compartment) compartmentPd.getReadMethod().invoke(compartmentVarGroup)).getId();
 
 
-            List<Vcn> vcn = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listVcns(vcn_compartment_id);
-
-            return vcn;
-        });
-
-        suggestedValues.put("oci:core:subnet:id",(pd,pds,varGroup)->{
-            PropertyDescriptor compartmentPd = pds.get("vcn_compartment_id");
-            VariableGroup networkVarGroup =  CustomWizardStep.variableGroups.get("Network");
-
-            String vcn_compartment_id ;
-            vcn_compartment_id =((Compartment) compartmentPd.getReadMethod().invoke(networkVarGroup)).getId();
-            Vcn vcn = (Vcn) pds.get("existing_vcn_id").getReadMethod().invoke(networkVarGroup);
-            if (vcn == null) return null;
-            String existing_vcn_id =vcn.getId();;
-
-
-            // todo
-//            LinkedHashMap dependsOn = (LinkedHashMap) pd.getValue("dependsOn");
-//            boolean hidePublicSubnet = (boolean) dependsOn.get("hidePublicSubnet");
-            boolean hidePublicSubnet = Boolean.parseBoolean(getVaribaleValue("hidePublicSubnet",pd.getValue("dependsOn")));
-            List<Subnet> subnets = OracleCloudAccount.getInstance().getVirtualNetworkClientProxy().listSubnets(vcn_compartment_id,existing_vcn_id,hidePublicSubnet);
-
-            return subnets;
-
-        });
-
-        suggestedValues.put("oci:identity:availabilitydomain:name",(pd,pds,varGroup)->{
-            VariableGroup general_ConfigurationVarGroup =  CustomWizardStep.variableGroups.get("General_Configuration");
-
-            String compartment_id =( (Compartment)pds.get("compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();
-            List<AvailabilityDomain> availabilityDomains = OracleCloudAccount.getInstance().getIdentityClient().getAvailabilityDomainsList(compartment_id);
-            return availabilityDomains;
-        });
-
-        suggestedValues.put("oci:database:autonomousdatabase:id",(pd,pds,varGroup)->{
-
-            VariableGroup general_ConfigurationVarGroup = CustomWizardStep.variableGroups.get("General_Configuration");
-
-
-            String compartment_id = ( (Compartment)pds.get("compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();
-            if (compartment_id== null) return null;
-            List<AutonomousDatabaseSummary> autonomousDatabases = OracleCloudAccount.getInstance().getDatabaseClient().getAutonomousDatabaseList(compartment_id);
-            return autonomousDatabases;
-
-        });
-
-        suggestedValues.put("oci:kms:vault:id",(pd,pds,varGroup)->{
-            VariableGroup general_ConfigurationVarGroup =  CustomWizardStep.variableGroups.get("Stack_authentication");
-
-            String vault_compartment_id = ((Compartment) pds.get("vault_compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();;
-
-            List<VaultSummary> vaultList = OracleCloudAccount.getInstance().getIdentityClient().getVaultsList(vault_compartment_id);
-            return vaultList;
-        });
-
-        suggestedValues.put("oci:kms:key:id",(pd,pds,varGroup)->{
-            VariableGroup general_ConfigurationVarGroup =  CustomWizardStep.variableGroups.get("Stack_authentication");
-
-            String vault_compartment_id = ( (Compartment) pds.get("vault_compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();
-            VaultSummary vault =(VaultSummary) pds.get("vault_id").getReadMethod().invoke(varGroup);
-            if (vault == null) return null ;
-
-
-            List<KeySummary> keyList = OracleCloudAccount.getInstance().getIdentityClient().getKeyList(vault_compartment_id,vault);
-
-            return keyList;
-
-        });
-
-
-    }
-
-    private static String getVaribaleValue(String variableName, Object dependsOn) {
-        Pattern pattern = Pattern.compile(variableName+"=([^,}]*)");
-        Matcher matcher = pattern.matcher(dependsOn.toString());
-
-        if (matcher.find()){
-            return matcher.group(1);
-        }
-        return "";
-    }
-
-    static public Map<String , List<String>> depondsOn = new LinkedHashMap<>(){{
-        put("compartment_id", List.of("availability_domain","autonomous_database"));
-        put("vault_compartment_id",List.of("vault_id","key_id"));
-        put("vault_id",List.of("key_id"));
-        put("vcn_compartment_id",List.of("existing_vcn_id","existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
-        put("existing_vcn_id",List.of("existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
-    }};
-
-    static public Map<String, List<String>> visibilty = new LinkedHashMap<>() {{
-        put("application_source", List.of("application_type", "repo_name", "branch", "build_command", "artifact_location", "artifact_id", "registry_id", "image_path", "exposed_port", "use_username_env", "use_password_env", "use_tns_admin_env", "tns_admin_env", "use_default_ssl_configuration", "cert_pem", "private_key_pem", "ca_pem", "vm_options", "program_arguments"));
-        put("application_type", List.of("program_arguments", "use_default_ssl_configuration"));
-        put("use_existing_database", List.of("autonomous_database_display_name", "autonomous_database_admin_password", "data_storage_size_in_tbs", "cpu_core_count", "ocpu_count", "autonomous_database", "autonomous_database_user", "autonomous_database_password", "use_existing_db_subnet", "db_subnet_cidr"));
-        put("use_existing_vault", List.of("new_vault_display_name", "vault_compartment_id", "vault_id", "key_id"));
-        put("use_existing_token", List.of("current_user_token"));
-        put("use_connection_url_env", List.of("connection_url_env"));
-        put("use_username_env", List.of("username_env"));
-        put("use_password_env", List.of("password_env"));
-        put("use_tns_admin_env", List.of("tns_admin_env"));
-        put("use_default_ssl_configuration", List.of("port_property", "keystore_property", "key_alias_property", "keystore_password_property", "keystore_type_property"));
-        put("create_fqdn", List.of("dns_compartment", "zone", "subdomain", "certificate_ocid"));
-        put("create_new_vcn", List.of("vcn_compartment_id", "existing_vcn_id", "vcn_cidr", "use_existing_app_subnet", "use_existing_db_subnet", "use_existing_lb_subnet"));
-        put("use_existing_app_subnet", List.of("existing_app_subnet_id", "app_subnet_cidr"));
-        put("use_existing_db_subnet", List.of("existing_db_subnet_id", "db_subnet_cidr"));
-        put("use_existing_lb_subnet", List.of("existing_lb_subnet_id", "lb_subnet_cidr"));
-        put("use_default_lb_configuration", List.of("maximum_bandwidth_in_mbps", "minimum_bandwidth_in_mbps", "health_checker_url_path", "health_checker_return_code", "enable_session_affinity"));
-        put("enable_session_affinity", List.of("session_affinity", "session_affinity_cookie_name"));
-    }};
-
-    static SuggestConsumor<PropertyDescriptor,LinkedHashMap<String,PropertyDescriptor> ,List<? extends ExplicitlySetBmcModel>,VariableGroup> getSuggestedValuesOf(String type){
-        return suggestedValues.get(type);
-    }
-
-
-}
-@FunctionalInterface
-interface SuggestConsumor<T,U,R,O> {
-    R apply(T t,U u,O o) throws InvocationTargetException, IllegalAccessException;
-}
 

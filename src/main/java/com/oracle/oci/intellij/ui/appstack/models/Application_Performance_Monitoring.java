@@ -14,8 +14,10 @@ public class Application_Performance_Monitoring extends VariableGroup {
         return is_free_tier;
     }
 
-    public void setIs_free_tier(boolean is_free_tier) {
-        this.is_free_tier = is_free_tier;
+    public void setIs_free_tier(boolean newValue) {
+        Object oldValue = this.is_free_tier;
+        this.is_free_tier = newValue;
+        pcs.firePropertyChange("is_free_tier", oldValue, newValue);
     }
     public void addPropertyChangeListener(PropertyChangeListener listener) {
          this.pcs.addPropertyChangeListener(listener);

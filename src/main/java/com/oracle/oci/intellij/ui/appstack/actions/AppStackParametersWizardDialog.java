@@ -7,6 +7,7 @@ import com.intellij.ui.wizard.WizardStep;
 import com.intellij.util.ui.JBDimension;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
+import com.oracle.oci.intellij.ui.appstack.models.Controller;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 
 import javax.swing.*;
@@ -63,7 +64,7 @@ public class AppStackParametersWizardDialog extends WizardDialog {
                     WizardStep nextStep =null;
                     boolean ischangeValide = true;
                     CustomWizardStep currentStep = (CustomWizardStep) appStackModel.getMySteps().get(lastSelectedIndex[0]);
-                    nextStep = currentStep.doValidate();
+                    nextStep = Controller.getInstance().doValidate(currentStep);
                     if (nextStep != null){
                         ischangeValide = false;
                     }

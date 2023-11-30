@@ -7,7 +7,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 public class Application extends VariableGroup {
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+//    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     private java.lang.String application_name;
 
@@ -55,8 +55,10 @@ public class Application extends VariableGroup {
         return application_name;
     }
 
-    public void setApplication_name(String application_name) {
-        this.application_name = application_name;
+    public void setApplication_name(String newValue) {
+        String oldValue = this.application_name;
+        this.application_name = newValue;
+        pcs.firePropertyChange("application_name", oldValue, newValue);
     }
     @PropertyOrder(2)
     @VariableMetaData(title="Number of deployments",description="This is the number of container instances that will be deployed.",type="number",required=true)
@@ -67,6 +69,7 @@ public class Application extends VariableGroup {
 
     public void setNb_copies(int nb_copies) {
         this.nb_copies = nb_copies;
+
     }
     @PropertyOrder(3)
     @VariableMetaData(title="Application source",description="You can deploy an application that is either a container image, a Java artifact (JAR/WAR) or from the source code.",defaultVal="SOURCE_CODE",type="enum",required=true,enumValues ="IMAGE,ARTIFACT,SOURCE_CODE")
@@ -179,11 +182,11 @@ public class Application extends VariableGroup {
         this.exposed_port = exposed_port;
     }
 
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-         this.pcs.addPropertyChangeListener(listener);
-     }
-
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-         this.pcs.removePropertyChangeListener(listener);
-     }
+//    public void addPropertyChangeListener(PropertyChangeListener listener) {
+//         this.pcs.addPropertyChangeListener(listener);
+//     }
+//
+//    public void removePropertyChangeListener(PropertyChangeListener listener) {
+//         this.pcs.removePropertyChangeListener(listener);
+//     }
 }

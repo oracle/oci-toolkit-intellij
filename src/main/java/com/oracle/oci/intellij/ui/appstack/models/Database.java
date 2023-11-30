@@ -7,7 +7,6 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 public class Database extends VariableGroup {
-    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     private boolean use_existing_database;
 
@@ -148,72 +147,106 @@ public class Database extends VariableGroup {
         return password_env;
     }
 
-    public void setUse_existing_database(boolean use_existing_database) {
-        this.use_existing_database = use_existing_database;
+    public void setUse_existing_database(boolean newValue) {
+        Object oldValue = this.use_existing_database;
+        this.use_existing_database = newValue;
+        pcs.firePropertyChange("use_existing_database", oldValue, newValue);
     }
 
-    public void setAutonomous_database_display_name(String autonomous_database_display_name) {
-        this.autonomous_database_display_name = autonomous_database_display_name;
+    public void setAutonomous_database_display_name(String newValue) {
+        Object oldValue = this.autonomous_database_display_name;
+        this.autonomous_database_display_name = newValue;
+        pcs.firePropertyChange("autonomous_database_display_name", oldValue, newValue);
     }
 
-    public void setAutonomous_database_admin_password(Object autonomous_database_admin_password) {
-        this.autonomous_database_admin_password = autonomous_database_admin_password;
+    public void setAutonomous_database_admin_password(Object newValue) {
+        Object oldValue = this.autonomous_database_admin_password;
+        this.autonomous_database_admin_password = newValue;
+        pcs.firePropertyChange("autonomous_database_admin_password", oldValue, newValue);
     }
 
-    public void setData_storage_size_in_tbs(int data_storage_size_in_tbs) {
-        this.data_storage_size_in_tbs = data_storage_size_in_tbs;
+    public void setData_storage_size_in_tbs(int newValue) {
+        Object oldValue = this.data_storage_size_in_tbs;
+        this.data_storage_size_in_tbs = newValue;
+        pcs.firePropertyChange("data_storage_size_in_tbs", oldValue, newValue);
     }
 
-    public void setCpu_core_count(int cpu_core_count) {
-        this.cpu_core_count = cpu_core_count;
+    public void setCpu_core_count(int newValue) {
+        Object oldValue = this.cpu_core_count;
+        this.cpu_core_count = newValue;
+        pcs.firePropertyChange("cpu_core_count", oldValue, newValue);
     }
 
-    public void setOcpu_count(int ocpu_count) {
-        this.ocpu_count = ocpu_count;
+    public void setOcpu_count(int newValue) {
+        Object oldValue = this.ocpu_count;
+        this.ocpu_count = newValue;
+        pcs.firePropertyChange("ocpu_count", oldValue, newValue);
     }
 
-    public void setAutonomous_database(Object autonomous_database) {
-        this.autonomous_database = autonomous_database;
+    public void setAutonomous_database(Object newValue) {
+        Object oldValue = this.autonomous_database;
+        this.autonomous_database = newValue;
+        pcs.firePropertyChange("autonomous_database", oldValue, newValue);
     }
 
-    public void setAutonomous_database_user(String autonomous_database_user) {
-        this.autonomous_database_user = autonomous_database_user;
+    public void setAutonomous_database_user(String newValue) {
+        Object oldValue = this.autonomous_database_user;
+        this.autonomous_database_user = newValue;
+        pcs.firePropertyChange("autonomous_database_user", oldValue, newValue);
     }
 
-    public void setAutonomous_database_password(Object autonomous_database_password) {
-        this.autonomous_database_password = autonomous_database_password;
+    public void setAutonomous_database_password(Object newValue) {
+        Object oldValue = this.autonomous_database_password;
+        this.autonomous_database_password = newValue;
+        pcs.firePropertyChange("autonomous_database_password", oldValue, newValue);
     }
 
-    public void setUse_connection_url_env(boolean use_connection_url_env) {
-        this.use_connection_url_env = use_connection_url_env;
+    public void setUse_connection_url_env(boolean newValue) {
+        Object oldValue = this.use_connection_url_env;
+        this.use_connection_url_env = newValue;
+        pcs.firePropertyChange("use_connection_url_env", oldValue, newValue);
     }
 
-    public void setConnection_url_env(String connection_url_env) {
-        this.connection_url_env = connection_url_env;
+    public void setConnection_url_env(String newValue) {
+        Object oldValue = this.connection_url_env;
+        this.connection_url_env = newValue;
+        pcs.firePropertyChange("connection_url_env", oldValue, newValue);
     }
 
-    public void setUse_tns_admin_env(boolean use_tns_admin_env) {
-        this.use_tns_admin_env = use_tns_admin_env;
+    public void setUse_tns_admin_env(boolean newValue) {
+        Object oldValue = this.use_tns_admin_env;
+        this.use_tns_admin_env = newValue;
+        pcs.firePropertyChange("use_tns_admin_env", oldValue, newValue);
     }
 
-    public void setTns_admin_env(String tns_admin_env) {
-        this.tns_admin_env = tns_admin_env;
+    public void setTns_admin_env(String newValue) {
+        Object oldValue = this.tns_admin_env;
+        this.tns_admin_env = newValue;
+        pcs.firePropertyChange("tns_admin_env", oldValue, newValue);
     }
 
-    public void setUse_username_env(boolean use_username_env) {
-        this.use_username_env = use_username_env;
+    public void setUse_username_env(boolean newValue) {
+        Object oldValue = this.use_username_env;
+        this.use_username_env = newValue;
+        pcs.firePropertyChange("use_username_env", oldValue, newValue);
     }
 
-    public void setUsername_env(String username_env) {
-        this.username_env = username_env;
+    public void setUsername_env(String newValue) {
+        Object oldValue = this.username_env;
+        this.username_env = newValue;
+        pcs.firePropertyChange("username_env", oldValue, newValue);
     }
 
-    public void setUse_password_env(boolean use_password_env) {
-        this.use_password_env = use_password_env;
+    public void setUse_password_env(boolean newValue) {
+        Object oldValue = this.use_password_env;
+        this.use_password_env = newValue;
+        pcs.firePropertyChange("use_password_env", oldValue, newValue);
     }
 
-    public void setPassword_env(String password_env) {
-        this.password_env = password_env;
+    public void setPassword_env(String newValue) {
+        Object oldValue = this.password_env;
+        this.password_env = newValue;
+        pcs.firePropertyChange("password_env", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
