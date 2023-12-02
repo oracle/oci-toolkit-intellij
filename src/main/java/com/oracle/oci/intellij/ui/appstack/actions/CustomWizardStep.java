@@ -33,6 +33,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -242,7 +244,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                     compartmentName.setText(selectedCompartment.getName());
 
 //                controller.updateDependencies(pd.getName(),varGroup);
-
+                    ExecutorService executorService = Executors.newSingleThreadExecutor();
 
                     selectCompartmentBtn.addActionListener(e->{
                         final CompartmentSelection compartmentSelection1 = CompartmentSelection.newInstance();
@@ -250,15 +252,16 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
                         if (compartmentSelection1.showAndGet()){
                             final Compartment selected = compartmentSelection1.getSelectedCompartment();
-                            try {
-                                compartmentName.setText(selected.getName());
-//                            pd.setValue("value",selected);
-                                pd.getWriteMethod().invoke(varGroup,selected);
-//                            controller.updateDependencies(pd.getName(), varGroup);
+                            compartmentName.setText(selected.getName());
+                            executorService.submit(() -> {
+                                try {
+                                    pd.getWriteMethod().invoke(varGroup, selected);
 
-                            } catch (IllegalAccessException | InvocationTargetException ex) {
-                                throw new RuntimeException(ex);
-                            }
+                                } catch (IllegalAccessException | InvocationTargetException ex) {
+                                    throw new RuntimeException(ex);
+                                }
+                                return null;
+                            });
                         }
                     });
 //                    controller.getPdComponents().put(pd.getName(),compartmentPanel);
@@ -284,7 +287,8 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                          *
                          */
                         // we need to set a custom renderer
-                        comboBox.setModel(new DefaultComboBoxModel<>(new String[] {"Loading..."}));                        loadComboBoxValues(pd,varGroup,comboBox);
+                        comboBox.setModel(new DefaultComboBoxModel<>(new String[] {"Loading..."}));
+                        controller.loadComboBoxValues(pd,varGroup,comboBox);
                         System.out.println("----------"+pd.getName()+"----------------");
 
 
@@ -342,6 +346,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
                     if (pd.getValue("default") != null) {
                         comboBox.setSelectedItem(pd.getValue("default"));
+                        pd.getWriteMethod().invoke(varGroup,pd.getValue("default"));
                     }
 
                     component = comboBox;
@@ -436,43 +441,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             return component;
         }
 
-        private void loadComboBoxValues(PropertyDescriptor pd, VariableGroup varGroup, ComboBox comboBox) {
-            new SwingWorker<List, Void>() {
-                @Override
-                protected List doInBackground() throws Exception {
-                    return controller.getSuggestedValues(pd,varGroup);
-                }
 
-                @Override
-                protected void done() {
-                    List<ExplicitlySetBmcModel> suggestedValues;
-                    try {
-                        suggestedValues = (List<ExplicitlySetBmcModel>) get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        throw new RuntimeException(e);
-                    }
-                    comboBox.removeAllItems();
-
-                    if (suggestedValues != null) {
-                        for (ExplicitlySetBmcModel enumValue : suggestedValues) {
-                            comboBox.addItem(enumValue);
-                        }
-                        if (!suggestedValues.isEmpty()){
-                            comboBox.setSelectedItem(suggestedValues.get(0));
-//                        pd.setValue("value",suggestedValues.get(0));
-                            try {
-                                pd.getWriteMethod().invoke(varGroup,suggestedValues.get(0));
-                            } catch (IllegalAccessException | InvocationTargetException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }
-                }
-            }.execute();
-
-
-
-        }
 
         public JLabel getLabel() {
             return label;

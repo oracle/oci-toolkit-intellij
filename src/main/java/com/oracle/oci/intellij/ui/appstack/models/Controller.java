@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class Controller {
     Map<String, PropertyDescriptor> descriptorsState;
@@ -84,30 +85,74 @@ public class Controller {
         List<String> dependencies = Utils.depondsOn.get(pd.getName());
         if (dependencies != null) {
             for (String dependent : dependencies) {
-                ComboBox jComboBox = (ComboBox) getComponentByName(dependent);
+                CustomWizardStep.VarPanel varPanel = varPanels.get(dependent);
+                ComboBox jComboBox = (ComboBox) varPanel.getMainComponent();
                 if (jComboBox == null) continue;
                 jComboBox.removeAllItems();
+                jComboBox.setModel(new DefaultComboBoxModel<>(new String[] {"Loading..."}));
+                jComboBox.setEnabled(false);
                 PropertyDescriptor dependentPd = descriptorsState.get(dependent);
+                loadComboBoxValues(dependentPd,varPanel.getVariableGroup(),jComboBox);
 
-                List<? extends ExplicitlySetBmcModel> suggestedvalues = null;
-                try {
-                    suggestedvalues = Utils.getSuggestedValuesOf((String) dependentPd.getValue("type")).apply(dependentPd, (LinkedHashMap<String, PropertyDescriptor>) descriptorsState,varGroup);
-                } catch (InvocationTargetException | IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-                if (suggestedvalues == null) return;
-                for (ExplicitlySetBmcModel enumValue : suggestedvalues) {
-                    jComboBox.addItem(enumValue);
-                }
-                if (!suggestedvalues.isEmpty()){
-                    jComboBox.setSelectedItem(suggestedvalues.get(0));
-                    dependentPd.setValue("value",suggestedvalues.get(0));
-                }
+//                List<? extends ExplicitlySetBmcModel> suggestedvalues = null;
+//                try {
+//                    suggestedvalues = Utils.getSuggestedValuesOf((String) dependentPd.getValue("type")).apply(dependentPd, (LinkedHashMap<String, PropertyDescriptor>) descriptorsState,varGroup);
+//                } catch (InvocationTargetException | IllegalAccessException e) {
+//                    throw new RuntimeException(e);
+//                }
+//                if (suggestedvalues == null) return;
+//                for (ExplicitlySetBmcModel enumValue : suggestedvalues) {
+//                    jComboBox.addItem(enumValue);
+//                }
+//                if (!suggestedvalues.isEmpty()){
+//                    jComboBox.setSelectedItem(suggestedvalues.get(0));
+//                    dependentPd.setValue("value",suggestedvalues.get(0));
+//                }
 
 
 
             }
         }
+    }
+
+    public void loadComboBoxValues(PropertyDescriptor pd, VariableGroup varGroup, ComboBox comboBox) {
+        new SwingWorker<List, Void>() {
+            @Override
+            protected List doInBackground() throws Exception {
+                return getSuggestedValues(pd,varGroup);
+            }
+
+            @Override
+            protected void done() {
+                List<ExplicitlySetBmcModel> suggestedValues;
+                try {
+                    suggestedValues = (List<ExplicitlySetBmcModel>) get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+                comboBox.removeAllItems();
+                comboBox.setEnabled(true);
+
+
+                if (suggestedValues != null) {
+                    for (ExplicitlySetBmcModel enumValue : suggestedValues) {
+                        comboBox.addItem(enumValue);
+                    }
+                    if (!suggestedValues.isEmpty()){
+                        comboBox.setSelectedItem(suggestedValues.get(0));
+//                        pd.setValue("value",suggestedValues.get(0));
+                        try {
+                            pd.getWriteMethod().invoke(varGroup,suggestedValues.get(0));
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            }
+        }.execute();
+
+
+
     }
     public void updateVisibility(String pdName,VariableGroup variableGroup){
         PropertyDescriptor pd = descriptorsState.get(pdName);
@@ -257,6 +302,8 @@ public class Controller {
 //
 //        return variableGroups.get(className);
 //    }
+
+
 
     public List<? extends ExplicitlySetBmcModel> getSuggestedValues(PropertyDescriptor pd, VariableGroup varGroup) {
         String varType = (String) pd.getValue("type");
