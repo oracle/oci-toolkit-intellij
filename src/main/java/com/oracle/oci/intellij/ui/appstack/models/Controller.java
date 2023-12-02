@@ -16,35 +16,51 @@ import java.util.List;
 import java.util.Map;
 
 public class Controller {
-    LinkedHashMap<String, PropertyDescriptor> descriptorsState;
-    Map<String , JComponent> pdComponents = new LinkedHashMap<>();
-    Map<String , JComponent> errorLabels = new LinkedHashMap<>();
+    Map<String, PropertyDescriptor> descriptorsState;
+    Map <String, CustomWizardStep.VarPanel> varPanels = new LinkedHashMap<>() ;
+//    Map<String , JComponent> pdComponents = new LinkedHashMap<>();
+//    Map<String , JComponent> errorLabels = new LinkedHashMap<>();
     Map<String, VariableGroup> variableGroups ;
     private static Controller instance ;
 
-    public LinkedHashMap<String, PropertyDescriptor> getDescriptorsState() {
+    public Map<String, PropertyDescriptor> getDescriptorsState() {
         return descriptorsState;
+    }
+    public void addVariablePanel (CustomWizardStep.VarPanel varPanel){
+        varPanels.put(varPanel.getPd().getName(),varPanel);
     }
 
     public void setDescriptorsState(LinkedHashMap<String, PropertyDescriptor> descriptorsState) {
         this.descriptorsState = descriptorsState;
     }
-
-    public Map<String, JComponent> getPdComponents() {
-        return pdComponents;
+    public JComponent getComponentByName(String pdName){
+        CustomWizardStep.VarPanel varPanel = varPanels.get(pdName);
+        return varPanel.getMainComponent();
+    }
+    public JComponent getErrorLabelByName(String pdName){
+        CustomWizardStep.VarPanel varPanel = varPanels.get(pdName);
+        return varPanel.getErrorLabel();
+    }
+    public VariableGroup getVarGroupByName(String pdName){
+        CustomWizardStep.VarPanel varPanel = varPanels.get(pdName);
+        return varPanel.getVariableGroup();
     }
 
-    public void setPdComponents(Map<String, JComponent> pdComponents) {
-        this.pdComponents = pdComponents;
-    }
+//    public Map<String, JComponent> getPdComponents() {
+//        return pdComponents;
+//    }
 
-    public Map<String, JComponent> getErrorLabels() {
-        return errorLabels;
-    }
+//    public void setPdComponents(Map<String, JComponent> pdComponents) {
+//        this.pdComponents = pdComponents;
+//    }
 
-    public void setErrorLabels(Map<String, JComponent> errorLabels) {
-        this.errorLabels = errorLabels;
-    }
+//    public Map<String, JComponent> getErrorLabels() {
+//        return errorLabels;
+//    }
+
+//    public void setErrorLabels(Map<String, JComponent> errorLabels) {
+//        this.errorLabels = errorLabels;
+//    }
 
     public Map<String, VariableGroup> getVariableGroups() {
         return variableGroups;
@@ -68,14 +84,14 @@ public class Controller {
         List<String> dependencies = Utils.depondsOn.get(pd.getName());
         if (dependencies != null) {
             for (String dependent : dependencies) {
-                ComboBox jComboBox = (ComboBox) pdComponents.get(dependent);
+                ComboBox jComboBox = (ComboBox) getComponentByName(dependent);
                 if (jComboBox == null) continue;
                 jComboBox.removeAllItems();
                 PropertyDescriptor dependentPd = descriptorsState.get(dependent);
 
                 List<? extends ExplicitlySetBmcModel> suggestedvalues = null;
                 try {
-                    suggestedvalues = Utils.getSuggestedValuesOf((String) dependentPd.getValue("type")).apply(dependentPd, descriptorsState,varGroup);
+                    suggestedvalues = Utils.getSuggestedValuesOf((String) dependentPd.getValue("type")).apply(dependentPd, (LinkedHashMap<String, PropertyDescriptor>) descriptorsState,varGroup);
                 } catch (InvocationTargetException | IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
@@ -99,12 +115,14 @@ public class Controller {
         if (dependencies != null) {
 
             for (String dependency : dependencies) {
-                JComponent dependencyComponent  = pdComponents.get(dependency);
+                CustomWizardStep.VarPanel varPanel = varPanels.get(dependency);
+                JComponent dependencyComponent  = varPanel.getMainComponent();
                 if (dependencyComponent == null) continue;
 
                 PropertyDescriptor dependentPd = descriptorsState.get(dependency);
                 boolean isVisible = isVisible((String) dependentPd.getValue("visible"));
                 dependencyComponent.setEnabled(isVisible);
+                varPanel.getLabel().setEnabled(isVisible);
 
                 if (dependencyComponent instanceof JPanel){
                     JPanel dependencyComponentP = (JPanel) dependencyComponent;
@@ -120,7 +138,7 @@ public class Controller {
                 if (!isVisible){
 
                     // empty the error labels
-                    JLabel errorLabel = (JLabel) errorLabels.get(dependency);
+                    JLabel errorLabel =  varPanel.getErrorLabel();
                     if (errorLabel == null) continue;
                     errorLabel.setVisible(false);
                     dependencyComponent.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
@@ -128,10 +146,10 @@ public class Controller {
                     // empty the value
                     if (dependencyComponent instanceof JTextField){
                         ((JTextField) dependencyComponent).setText("");
-                        dependentPd.setValue("value","");
-                        String className = dependentPd.getReadMethod().getDeclaringClass().getSimpleName();
+//                        dependentPd.setValue("value","");
+//                        String className = dependentPd.getReadMethod().getDeclaringClass().getSimpleName();
 
-                        VariableGroup varGroup = variableGroups.get(className);
+                        VariableGroup varGroup = varPanel.getVariableGroup();
                         try {
                             dependentPd.getWriteMethod().invoke(varGroup,"");
                         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -204,10 +222,10 @@ public class Controller {
         PropertyDescriptor errorPd = null;
         for (PropertyDescriptor pd:
                 cWizardStep.getStepPropertyDescriptors()) {
-            if (pdComponents.get(pd.getName()).isEnabled() && (boolean)pd.getValue("required")){
-                String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
+            if (getComponentByName(pd.getName()).isEnabled() && (boolean)pd.getValue("required")){
+//                String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
 
-                VariableGroup varGroup = variableGroups.get(className);
+                VariableGroup varGroup = getVarGroupByName(pd.getName());
                 Object value = null;
                 try {
                     value  = pd.getReadMethod().invoke(varGroup);
@@ -216,7 +234,7 @@ public class Controller {
                 }
                 if (value== null || value.equals("")){
                     errorPd = pd;
-                    errorComponent = pdComponents.get(pd.getName());
+                    errorComponent = getComponentByName(pd.getName());
                     isvalide = false;
                     break;
                 }
@@ -225,7 +243,7 @@ public class Controller {
         if (!isvalide){
             errorComponent.grabFocus();
             errorComponent.requestFocusInWindow();
-            JLabel errorLabel = (JLabel) errorLabels.get(errorPd.getName());
+            JLabel errorLabel = (JLabel) getErrorLabelByName(errorPd.getName());
             errorLabel.setVisible(true);
             errorLabel.setText("This field is required");
             errorComponent.setBorder(BorderFactory.createLineBorder(JBColor.RED));
@@ -234,16 +252,16 @@ public class Controller {
         return null;
     }
 
-    public VariableGroup getVariableGroup(PropertyDescriptor pd) {
-        String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
-
-        return variableGroups.get(className);
-    }
+//    public VariableGroup getVariableGroup(PropertyDescriptor pd) {
+//        String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
+//
+//        return variableGroups.get(className);
+//    }
 
     public List<? extends ExplicitlySetBmcModel> getSuggestedValues(PropertyDescriptor pd, VariableGroup varGroup) {
         String varType = (String) pd.getValue("type");
         try {
-            return Utils.getSuggestedValuesOf(varType).apply(pd,descriptorsState,varGroup);
+            return Utils.getSuggestedValuesOf(varType).apply(pd, (LinkedHashMap<String, PropertyDescriptor>) descriptorsState,varGroup);
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }

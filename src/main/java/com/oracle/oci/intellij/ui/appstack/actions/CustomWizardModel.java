@@ -70,7 +70,7 @@ public class CustomWizardModel extends WizardModel {
     public LinkedHashMap<String,String> collectVariables(){
         LinkedHashMap<String,String> vars = new LinkedHashMap<>();
         descriptorsState.forEach((key,value)->{
-            boolean isEnabled = Controller.getInstance().getPdComponents().get(value.getName()).isEnabled();
+            boolean isEnabled = Controller.getInstance().getComponentByName(value.getName()).isEnabled();
             if (isEnabled && (boolean)value.getValue("required")){
                 String mappedValue = mapValue(value);
                 vars.put(value.getName(),mappedValue);
@@ -80,7 +80,7 @@ public class CustomWizardModel extends WizardModel {
     }
 
     private String mapValue(PropertyDescriptor pd) {
-        VariableGroup variableGroup = Controller.getInstance().getVariableGroup(pd);
+        VariableGroup variableGroup = Controller.getInstance().getVarGroupByName(pd.getName());
         Object value;
         try {
             value = pd.getReadMethod().invoke(variableGroup);
