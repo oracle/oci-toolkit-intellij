@@ -33,8 +33,8 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         JPanel mainPanel = new JPanel(new BorderLayout());
         JPanel leftPanel = (JPanel) createMenuPanel();
 
-        mainPanel.add(leftPanel,BorderLayout.EAST);
-        mainPanel.add(wizard,BorderLayout.WEST);
+        mainPanel.add(leftPanel,BorderLayout.WEST);
+        mainPanel.add(wizard,BorderLayout.EAST);
         mainPanel.setPreferredSize(new JBDimension(1100,780));
         return mainPanel;
     }

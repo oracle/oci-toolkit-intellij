@@ -70,7 +70,7 @@ public class CustomWizardModel extends WizardModel {
     public LinkedHashMap<String,String> collectVariables(){
         LinkedHashMap<String,String> vars = new LinkedHashMap<>();
         descriptorsState.forEach((key,value)->{
-            boolean isEnabled = Controller.getInstance().getComponentByName(value.getName()).isEnabled();
+            boolean isEnabled = Controller.getInstance().getVarPanelByName(value.getName()).isVisible();
             if (isEnabled && (boolean)value.getValue("required")){
                 String mappedValue = mapValue(value);
                 vars.put(value.getName(),mappedValue);

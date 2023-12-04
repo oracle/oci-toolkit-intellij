@@ -43,16 +43,16 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
     JBScrollPane mainScrollPane;
     JPanel mainPanel;
     VariableGroup variableGroup;
-    List<PropertyDescriptor> stepPropertyDescriptors;
+//    List<PropertyDescriptor> stepPropertyDescriptors;
+    List<VarPanel> varPanels ;
     Controller controller = Controller.getInstance();
-
 
 
     public CustomWizardStep(VariableGroup varGroup, PropertyDescriptor[] propertyDescriptors, LinkedHashMap<String, PropertyDescriptor> descriptorsState, List<VariableGroup> varGroups) {
         mainPanel = new JPanel();
         mainScrollPane = new JBScrollPane(mainPanel);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        stepPropertyDescriptors = new ArrayList<>();
+        varPanels = new ArrayList<>();
         varGroup.addPropertyChangeListener(this);
         this.variableGroup = varGroup;
 
@@ -69,10 +69,11 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 continue;
             }
             try {
-                stepPropertyDescriptors.add(pd);
-                JPanel varPanel = new VarPanel(pd,variableGroup);
-                controller.addVariablePanel((VarPanel) varPanel);
-                mainPanel.add(varPanel)  ;
+//                stepPropertyDescriptors.add(pd);
+               VarPanel varPanel =new VarPanel(pd,variableGroup);
+               varPanels.add(varPanel) ;
+               controller.addVariablePanel( varPanel);
+               mainPanel.add(varPanel)  ;
             } catch (InvocationTargetException | IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
@@ -80,7 +81,9 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
     }
 
-
+    public List<VarPanel> getVarPanels() {
+        return varPanels;
+    }
 
 
     @Override
@@ -103,9 +106,9 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         return super.onNext(model);
     }
 
-    public List<PropertyDescriptor> getStepPropertyDescriptors() {
-        return stepPropertyDescriptors;
-    }
+//    public List<PropertyDescriptor> getStepPropertyDescriptors() {
+//        return stepPropertyDescriptors;
+//    }
 
 
 
@@ -174,7 +177,6 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             componentErrorPanel.setLayout(new BorderLayout());
 
             errorLabel = new JLabel();
-//            controller.getErrorLabels().put(pd.getName(), errorLabel);
             errorLabel.setVisible(false);
             errorLabel.setForeground(JBColor.RED);
             errorLabel.setBorder(BorderFactory.createEmptyBorder(0,80,0,0));
@@ -188,15 +190,12 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             componentErrorPanel.add(errorLabel,BorderLayout.SOUTH);
 
             boolean  isVisible = controller.isVisible((String) pd.getValue("visible"));
-            mainComponent.setEnabled(isVisible);
-            label.setEnabled(isVisible);
+            this.setVisible(isVisible);
 
 
             add(labelPanel, BorderLayout.WEST);
             componentErrorPanelFlow.add(componentErrorPanel);
             add(componentErrorPanelFlow,BorderLayout.EAST);
-//        varPanel.setPreferredSize(new JBDimension(660,30));
-//        varPanel.setMaximumSize( new JBDimension(660,30));
         }
 
 
@@ -211,7 +210,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 component = checkBox;
 
                 checkBox.addActionListener(e -> {
-                    pd.setValue("value",checkBox.isSelected());
+//                    pd.setValue("value",checkBox.isSelected());
                     try {
                         pd.getWriteMethod().invoke(varGroup,checkBox.isSelected());
 //                    controller.updateVisibility(pd.getName(),varGroup);

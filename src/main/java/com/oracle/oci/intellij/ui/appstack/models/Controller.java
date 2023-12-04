@@ -19,8 +19,6 @@ import java.util.concurrent.ExecutionException;
 public class Controller {
     Map<String, PropertyDescriptor> descriptorsState;
     Map <String, CustomWizardStep.VarPanel> varPanels = new LinkedHashMap<>() ;
-//    Map<String , JComponent> pdComponents = new LinkedHashMap<>();
-//    Map<String , JComponent> errorLabels = new LinkedHashMap<>();
     Map<String, VariableGroup> variableGroups ;
     private static Controller instance ;
 
@@ -45,6 +43,10 @@ public class Controller {
     public VariableGroup getVarGroupByName(String pdName){
         CustomWizardStep.VarPanel varPanel = varPanels.get(pdName);
         return varPanel.getVariableGroup();
+    }
+
+    public CustomWizardStep.VarPanel getVarPanelByName(String pdName){
+        return varPanels.get(pdName);
     }
 
 //    public Map<String, JComponent> getPdComponents() {
@@ -166,8 +168,9 @@ public class Controller {
 
                 PropertyDescriptor dependentPd = descriptorsState.get(dependency);
                 boolean isVisible = isVisible((String) dependentPd.getValue("visible"));
-                dependencyComponent.setEnabled(isVisible);
-                varPanel.getLabel().setEnabled(isVisible);
+                varPanel.setVisible(isVisible);
+                //                dependencyComponent.setEnabled(isVisible);
+//                varPanel.getLabel().setEnabled(isVisible);
 
                 if (dependencyComponent instanceof JPanel){
                     JPanel dependencyComponentP = (JPanel) dependencyComponent;
@@ -210,26 +213,36 @@ public class Controller {
         }
     }
     public boolean isVisible(String rule) {
-        if (rule == null || rule.isEmpty()){
-            return true;
-        }
-        if (rule.startsWith("not(")){
-            return !isVisible(rule.substring(4,rule.length()-1));
-        }
-        if (rule.startsWith("and(")){
-            return evaluateAnd(rule.substring(4, rule.lastIndexOf(')')));
-        }
-        if (rule.startsWith("eq(")){
-            String[] parts = rule.substring(3,rule.length()-1).split(",");
-            String variable = parts[0];
-            String value = parts[1].trim().replaceAll("'","");
+        try {
+            if (rule == null || rule.isEmpty()){
+                return true;
+            }
+            if (rule.startsWith("not(")){
+                return !isVisible(rule.substring(4,rule.length()-1));
+            }
+            if (rule.startsWith("and(")){
+                return evaluateAnd(rule.substring(4, rule.lastIndexOf(')')));
+            }
+            if (rule.startsWith("eq(")){
+                String[] parts = rule.substring(3,rule.length()-1).split(",");
+                String variable;
+                String value = parts[1].trim().replaceAll("'","");
+                VariableGroup variableGroup = getVarGroupByName(parts[0]);
+                PropertyDescriptor pd = descriptorsState.get(parts[0]);
+                Enum varValue = (Enum) pd.getReadMethod().invoke(variableGroup);
 
-            Enum varValue = (Enum) descriptorsState.get(variable).getValue("value");
+                return varValue.toString().equals(value);
+            }
+            VariableGroup variableGroup = getVarGroupByName(rule.trim());
+            PropertyDescriptor pd = descriptorsState.get(rule.trim());
+            boolean varValue = false;
 
-            return varValue.toString().equals(value);
+            varValue = (boolean) pd.getReadMethod().invoke(variableGroup);
+            return varValue;
+
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
         }
-        boolean varValue = (boolean) descriptorsState.get(rule.trim()).getValue("value");
-        return varValue;
     }
 
     private  boolean evaluateAnd(String rule) {
@@ -265,9 +278,11 @@ public class Controller {
         boolean isvalide = true ;
         JComponent errorComponent = null;
         PropertyDescriptor errorPd = null;
-        for (PropertyDescriptor pd:
-                cWizardStep.getStepPropertyDescriptors()) {
-            if (getComponentByName(pd.getName()).isEnabled() && (boolean)pd.getValue("required")){
+
+        for (CustomWizardStep.VarPanel varPanel:
+                cWizardStep.getVarPanels()) {
+            PropertyDescriptor pd = varPanel.getPd();
+            if (varPanel.isVisible() && (boolean)pd.getValue("required")){
 //                String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
 
                 VariableGroup varGroup = getVarGroupByName(pd.getName());

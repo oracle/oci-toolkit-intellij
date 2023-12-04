@@ -29,6 +29,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.table.DefaultTableModel;
 
+import com.intellij.openapi.application.ApplicationManager;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.notification.NotificationType;
@@ -462,26 +463,32 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 //        e1.printStackTrace();
 //      }
 
-      try {
-//        dashboard.createAppStackButton.setEnabled(false);
-//        YamlLoader.Load();
-        YamlLoader loader = new YamlLoader();
-        loader.load();
-//        dashboard.createAppStackButton.setEnabled(true);
-      } catch (IntrospectionException ex) {
-        try {
-          ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
-          String compartmentId = SystemPreferences.getCompartmentId();
-          ClassLoader cl = AppStackDashboard.class.getClassLoader();
-          CreateStackCommand command = 
-            new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
-          this.dashboard.commandStack.execute(command);
-        } catch (Exception e1) {
-          throw new RuntimeException(e1);
-        }
-      } catch (InvocationTargetException | IllegalAccessException ex) {
-          throw new RuntimeException(ex);
-      }
+
+        dashboard.createAppStackButton.setEnabled(false);
+        Runnable runnable = ()->{
+          YamlLoader loader = new YamlLoader();
+          try {
+            loader.load();
+          } catch (IntrospectionException | IllegalAccessException | InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+          }
+            dashboard.createAppStackButton.setEnabled(true);
+        };
+        ApplicationManager.getApplication().invokeLater(runnable);
+
+
+
+//        try {
+//          ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+//          String compartmentId = SystemPreferences.getCompartmentId();
+//          ClassLoader cl = AppStackDashboard.class.getClassLoader();
+//          CreateStackCommand command =
+//            new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
+//          this.dashboard.commandStack.execute(command);
+//        } catch (Exception e1) {
+//          throw new RuntimeException(e1);
+//        }
+
     }
   }
   

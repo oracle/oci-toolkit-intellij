@@ -26,8 +26,7 @@ import java.util.concurrent.*;
 
 public class YamlLoader {
     static List<VariableGroup> varGroups;
-      final ExecutorService executorService = Executors.newSingleThreadExecutor();
-      Compartment compartment ;
+    Compartment compartment ;
 
     public  void load() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
 
@@ -64,7 +63,7 @@ public class YamlLoader {
                     System.out.println(pd.getName());
                     pd.setValue("default", defaultValue);
 
-                    pd.setValue("value",defaultValue);
+//                    pd.setValue("value",defaultValue);
                     pd.getWriteMethod().invoke(appVarGroup,defaultValue);
                 }
                 if (annotation.dependsOn() != null && !annotation.dependsOn().isEmpty()) {
@@ -103,28 +102,6 @@ public class YamlLoader {
         CustomWizardModel customWizardModel = new CustomWizardModel(varGroups,descriptorsState);
         AppStackParametersWizardDialog dialog = new AppStackParametersWizardDialog(customWizardModel);
         dialog.show();
-//        JPanel mainPanel = new JPanel(new BorderLayout());
-//        JPanel leftPanel = new JPanel();
-//        JLabel label = new JLabel("hii");
-//        JLabel label1 = new JLabel("hii");
-//
-//        JLabel label22 = new JLabel("hii");
-//
-//        leftPanel.add(label1);
-//        leftPanel.add(label);
-//        leftPanel.add(label22);
-//
-//
-//        mainPanel.add(leftPanel,BorderLayout.EAST);
-//        mainPanel.add(dialog.getContentPanel(),BorderLayout.WEST);
-//        // create new panel
-//        DialogWrapper dialogWrapper = new DialogWrapper(true) {
-//            @Override
-//            protected @Nullable JComponent createCenterPanel() {
-//                return mainPanel;
-//            }
-//        };
-//        dialogWrapper.show();
 
 
     }
