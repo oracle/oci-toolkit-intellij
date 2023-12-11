@@ -4,6 +4,7 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.wizard.WizardStep;
 import com.oracle.bmc.http.client.internal.ExplicitlySetBmcModel;
+import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardStep;
 
 import javax.swing.*;
@@ -21,6 +22,8 @@ public class Controller {
     Map <String, CustomWizardStep.VarPanel> varPanels = new LinkedHashMap<>() ;
     Map<String, VariableGroup> variableGroups ;
     private static Controller instance ;
+    Map<String, List<Compartment>> cachedCompartmentList = new LinkedHashMap<>();
+
 
     public Map<String, PropertyDescriptor> getDescriptorsState() {
         return descriptorsState;
@@ -32,6 +35,15 @@ public class Controller {
     public void setDescriptorsState(LinkedHashMap<String, PropertyDescriptor> descriptorsState) {
         this.descriptorsState = descriptorsState;
     }
+
+    public Map<String, List<Compartment>> getCachedCompartmentList() {
+        return cachedCompartmentList;
+    }
+
+    public void setCachedCompartmentList(Map<String, List<Compartment>> cachedCompartmentList) {
+        this.cachedCompartmentList = cachedCompartmentList;
+    }
+
     public JComponent getComponentByName(String pdName){
         CustomWizardStep.VarPanel varPanel = varPanels.get(pdName);
         return varPanel.getMainComponent();
@@ -273,7 +285,7 @@ public class Controller {
         }
         return true;
     }
-    public WizardStep doValidate(WizardStep wizardStep){
+    public boolean doValidate(WizardStep wizardStep){
         CustomWizardStep cWizardStep = (CustomWizardStep)wizardStep;
         boolean isvalide = true ;
         JComponent errorComponent = null;
@@ -292,7 +304,7 @@ public class Controller {
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
-                if (value== null || value.equals("")){
+                if (value == null || value.equals("")){
                     errorPd = pd;
                     errorComponent = getComponentByName(pd.getName());
                     isvalide = false;
@@ -307,9 +319,9 @@ public class Controller {
             errorLabel.setVisible(true);
             errorLabel.setText("This field is required");
             errorComponent.setBorder(BorderFactory.createLineBorder(JBColor.RED));
-            return cWizardStep;
+            return false;
         }
-        return null;
+        return true;
     }
 
 //    public VariableGroup getVariableGroup(PropertyDescriptor pd) {
@@ -327,5 +339,8 @@ public class Controller {
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public boolean validateField() {
     }
 }

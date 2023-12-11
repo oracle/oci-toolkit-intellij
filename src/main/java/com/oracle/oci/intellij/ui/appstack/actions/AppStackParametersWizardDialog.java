@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 
 public class AppStackParametersWizardDialog extends WizardDialog {
     public static  boolean isProgramaticChange = false;
+    JBList menuList;
 
     public AppStackParametersWizardDialog(WizardModel wizardModel){
         super(true ,  wizardModel);
@@ -50,7 +51,7 @@ public class AppStackParametersWizardDialog extends WizardDialog {
             listModel.addElement(var.getClass().getSimpleName().replaceAll("_"," "));
         }
 
-        JBList menuList = new JBList<>(listModel);
+         menuList = new JBList<>(listModel);
         appStackModel.setGroupMenuList(menuList);
         isProgramaticChange = true;
         menuList.setSelectedIndex(0);
@@ -59,49 +60,37 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         menuList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                if ( e.getValueIsAdjusting() && !isProgramaticChange) {
-                    int selectedIndex = menuList.getSelectedIndex();
-                    WizardStep nextStep =null;
-                    boolean ischangeValide = true;
-                    CustomWizardStep currentStep = (CustomWizardStep) appStackModel.getMySteps().get(lastSelectedIndex[0]);
-                    nextStep = Controller.getInstance().doValidate(currentStep);
-                    if (nextStep != null){
-                        ischangeValide = false;
+                if ( e.getValueIsAdjusting() ) {
+                    if(!isProgramaticChange) {
+                        int selectedIndex = menuList.getSelectedIndex();
+                        WizardStep nextStep = null;
+//                        boolean ischangeValide = true;
+                        CustomWizardStep currentStep = (CustomWizardStep) appStackModel.getMySteps().get(lastSelectedIndex[0]);
+//                        currentStep.
+                        boolean isValide =  Controller.getInstance().doValidate(currentStep);
+                        currentStep.setDirty(!isValide);
+//                        if (nextStep != null) {
+//                            ischangeValide = false;
+//                        }
+
+                        nextStep = nextStep != null ? nextStep : appStackModel.getMySteps().get(selectedIndex);
+                        if (changeToStep(nextStep,appStackModel)) return;
+//                        if (!ischangeValide) {
+//                            isProgramaticChange = true;
+//                            menuList.setSelectedIndex(lastSelectedIndex[0]);
+//                            isProgramaticChange = false;
+//                        } else {
+                            lastSelectedIndex[0] = selectedIndex;
+//                        }
                     }
 
-                    nextStep = nextStep != null ? nextStep: appStackModel.getMySteps().get(selectedIndex);
-                    if (nextStep == WizardStep.FORCED_GOAL_DROPPED) {
-                        appStackModel.cancel();
-                        return;
-                    }
+//                    }else {
+//                        // put the title menu in not bold
+//
+//
+//                    }
 
-                    if (nextStep == WizardStep.FORCED_GOAL_ACHIEVED) {
-                        appStackModel.finish();
-                        return;
-                    }
-
-                    if (nextStep == null) {
-//                    nextStep = getNextFor(getCurrentStep());
-                        throw new RuntimeException("ex");
-
-                    }
-
-                    try {
-                        Method method = WizardModel.class.getDeclaredMethod("changeToStep", WizardStep.class);
-                        method.setAccessible(true);
-                        method.invoke(appStackModel, nextStep);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                    if (!ischangeValide){
-                        isProgramaticChange = true;
-                        menuList.setSelectedIndex(lastSelectedIndex[0]);
-                        isProgramaticChange = false;
-                    }else {
-                        lastSelectedIndex[0] = selectedIndex;
-                    }
-
-
+                    repaint();
                 }
             }
         });
@@ -109,6 +98,8 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         menuList.setCellRenderer(new DefaultListCellRenderer(){
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                CustomWizardStep currentStep = (CustomWizardStep) appStackModel.getMySteps().get(index);
+
                 JPanel itemPanel = new JPanel(new BorderLayout());
                 itemPanel.setOpaque(true);
                 Color bg = isSelected ? UIUtil.getListSelectionBackground(true) : UIUtil.getListBackground();
@@ -117,7 +108,11 @@ public class AppStackParametersWizardDialog extends WizardDialog {
                 itemPanel.setToolTipText((String) value);
                 label.setBackground(bg);
                 label.setForeground(UIUtil.getListForeground());
-                label.setFont(label.getFont().deriveFont(1));
+                if (currentStep.isDirty()){
+                    label.setFont(label.getFont().deriveFont(1));
+                }else {
+                    label.setFont(label.getFont().deriveFont(0));
+                }
                 label.setBorder(JBUI.Borders.emptyLeft(20));
                 itemPanel.add(label, "West");
                 setPreferredSize(new JBDimension(270,30));
@@ -137,10 +132,54 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         return leftPanel;
     }
 
+    private boolean changeToStep(WizardStep nextStep,CustomWizardModel appStackModel) {
+        if (nextStep == WizardStep.FORCED_GOAL_DROPPED) {
+            appStackModel.cancel();
+            return true;
+        }
+
+        if (nextStep == WizardStep.FORCED_GOAL_ACHIEVED) {
+            appStackModel.finish();
+            return true;
+        }
+
+        if (nextStep == null) {
+//                    nextStep = getNextFor(getCurrentStep());
+            throw new RuntimeException("ex");
+
+        }
+
+        try {
+            Method method = WizardModel.class.getDeclaredMethod("changeToStep", WizardStep.class);
+            method.setAccessible(true);
+            method.invoke(appStackModel, nextStep);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
     @Override
     protected void doOKAction() {
         // create hashMap that contains all the variables and it's value .....
+
         CustomWizardModel appStackModel = (CustomWizardModel)myModel;
+        int stepindex = 0 ;
+        for (WizardStep step:
+             appStackModel.getMySteps()) {
+            CustomWizardStep customWizardStep = (CustomWizardStep) step;
+            if (customWizardStep.isDirty()){
+                // move to this dirty wizard .
+                changeToStep(customWizardStep,appStackModel);
+                AppStackParametersWizardDialog.isProgramaticChange = true;
+                menuList.setSelectedIndex(stepindex);
+                AppStackParametersWizardDialog.isProgramaticChange = false;
+
+                return;
+            }
+            stepindex++;
+
+        }
         LinkedHashMap<String,String> variables = appStackModel.collectVariables();
         System.out.println(variables);
         super.doOKAction();

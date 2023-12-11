@@ -1,5 +1,6 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
+import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
@@ -22,6 +23,7 @@ import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 import com.oracle.oci.intellij.ui.common.CompartmentSelection;
 
 import javax.swing.*;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -43,6 +45,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
     JBScrollPane mainScrollPane;
     JPanel mainPanel;
     VariableGroup variableGroup;
+    boolean dirty = true ;
 //    List<PropertyDescriptor> stepPropertyDescriptors;
     List<VarPanel> varPanels ;
     Controller controller = Controller.getInstance();
@@ -85,6 +88,13 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         return varPanels;
     }
 
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
+    }
 
     @Override
     public JComponent prepare(WizardNavigationState state) {
@@ -93,10 +103,13 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
     @Override
     public WizardStep onNext(WizardModel model) {
-        WizardStep nextWizardStep = controller.doValidate(this);
-        if (nextWizardStep != null){
-            return nextWizardStep;
-        }
+        boolean isValidated = controller.doValidate(this);
+//        if (nextWizardStep != null){
+//            return nextWizardStep;
+//        }
+        setDirty(!isValidated);
+        // put if this step is dirty or not
+
 
 
         CustomWizardModel appStackWizardModel = (CustomWizardModel) model;
@@ -114,11 +127,11 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
     @Override
     public WizardStep onPrevious(WizardModel model) {
-        WizardStep previousWizardStep = controller.doValidate(this);
-        if (previousWizardStep != null){
-            return previousWizardStep;
-        }
-
+        boolean isValidated = controller.doValidate(this);
+//        if (previousWizardStep != null){
+//            return previousWizardStep;
+//        }
+        setDirty(!isValidated);
 
         CustomWizardModel appStackWizardModel = (CustomWizardModel) model;
         AppStackParametersWizardDialog.isProgramaticChange = true;
@@ -133,10 +146,18 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+        // validate
+        boolean isValidated = controller.validateField();
+        if (!isValidated){
+            //todo cancel changing the bean's value ....
+            // also this change should not fireProperty change ....
+            return;
+        }
         // execute the updateDependency ...
-        // execute update-visibility ..... for the pd that changed
         controller.updateDependencies(evt.getPropertyName(),variableGroup);
+        // execute update-visibility ..... for the pd that changed
         controller.updateVisibility(evt.getPropertyName(),variableGroup);
+
     }
 
     public class VarPanel extends JPanel {
@@ -155,47 +176,53 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         }
         private void createVarPanel( PropertyDescriptor pd,VariableGroup variableGroup) throws InvocationTargetException, IllegalAccessException {
             setLayout(new BorderLayout());
-            setPreferredSize(new Dimension(760, 60));
+            setPreferredSize(new Dimension(760, 40));
             setMaximumSize(getPreferredSize());
 
 
-            JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            label = new JLabel(pd.getDisplayName());
+//            JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            label = new JLabel("<html><body style='width: 175px'>"+pd.getDisplayName()+"</body></html>");
+            label.setPreferredSize(new JBDimension(250,45));
             label.setToolTipText( pd.getShortDescription());
-            if (pd.getValue("required") != null) {
-                boolean required = (boolean) pd.getValue("required");
-                if (required) {
-                    label.setText(label.getText() + " *");
-                }
-            }
-            labelPanel.add(label);
-            label.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+//            if (pd.getValue("required") != null) {
+//                boolean required = (boolean) pd.getValue("required");
+//                if (required) {
+//                    label.setText(label.getText() + " *");
+//                }
+//            }
+//            labelPanel.add(label);
+//            label.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
 
-            JPanel componentErrorPanelFlow = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            JPanel componentErrorPanel = new JPanel();
-            componentErrorPanel.setLayout(new BorderLayout());
+//            JPanel componentErrorPanelFlow = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+//            JPanel componentErrorPanel = new JPanel();
+//            componentErrorPanel.setLayout(new BorderLayout());
 
             errorLabel = new JLabel();
-            errorLabel.setVisible(false);
+//            errorLabel.setVisible(false);
             errorLabel.setForeground(JBColor.RED);
-            errorLabel.setBorder(BorderFactory.createEmptyBorder(0,80,0,0));
+            errorLabel.setBorder(BorderFactory.createEmptyBorder(0,5,0,0));
 
 
 
 
 
              mainComponent = createVarComponent(pd,variableGroup,errorLabel);
-            componentErrorPanel.add(mainComponent,BorderLayout.NORTH);
-            componentErrorPanel.add(errorLabel,BorderLayout.SOUTH);
+//            componentErrorPanel.add(mainComponent,BorderLayout.NORTH);
+//            componentErrorPanel.add(errorLabel,BorderLayout.SOUTH);
 
             boolean  isVisible = controller.isVisible((String) pd.getValue("visible"));
             this.setVisible(isVisible);
 
 
-            add(labelPanel, BorderLayout.WEST);
-            componentErrorPanelFlow.add(componentErrorPanel);
-            add(componentErrorPanelFlow,BorderLayout.EAST);
+            add(label, BorderLayout.WEST);
+            add(mainComponent,BorderLayout.CENTER);
+            add(errorLabel,BorderLayout.EAST);
+//            componentErrorPanelFlow.add(componentErrorPanel);
+//            add(componentErrorPanelFlow,BorderLayout.EAST);
+
+            setBorder(BorderFactory.createEmptyBorder(0,8,8,0));
+
         }
 
 
@@ -231,8 +258,9 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 if (pd.getValue("type").equals("oci:identity:compartment:id")){
                     JPanel compartmentPanel = new JPanel();
                     JButton selectCompartmentBtn  = new JButton("select");
+//                    compartmentPanel.setPreferredSize(new JBDimension(300,40));
                     JTextField compartmentName = new JTextField("");
-                    compartmentName.setPreferredSize(new Dimension(260,30));
+                    compartmentName.setPreferredSize(new JBDimension(405,30));
                     compartmentName.setEnabled(false);
                     compartmentPanel.add(compartmentName);
                     compartmentPanel.add(selectCompartmentBtn);
@@ -331,7 +359,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 //                        pd.setValue("value", comboBox.getSelectedItem());
                             try {
                                 pd.getWriteMethod().invoke(varGroup,comboBox.getSelectedItem());
-                                errorLabel.setVisible(false);
+//                                errorLabel.setVisible(false);
                                 comboBox.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
                                 errorLabel.setText("");
                             } catch (IllegalAccessException | InvocationTargetException ex) {
@@ -354,6 +382,19 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 SpinnerNumberModel spinnerModel = new SpinnerNumberModel(0, 0, Integer.MAX_VALUE, 1);
                 JSpinner spinner = new JSpinner(spinnerModel);
 
+                JComponent editorComponent = spinner.getEditor();
+
+                if (editorComponent instanceof JSpinner.DefaultEditor) {
+                    JTextField textField = ((JSpinner.DefaultEditor) editorComponent).getTextField();
+                    textField.addFocusListener(new FocusAdapter() {
+                        @Override
+                        public void focusLost(FocusEvent e) {
+                            errorCheck(pd, errorLabel, spinner);
+
+                        }
+                    });
+                }
+
 
                 Object value = pd.getValue("default");
                 if (value != null){
@@ -365,24 +406,17 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                         }
                     }
                     spinner.setValue(value);
+                    pd.getWriteMethod().invoke(varGroup,value);
+
                 }
+
                 spinner.addChangeListener(e->{
                     try {
 //                    pd.setValue("value",spinner.getValue());
                         pd.getWriteMethod().invoke(varGroup,spinner.getValue());
 
 
-
-                        if ( pd.getValue("required") != null && (boolean) pd.getValue("required") && (int)spinner.getValue() == 0 ) {
-                            spinner.setBorder(BorderFactory.createLineBorder(JBColor.RED));
-                            errorLabel.setVisible(true);
-                            errorLabel.setText("This field is required");
-                            return;
-                        }
-
-                        errorLabel.setVisible(false);
-                        spinner.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
-                        errorLabel.setText("");
+                        errorCheck(pd, errorLabel, spinner);
 
 
                     } catch (IllegalAccessException | InvocationTargetException ex) {
@@ -397,49 +431,38 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 JTextField textField = getjTextField(pd, varGroup);
                 if (pd.getValue("default") != null){
                     textField.setText(pd.getValue("default").toString());
+                    pd.getWriteMethod().invoke(varGroup, pd.getValue("default").toString());
+
                 }
-                textField.addFocusListener(new FocusAdapter() {
-                                               @Override
-                                               public void focusLost(FocusEvent e) {
-                                                   try {
-//                                                   pd.setValue("value",textField.getText());
-                                                       pd.getWriteMethod().invoke(varGroup,textField.getText());
 
-                                                       if (textField.getText().isEmpty() && pd.getValue("required") != null && (boolean) pd.getValue("required")) {
-                                                           textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
-                                                           errorLabel.setVisible(true);
-                                                           errorLabel.setText("This field is required");
-                                                           return;
-                                                       }
-                                                       if (pd.getValue("pattern") != null){
-                                                           if (!textField.getText().matches((String)pd.getValue("pattern"))) {
-                                                               textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
-                                                               errorLabel.setText("invalid format ");
-                                                               return;
-                                                           }
-                                                       }
-
-                                                       errorLabel.setVisible(false);
-                                                       textField.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
-                                                       errorLabel.setText("");
-
-                                                       pd.getWriteMethod().invoke(varGroup, textField.getText());
-                                                   } catch (IllegalAccessException | InvocationTargetException ex) {
-                                                       throw new RuntimeException(ex);
-                                                   }
-                                               }
-                                           }
-
-                );
                 component = textField;
             }
 //            controller.getPdComponents().put(pd.getName(),component);
-            component.setPreferredSize(new JBDimension(350,40));
+            component.setPreferredSize(new JBDimension(200,40));
 
 
             return component;
         }
 
+        private void errorCheck(PropertyDescriptor pd, JLabel errorLabel, JSpinner spinner) {
+            if ( pd.getValue("required") != null && (boolean) pd.getValue("required")   ) {
+                String errorMsg ="This field is required";
+
+                if ((int) spinner.getValue() == 0){
+                    errorMsg = "this field can't be 0";
+                }else {
+                    spinner.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+                    errorLabel.setText("");
+                    return;
+                }
+
+                spinner.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+                errorLabel.setText(errorMsg);
+            }
+
+//                        errorLabel.setVisible(false);
+
+        }
 
 
         public JLabel getLabel() {
@@ -485,21 +508,90 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         private  JTextField getjTextField(PropertyDescriptor pd, VariableGroup varGroup) {
             JTextField textField = new JTextField();
             textField.addFocusListener(new FocusAdapter() {
+                                           @Override
+                                           public void focusLost(FocusEvent e) {
+//                                                   pd.setValue("value",textField.getText());
+//                                                   pd.getWriteMethod().invoke(varGroup,textField.getText());
+
+                                                   if (textField.getText().isEmpty() && pd.getValue("required") != null && (boolean) pd.getValue("required")) {
+                                                       textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+//                                                           errorLabel.setVisible(true);
+                                                       errorLabel.setText("This field is required");
+                                                       return;
+                                                   }
+                                                   if (pd.getValue("pattern") != null){
+                                                       if (!textField.getText().matches((String)pd.getValue("pattern"))) {
+                                                           textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+                                                           errorLabel.setText("invalid format ");
+                                                           return;
+                                                       }
+                                                   }
+
+//                                                       errorLabel.setVisible(false);
+                                                   textField.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+                                                   errorLabel.setText("");
+
+//                                                   pd.getWriteMethod().invoke(varGroup, textField.getText());
+
+                                           }
+                                       }
+
+            );
+
+            textField.getDocument().addDocumentListener(new DocumentListener() {
                 @Override
-                public void focusLost(FocusEvent focusEvent) {
+                public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                    documentChanged();
+                }
+
+                @Override
+                public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                    documentChanged();
+                }
+
+                @Override
+                public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                    documentChanged();
+
+                }
+
+                private void documentChanged() {
+                    // Handle text field changes here
                     try {
-                        String value = textField.getText();
-//                    pd.setValue("value",value);
-                        pd.getWriteMethod().invoke(varGroup, value);
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        throw new RuntimeException(e);
+//                                                   pd.setValue("value",textField.getText());
+                        pd.getWriteMethod().invoke(varGroup,textField.getText());
+
+                        if (textField.getText().isEmpty() && pd.getValue("required") != null && (boolean) pd.getValue("required")) {
+                            textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+//                                                           errorLabel.setVisible(true);
+                            errorLabel.setText("This field is required");
+                            return;
+                        }
+                        if (pd.getValue("pattern") != null){
+                            if (!textField.getText().matches((String)pd.getValue("pattern"))) {
+                                textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+                                errorLabel.setText("invalid format ");
+                                return;
+                            }
+                        }
+
+//                                                       errorLabel.setVisible(false);
+                        textField.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+                        errorLabel.setText("");
+
+                        pd.getWriteMethod().invoke(varGroup, textField.getText());
+                    } catch (IllegalAccessException | InvocationTargetException ex) {
+                        throw new RuntimeException(ex);
                     }
                 }
+
             });
             return textField;
         }
     }
 }
+
+
 
 
 

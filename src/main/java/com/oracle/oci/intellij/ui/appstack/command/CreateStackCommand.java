@@ -53,10 +53,10 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 //      		.builder().zipFileBase64Encoded(zipFileAsString).build();
 
 			CreateStackResponse createStackResponse = resourceManagerClient.createStack(this.variables);
-      System.out.println("Created Stack : " + createStackResponse.getStack());
-      final String stackId = createStackResponse.getStack().getId();
+            System.out.println("Created Stack : " + createStackResponse.getStack());
+            final String stackId = createStackResponse.getStack().getId();
 
-      System.out.println(stackId);
+            System.out.println(stackId);
 			
 			CreateJobResponse createApplyJobResponse = createApplyJob(resourceManagerClient, stackId);
 			String applyJobId = createApplyJobResponse.getJob().getId();
@@ -66,7 +66,7 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 			GetJobTfStateResponse jobTfState = resourceManagerClient.getJobTfState(applyJobId);
 			System.out.println(jobTfState.toString());
 
-      return CreateResult.create().stackId(stackId).build();
+            return CreateResult.create().stackId(stackId).build();
 		}
 			  
 //	  private static CreateJobResponse createPlanJob(ResourceManagerClientProxy resourceManagerClient, String stackId) {
