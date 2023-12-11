@@ -9,9 +9,21 @@ import java.util.Map;
 
 public class CompartmentCache {
     Map<String, List<Compartment>> compChildren = new LinkedHashMap<>();
-    private volatile boolean isCaching = true;
+    private  boolean isCaching ;
+    private static CompartmentCache INSTANCE;
 
-    public synchronized List<Compartment> getCompartmentList(Compartment parent) {
+    public static CompartmentCache getInstance() {
+        if (INSTANCE == null){
+            INSTANCE = new CompartmentCache();
+        }
+        return INSTANCE;
+    }
+
+    public void setCaching(boolean caching) {
+        isCaching = caching;
+    }
+
+    public    List<Compartment> getCompartmentList(Compartment parent) {
         List<Compartment> list = null;
         if (isCaching) {
             list = compChildren.get(parent.getId());
@@ -23,4 +35,9 @@ public class CompartmentCache {
         }
         return list;
     }
+
+    public    void clearCache() {
+        compChildren.clear();
+    }
+
 }

@@ -6,6 +6,7 @@ import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersWizardDialog;
+import com.oracle.oci.intellij.ui.appstack.actions.CompartmentCache;
 import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardModel;
 import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardStep;
 import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
@@ -27,9 +28,12 @@ import java.util.concurrent.*;
 public class YamlLoader {
     static List<VariableGroup> varGroups;
     Compartment compartment ;
+    CompartmentCache compartmentCache ;
 
     public  void load() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
-
+        // start caching compartments
+        compartmentCache = CompartmentCache.getInstance();
+        compartmentCache.setCaching(true);
         varGroups = init();
         LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
 

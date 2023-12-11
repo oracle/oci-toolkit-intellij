@@ -160,6 +160,12 @@ public class AppStackParametersWizardDialog extends WizardDialog {
     }
 
     @Override
+    public void doCancelAction() {
+        freeCache();
+        super.doCancelAction();
+    }
+
+    @Override
     protected void doOKAction() {
         // create hashMap that contains all the variables and it's value .....
 
@@ -169,7 +175,7 @@ public class AppStackParametersWizardDialog extends WizardDialog {
              appStackModel.getMySteps()) {
             CustomWizardStep customWizardStep = (CustomWizardStep) step;
             if (customWizardStep.isDirty()){
-                // move to this dirty wizard .
+                // move to this dirty wizard step  .
                 changeToStep(customWizardStep,appStackModel);
                 AppStackParametersWizardDialog.isProgramaticChange = true;
                 menuList.setSelectedIndex(stepindex);
@@ -181,8 +187,18 @@ public class AppStackParametersWizardDialog extends WizardDialog {
 
         }
         LinkedHashMap<String,String> variables = appStackModel.collectVariables();
+        freeCache();
+
         System.out.println(variables);
         super.doOKAction();
     }
+
+    private void freeCache() {
+        // free cache
+        CompartmentCache compartmentCache = CompartmentCache.getInstance();
+        compartmentCache.setCaching(false);
+        compartmentCache.clearCache();
+    }
+
 }
 

@@ -148,11 +148,11 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
     public void propertyChange(PropertyChangeEvent evt) {
         // validate
         boolean isValidated = controller.validateField();
-        if (!isValidated){
-            //todo cancel changing the bean's value ....
-            // also this change should not fireProperty change ....
-            return;
-        }
+//        if (!isValidated){
+//            //todo cancel changing the bean's value ....
+//            // also this change should not fireProperty change ....
+//            return;
+//        }
         // execute the updateDependency ...
         controller.updateDependencies(evt.getPropertyName(),variableGroup);
         // execute update-visibility ..... for the pd that changed
@@ -264,10 +264,10 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                     compartmentName.setEnabled(false);
                     compartmentPanel.add(compartmentName);
                     compartmentPanel.add(selectCompartmentBtn);
-                    final CompartmentSelection compartmentSelection = CompartmentSelection.newInstance();
+//                    final CompartmentSelection compartmentSelection = CompartmentSelection.newInstance();
                     Compartment selectedCompartment = (Compartment) pd.getReadMethod().invoke(varGroup);
 
-                    compartmentSelection.setSelectedCompartment(selectedCompartment);
+//                    compartmentSelection.setSelectedCompartment(selectedCompartment);
                     compartmentName.setText(selectedCompartment.getName());
 
 //                controller.updateDependencies(pd.getName(),varGroup);
