@@ -51,7 +51,7 @@ public class AppStackParametersWizardDialog extends WizardDialog {
             listModel.addElement(var.getClass().getSimpleName().replaceAll("_"," "));
         }
 
-         menuList = new JBList<>(listModel);
+        menuList = new JBList<>(listModel);
         appStackModel.setGroupMenuList(menuList);
         isProgramaticChange = true;
         menuList.setSelectedIndex(0);
@@ -186,11 +186,20 @@ public class AppStackParametersWizardDialog extends WizardDialog {
             stepindex++;
 
         }
-        LinkedHashMap<String,String> variables = appStackModel.collectVariables();
-        freeCache();
 
-        System.out.println(variables);
-        super.doOKAction();
+        LinkedHashMap<String,String> variables = appStackModel.collectVariables();
+
+
+        ReviewDialog reviewDialog = new ReviewDialog(variables,appStackModel.getVarGroups());
+        if (reviewDialog.showAndGet()){
+            freeCache();
+
+            System.out.println(variables);
+            super.doOKAction();
+        }
+
+
+
     }
 
     private void freeCache() {

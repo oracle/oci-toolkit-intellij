@@ -184,19 +184,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             label = new JLabel("<html><body style='width: 175px'>"+pd.getDisplayName()+"</body></html>");
             label.setPreferredSize(new JBDimension(250,45));
             label.setToolTipText( pd.getShortDescription());
-//            if (pd.getValue("required") != null) {
-//                boolean required = (boolean) pd.getValue("required");
-//                if (required) {
-//                    label.setText(label.getText() + " *");
-//                }
-//            }
-//            labelPanel.add(label);
-//            label.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
 
-
-//            JPanel componentErrorPanelFlow = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-//            JPanel componentErrorPanel = new JPanel();
-//            componentErrorPanel.setLayout(new BorderLayout());
 
             errorLabel = new JLabel();
 //            errorLabel.setVisible(false);
@@ -208,8 +196,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
 
              mainComponent = createVarComponent(pd,variableGroup,errorLabel);
-//            componentErrorPanel.add(mainComponent,BorderLayout.NORTH);
-//            componentErrorPanel.add(errorLabel,BorderLayout.SOUTH);
+
 
             boolean  isVisible = controller.isVisible((String) pd.getValue("visible"));
             this.setVisible(isVisible);
@@ -218,8 +205,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             add(label, BorderLayout.WEST);
             add(mainComponent,BorderLayout.CENTER);
             add(errorLabel,BorderLayout.EAST);
-//            componentErrorPanelFlow.add(componentErrorPanel);
-//            add(componentErrorPanelFlow,BorderLayout.EAST);
+
 
             setBorder(BorderFactory.createEmptyBorder(0,8,8,0));
 

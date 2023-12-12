@@ -43,6 +43,10 @@ public class CustomWizardModel extends WizardModel {
         return groupMenuList;
     }
 
+    public List<VariableGroup> getVarGroups() {
+        return varGroups;
+    }
+
     public void setGroupMenuList(JBList<String> groupMenuList) {
         this.groupMenuList = groupMenuList;
     }

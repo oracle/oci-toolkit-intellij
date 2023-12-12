@@ -6,15 +6,17 @@ import com.intellij.ui.wizard.WizardStep;
 import com.oracle.bmc.http.client.internal.ExplicitlySetBmcModel;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardStep;
+import com.oracle.oci.intellij.ui.appstack.actions.PropertyOrder;
 
 import javax.swing.*;
 import java.awt.*;
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class Controller {
@@ -324,11 +326,11 @@ public class Controller {
         return true;
     }
 
-//    public VariableGroup getVariableGroup(PropertyDescriptor pd) {
-//        String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
-//
-//        return variableGroups.get(className);
-//    }
+    public VariableGroup getVariableGroup(PropertyDescriptor pd) {
+        String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
+
+        return variableGroups.get(className);
+    }
 
 
 
@@ -343,5 +345,17 @@ public class Controller {
 
     public boolean validateField() {
         return false;
+    }
+
+    public PropertyDescriptor[] getSortedProertyDescriptorsByVarGroup(VariableGroup varGroup) throws IntrospectionException {
+        Class<? extends VariableGroup> varGroupClazz = varGroup.getClass();
+        BeanInfo beanInfo = Introspector.getBeanInfo(varGroupClazz);
+        PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+        Arrays.sort(propertyDescriptors, Comparator.comparingInt(pd -> {
+            PropertyOrder annotation = pd.getReadMethod().getAnnotation(PropertyOrder.class);
+            return (annotation != null) ? annotation.value() : Integer.MAX_VALUE;
+        }));
+        return propertyDescriptors;
     }
 }

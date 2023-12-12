@@ -6,9 +6,11 @@ import com.oracle.oci.intellij.account.OracleCloudAccount;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CompartmentCache {
-    Map<String, List<Compartment>> compChildren = new LinkedHashMap<>();
+//    Map<String, List<Compartment>> compChildren = new LinkedHashMap<>();
+   volatile Map<String, List<Compartment>> compChildren = new ConcurrentHashMap<>();
     private  boolean isCaching ;
     private static CompartmentCache INSTANCE;
 
