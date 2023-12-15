@@ -4,10 +4,9 @@
  */
 package com.oracle.oci.intellij;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.oracle.oci.intellij.account.ConfigFileHandler;
+import com.oracle.oci.intellij.account.SystemPreferences;
+import org.junit.Test;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -15,32 +14,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeAll;
-
-import com.oracle.oci.intellij.account.ConfigFileHandler;
-import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.account.SystemPreferences;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigFileHandlerTest {
-
-  private static File configFile = new File("./tests/resources/internal/config");
-  
-  @BeforeAll
-  public void before() {
-      SystemPreferences.clearUserPreferences();
-      try {
-        assertTrue(configFile.exists());
-        OracleCloudAccount.getInstance()
-                .configure(configFile.getAbsolutePath()
-                           , SystemPreferences.getProfileName());
-      } catch (Exception ioException) {
-        /*
-        Configuring cloud account is sufficient for testing the APIs. Since
-        the UI isn't instantiated, any exception thrown from UI is discarded.
-        */
-      }
-  }
 
   /**
    * Negative test.
@@ -127,7 +103,7 @@ public class ConfigFileHandlerTest {
    */
   @Test
   public void parseFile_4() {
-    assertDoesNotThrow(()->{ConfigFileHandler.parse(configFile.getAbsolutePath());});
+    assertDoesNotThrow(()->{ConfigFileHandler.parse(SystemPreferences.getConfigFilePath());});
   }
 
   /**
@@ -143,7 +119,7 @@ public class ConfigFileHandlerTest {
 
     assertDoesNotThrow(() -> {
       final ConfigFileHandler.ProfileSet profileSet =
-              ConfigFileHandler.parse(configFile.getAbsolutePath());
+              ConfigFileHandler.parse(SystemPreferences.getConfigFilePath());
 
       final File newFile = new File(newConfigFileName);
       if (newFile.createNewFile()) {
