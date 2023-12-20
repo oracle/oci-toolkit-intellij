@@ -76,9 +76,6 @@ public class ModelLoader {
 				throw new RuntimeException(e);
 			}
 		}
-    if (!variables.containsKey("project_id")) {
-      variables.put("project_id", "FooProject_"+System.currentTimeMillis());
-    }
 
 		variables.forEach((key, value) -> System.out.printf("%s = %s\n", key, value));
 		return variables;
@@ -90,7 +87,7 @@ public class ModelLoader {
 
 	public ModelLoader init() throws Exception {
 		loadModel("com.oracle.appstack.test.model");
-		loadTestDataFromCP("testdata.json");
+		loadTestDataFromCP("testdata2.json");
 		return this;
 	}
 

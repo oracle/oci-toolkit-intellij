@@ -17,17 +17,20 @@ public class CreateAppStackTest {
   private static String compartmentId;
 
   static {
-    Properties ociConfigProp = new Properties();
     try {
-      ociConfigProp.load(new FileReader(new File("/Users/cbateman/.oci/config")));
-      compartmentId = ociConfigProp.getProperty("tenancy");
       SystemPreferences.changeEventEnabled.set(false);
-      OracleCloudAccount.getInstance()
-                        .configure("/Users/cbateman/.oci/config", "DEFAULT");
+     
+      String CONFIG_PROFILE = "ONPREMJAVA";
+      String COMPARTMENT_ID_ALWAYS_FREE = "ocid1.compartment.oc1..aaaaaaaaj25pmwr67ktc4ykojn7rs6n2iawyapbgcu4pvutxhvusgqnrlypa";
+      String COMPARTMENT_ID_JAVAONPREM = "ocid1.compartment.oc1..aaaaaaaa6dtnmzrd3utboa4oli67kme2b52llhkexkuoawk3zkr7345wyisq";
+      
+      OracleCloudAccount.getInstance().configure("/Users/cbateman/.oci/config", CONFIG_PROFILE);
+      compartmentId = COMPARTMENT_ID_JAVAONPREM;
+
     } catch (IOException e) {
       throw new AssertionError(e);
     }
-
+    
   }
 
   public static void main(String args[]) throws Exception {

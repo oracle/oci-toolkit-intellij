@@ -3,7 +3,9 @@ package com.oracle.oci.intellij.appstack;
 import java.io.IOException;
 import java.util.List;
 
+import com.oracle.bmc.resourcemanager.model.LogEntry;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
+import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
 import com.oracle.bmc.resourcemanager.responses.ListJobsResponse;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
@@ -12,8 +14,10 @@ import com.oracle.oci.intellij.appStackGroup.provider.AppStackContentProvider;
 import com.oracle.oci.intellij.appStackGroup.provider.AppStackContentProvider.AppStackContent;
 import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand.ListStackResult;
+import com.oracle.oci.intellij.ui.appstack.command.ListTFLogsCommand;
+import com.oracle.oci.intellij.ui.appstack.command.ListTFLogsCommand.ListTFLogsResult;
 
-public class ListAppStackTest {
+public class ListTFLogsStackTest {
 
   private static final String compartmentId;
   
@@ -48,22 +52,22 @@ public class ListAppStackTest {
   public static void main(String args[]) throws Exception {
     final ResourceManagerClientProxy resourceManagerClientProxy = 
       OracleCloudAccount.getInstance().getResourceManagerClientProxy();
-
-    ListStackCommand listCommand = new ListStackCommand(resourceManagerClientProxy, compartmentId);
-    ListStackResult result = listCommand.execute();
-    List<StackSummary> stacks = result.getStacks();
-    AppStackContentProvider provider = new AppStackContentProvider();
-    List<AppStackContent> elements = provider.getElements(stacks);
-    if (!elements.isEmpty()) {
-      elements.forEach(appstack -> 
-        { System.out.printf("%s\t%s\t%s\n", appstack.getDisplayName(), appstack.getId(), appstack.getLifecycleState());
-          ListJobsResponse listJobs = resourceManagerClientProxy.listJobs(appstack.getCompartmentId(), appstack.getId());
-          listJobs.getItems().forEach(job -> 
-              System.out.printf("\t\t%s\t%s\t%s\n", job.getId(), job.getLifecycleState(), job.getJobOperationDetails().toString()));
-        });
+    String jobId = args[0];
+    ListTFLogsCommand tfLogsCommand = new ListTFLogsCommand(resourceManagerClientProxy, jobId, 100);
+    ListTFLogsResult result = tfLogsCommand.execute();
+    dumpLogs(result);
+    
+    while (result.getLastResponse().getOpcNextPage()!=null) {
+      tfLogsCommand = new ListTFLogsCommand(resourceManagerClientProxy, jobId, result, 1000);
+      result = tfLogsCommand.execute();
+      dumpLogs(result);
     }
-    else {
-      System.out.println("No stacks found.");
+  }
+
+  private static void dumpLogs(ListTFLogsResult result) {
+    List<LogEntry> items = result.getLastResponse().getItems();
+    for (LogEntry logEntry : items) {
+      System.out.println(logEntry.getMessage());
     }
   }
 }

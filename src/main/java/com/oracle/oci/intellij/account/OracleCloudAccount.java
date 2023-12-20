@@ -109,8 +109,12 @@ import com.oracle.bmc.keymanagement.requests.ListVaultsRequest;
 import com.oracle.bmc.keymanagement.responses.ListKeysResponse;
 import com.oracle.bmc.keymanagement.responses.ListVaultsResponse;
 import com.oracle.bmc.resourcemanager.ResourceManagerClient;
+import com.oracle.bmc.resourcemanager.model.CreateDestroyJobOperationDetails;
+import com.oracle.bmc.resourcemanager.model.CreateJobDetails;
+import com.oracle.bmc.resourcemanager.model.CreateJobOperationDetails;
 import com.oracle.bmc.resourcemanager.model.CreateStackDetails;
 import com.oracle.bmc.resourcemanager.model.CreateZipUploadConfigSourceDetails;
+import com.oracle.bmc.resourcemanager.model.DestroyJobOperationDetails;
 import com.oracle.bmc.resourcemanager.model.Stack;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.bmc.resourcemanager.requests.CreateJobRequest;
@@ -934,6 +938,24 @@ public class OracleCloudAccount {
       System.out.println("Deleted Stack : " + deleteStackResponse.toString());
     }
 
+    public CreateJobResponse destroyStack(String stackId) {
+      // Destroy resources but don't remove stack defn
+      CreateJobOperationDetails operationDetails =
+        CreateDestroyJobOperationDetails.builder()
+                                        .executionPlanStrategy(DestroyJobOperationDetails.ExecutionPlanStrategy.AutoApproved)
+                                        .build();
+      CreateJobDetails createDestroyJobDetails =
+        CreateJobDetails.builder()
+                        .stackId(stackId)
+                        .jobOperationDetails(operationDetails)
+                        .build();
+      CreateJobRequest createPlanJobRequest =
+        CreateJobRequest.builder()
+                        .createJobDetails(createDestroyJobDetails)
+                        .build();
+      return resourceManagerClient.createJob(createPlanJobRequest);
+    }
+
     public List<StackSummary> listStacks(String compartmentId) {
       ListStacksRequest listStackRequest = ListStacksRequest.builder().compartmentId(compartmentId).build();
       ListStacksResponse listStacks = this.resourceManagerClient.listStacks(listStackRequest);
@@ -947,11 +969,22 @@ public class OracleCloudAccount {
     }
 
     public GetJobLogsResponse getJobLogs(String planJobId) {
+      return getJobLogs(planJobId, 100);
+    }
+
+    public GetJobLogsResponse getJobLogs(String planJobId, int limit) {
       GetJobLogsRequest getJobLogsRequest = 
-        GetJobLogsRequest.builder().jobId(planJobId).build();
+        GetJobLogsRequest.builder().jobId(planJobId).limit(limit).build();
       return resourceManagerClient.getJobLogs(getJobLogsRequest);
       
     }
+    
+    public GetJobLogsResponse getJobLogs(String jobId, int limit, String opcNextPage) {
+      GetJobLogsRequest getJobLogsRequest = 
+        GetJobLogsRequest.builder().page(opcNextPage).jobId(jobId).opcRequestId(opcNextPage).limit(limit).build();
+      return resourceManagerClient.getJobLogs(getJobLogsRequest);
+    }
+
 
     public GetJobTfStateResponse getJobTfState(String applyJobId) {
       GetJobTfStateRequest getJobTfStateRequest =
@@ -960,12 +993,15 @@ public class OracleCloudAccount {
     }
 
     public CreateStackResponse createStack(Map<String, String> variables) throws IOException {
+      return createStack(SystemPreferences.getCompartmentId(), variables);
+    }
+    
+    public CreateStackResponse createStack(String compartmentId, Map<String, String> variables) throws IOException {
       CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
         CreateZipUploadConfigSourceDetails.builder()
         .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/cbateman/Downloads/appstackforjava.zip"))
         .build();
 
-      String compartmentId = SystemPreferences.getCompartmentId();
       CreateStackDetails stackDetails =
         CreateStackDetails.builder()
                           .compartmentId(compartmentId)
@@ -1006,5 +1042,6 @@ public class OracleCloudAccount {
         resourceManagerClient = null;
       }
     }
+
   }
 }
