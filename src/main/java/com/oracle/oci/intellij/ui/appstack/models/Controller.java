@@ -10,10 +10,7 @@ import com.oracle.oci.intellij.ui.appstack.actions.PropertyOrder;
 
 import javax.swing.*;
 import java.awt.*;
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
+import java.beans.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
@@ -63,22 +60,6 @@ public class Controller {
         return varPanels.get(pdName);
     }
 
-//    public Map<String, JComponent> getPdComponents() {
-//        return pdComponents;
-//    }
-
-//    public void setPdComponents(Map<String, JComponent> pdComponents) {
-//        this.pdComponents = pdComponents;
-//    }
-
-//    public Map<String, JComponent> getErrorLabels() {
-//        return errorLabels;
-//    }
-
-//    public void setErrorLabels(Map<String, JComponent> errorLabels) {
-//        this.errorLabels = errorLabels;
-//    }
-
     public Map<String, VariableGroup> getVariableGroups() {
         return variableGroups;
     }
@@ -109,21 +90,6 @@ public class Controller {
                 jComboBox.setEnabled(false);
                 PropertyDescriptor dependentPd = descriptorsState.get(dependent);
                 loadComboBoxValues(dependentPd,varPanel.getVariableGroup(),jComboBox);
-
-//                List<? extends ExplicitlySetBmcModel> suggestedvalues = null;
-//                try {
-//                    suggestedvalues = Utils.getSuggestedValuesOf((String) dependentPd.getValue("type")).apply(dependentPd, (LinkedHashMap<String, PropertyDescriptor>) descriptorsState,varGroup);
-//                } catch (InvocationTargetException | IllegalAccessException e) {
-//                    throw new RuntimeException(e);
-//                }
-//                if (suggestedvalues == null) return;
-//                for (ExplicitlySetBmcModel enumValue : suggestedvalues) {
-//                    jComboBox.addItem(enumValue);
-//                }
-//                if (!suggestedvalues.isEmpty()){
-//                    jComboBox.setSelectedItem(suggestedvalues.get(0));
-//                    dependentPd.setValue("value",suggestedvalues.get(0));
-//                }
 
 
 
@@ -156,12 +122,7 @@ public class Controller {
                     }
                     if (!suggestedValues.isEmpty()){
                         comboBox.setSelectedItem(suggestedValues.get(0));
-//                        pd.setValue("value",suggestedValues.get(0));
-                        try {
-                            pd.getWriteMethod().invoke(varGroup,suggestedValues.get(0));
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            throw new RuntimeException(e);
-                        }
+                        setValue(suggestedValues.get(0),varGroup,pd,false);
                     }
                 }
             }
@@ -172,7 +133,7 @@ public class Controller {
     }
     public void updateVisibility(String pdName,VariableGroup variableGroup){
         PropertyDescriptor pd = descriptorsState.get(pdName);
-        List<String> dependencies = Utils.visibilty.get(pd.getName());
+        List<String> dependencies = Utils.visibility.get(pd.getName());
         if (dependencies != null) {
 
             for (String dependency : dependencies) {
@@ -183,8 +144,6 @@ public class Controller {
                 PropertyDescriptor dependentPd = descriptorsState.get(dependency);
                 boolean isVisible = isVisible((String) dependentPd.getValue("visible"));
                 varPanel.setVisible(isVisible);
-                //                dependencyComponent.setEnabled(isVisible);
-//                varPanel.getLabel().setEnabled(isVisible);
 
                 if (dependencyComponent instanceof JPanel){
                     JPanel dependencyComponentP = (JPanel) dependencyComponent;
@@ -197,32 +156,6 @@ public class Controller {
                     }
                     continue;
                 }
-                if (!isVisible){
-
-                    // empty the error labels
-                    JLabel errorLabel =  varPanel.getErrorLabel();
-                    if (errorLabel == null) continue;
-                    errorLabel.setVisible(false);
-                    dependencyComponent.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
-                    errorLabel.setText("");
-                    // empty the value
-                    if (dependencyComponent instanceof JTextField){
-                        ((JTextField) dependencyComponent).setText("");
-//                        dependentPd.setValue("value","");
-//                        String className = dependentPd.getReadMethod().getDeclaringClass().getSimpleName();
-
-                        VariableGroup varGroup = varPanel.getVariableGroup();
-                        try {
-                            dependentPd.getWriteMethod().invoke(varGroup,"");
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-
-
-                }
-
-
             }
         }
     }
@@ -297,7 +230,6 @@ public class Controller {
                 cWizardStep.getVarPanels()) {
             PropertyDescriptor pd = varPanel.getPd();
             if (varPanel.isVisible() && (boolean)pd.getValue("required")){
-//                String className = pd.getReadMethod().getDeclaringClass().getSimpleName();
 
                 VariableGroup varGroup = getVarGroupByName(pd.getName());
                 Object value = null;
@@ -306,7 +238,7 @@ public class Controller {
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
-                if (value == null || value.equals("")){
+                if (value == null || value.equals("") || value.equals(0)){
                     errorPd = pd;
                     errorComponent = getComponentByName(pd.getName());
                     isvalide = false;
@@ -318,7 +250,6 @@ public class Controller {
             errorComponent.grabFocus();
             errorComponent.requestFocusInWindow();
             JLabel errorLabel = (JLabel) getErrorLabelByName(errorPd.getName());
-            errorLabel.setVisible(true);
             errorLabel.setText("This field is required");
             errorComponent.setBorder(BorderFactory.createLineBorder(JBColor.RED));
             return false;
@@ -343,8 +274,62 @@ public class Controller {
         }
     }
 
-    public boolean validateField() {
-        return false;
+//    public boolean validateField() {
+//        return false;
+//    }
+    public void setValue(Object value, VariableGroup variableGroup,PropertyDescriptor pd,boolean showError ){
+        try {
+            pd.getWriteMethod().invoke(variableGroup,value);
+            handleValidated(pd);
+
+        }catch (InvocationTargetException ex){
+            if (ex.getCause() instanceof PropertyVetoException) {
+                if (showError)
+                    handleError(pd,ex.getCause().getMessage());
+
+            }
+        }catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setValue(Object value, VariableGroup variableGroup,PropertyDescriptor pd  ){
+        setValue(value,variableGroup,pd,true);
+    }
+
+
+    public void handleValidated(PropertyDescriptor pd) {
+        CustomWizardStep.VarPanel varPanel = getVarPanelByName(pd.getName());
+
+        if (varPanel != null && !(varPanel.getMainComponent() instanceof JPanel)){
+            JComponent component = varPanel.getMainComponent();
+            JLabel errorLabel = varPanel.getErrorLabel();
+
+            component.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+            errorLabel.setText("");
+        }
+
+    }
+
+    public void handleError(PropertyDescriptor pd,String errorMessage ){
+        CustomWizardStep.VarPanel varPanel = getVarPanelByName(pd.getName());
+        if (varPanel != null){
+            JComponent component = varPanel.getMainComponent();
+            JLabel errorLabel = varPanel.getErrorLabel();
+
+
+            component.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+            errorLabel.setText(errorMessage);
+            if (pd.getValue("pattern") != null)
+                component.setToolTipText("field should be : "+pd.getValue("pattern"));
+        }
+    }
+    public Object getValue(VariableGroup variableGroup,PropertyDescriptor pd){
+        try {
+            return pd.getReadMethod().invoke(variableGroup);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public PropertyDescriptor[] getSortedProertyDescriptorsByVarGroup(VariableGroup varGroup) throws IntrospectionException {
@@ -358,4 +343,5 @@ public class Controller {
         }));
         return propertyDescriptors;
     }
+
 }

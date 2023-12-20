@@ -75,7 +75,7 @@ public class CustomWizardModel extends WizardModel {
         LinkedHashMap<String,String> vars = new LinkedHashMap<>();
         descriptorsState.forEach((key,value)->{
             boolean isEnabled = Controller.getInstance().getVarPanelByName(value.getName()).isVisible();
-            if (isEnabled && (boolean)value.getValue("required")){
+            if (isEnabled ){
                 String mappedValue = mapValue(value);
                 vars.put(value.getName(),mappedValue);
             }
@@ -115,7 +115,7 @@ public class CustomWizardModel extends WizardModel {
                 return adb.getId() ;
             }
         }
-        return value.toString();
+        return value!= null ?value.toString() : "";
     }
 
 

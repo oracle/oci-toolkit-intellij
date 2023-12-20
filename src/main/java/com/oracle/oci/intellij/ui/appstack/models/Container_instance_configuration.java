@@ -5,6 +5,7 @@ import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.beans.PropertyVetoException;
 
 public class Container_instance_configuration extends VariableGroup {
 
@@ -38,22 +39,25 @@ public class Container_instance_configuration extends VariableGroup {
         return ocpus;
     }
 
-    public void setShape(Shape newValue) {
+    public void setShape(Shape newValue) throws PropertyVetoException {
         Object oldValue = this.shape;
         this.shape = newValue;
         pcs.firePropertyChange("shape", oldValue, newValue);
+        vcp.fireVetoableChange("shape", oldValue, newValue);
     }
 
-    public void setMemory_in_gbs(int newValue) {
+    public void setMemory_in_gbs(int newValue) throws PropertyVetoException {
         Object oldValue = this.memory_in_gbs;
         this.memory_in_gbs = newValue;
         pcs.firePropertyChange("memory_in_gbs", oldValue, newValue);
+        vcp.fireVetoableChange("memory_in_gbs", oldValue, newValue);
     }
 
-    public void setOcpus(int newValue) {
+    public void setOcpus(int newValue) throws PropertyVetoException {
         Object oldValue = this.ocpus;
         this.ocpus = newValue;
         pcs.firePropertyChange("ocpus", oldValue, newValue);
+        vcp.fireVetoableChange("ocpus", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

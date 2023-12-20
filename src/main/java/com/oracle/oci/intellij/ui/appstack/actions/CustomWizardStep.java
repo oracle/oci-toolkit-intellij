@@ -19,6 +19,7 @@ import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.ui.appstack.models.Controller;
 import com.oracle.oci.intellij.ui.appstack.models.Utils;
+import com.oracle.oci.intellij.ui.appstack.models.Validator;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 import com.oracle.oci.intellij.ui.common.CompartmentSelection;
 
@@ -31,6 +32,7 @@ import java.awt.event.ItemEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyDescriptor;
+import java.beans.PropertyVetoException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
@@ -57,6 +59,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         varPanels = new ArrayList<>();
         varGroup.addPropertyChangeListener(this);
+        varGroup.addVetoableChangeListener(new Validator());
         this.variableGroup = varGroup;
 
 
@@ -64,15 +67,13 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
         String className = varGroup.getClass().getSimpleName().replaceAll("_"," ");
         mainPanel.setBorder(BorderFactory.createTitledBorder(className));
-//        mainPanel.setLayout(new GridLayout(propertyDescriptors.length, 1));
 
 
         for (PropertyDescriptor pd : propertyDescriptors) {
-            if (pd.getName().equals("class") || pd.getName().equals("db_compartment")) {
+            if (pd.getName().equals("class") ) {
                 continue;
             }
             try {
-//                stepPropertyDescriptors.add(pd);
                VarPanel varPanel =new VarPanel(pd,variableGroup);
                varPanels.add(varPanel) ;
                controller.addVariablePanel( varPanel);
@@ -124,6 +125,13 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 //    }
 
 
+    @Override
+    public boolean onFinish() {
+        boolean isValidated = controller.doValidate(this);
+        setDirty(!isValidated);
+
+        return super.onFinish();
+    }
 
     @Override
     public WizardStep onPrevious(WizardModel model) {
@@ -146,13 +154,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        // validate
-        boolean isValidated = controller.validateField();
-//        if (!isValidated){
-//            //todo cancel changing the bean's value ....
-//            // also this change should not fireProperty change ....
-//            return;
-//        }
+
         // execute the updateDependency ...
         controller.updateDependencies(evt.getPropertyName(),variableGroup);
         // execute update-visibility ..... for the pd that changed
@@ -187,7 +189,6 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
 
             errorLabel = new JLabel();
-//            errorLabel.setVisible(false);
             errorLabel.setForeground(JBColor.RED);
             errorLabel.setBorder(BorderFactory.createEmptyBorder(0,5,0,0));
 
@@ -223,18 +224,12 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 component = checkBox;
 
                 checkBox.addActionListener(e -> {
-//                    pd.setValue("value",checkBox.isSelected());
-                    try {
-                        pd.getWriteMethod().invoke(varGroup,checkBox.isSelected());
-//                    controller.updateVisibility(pd.getName(),varGroup);
-
-                    } catch (IllegalAccessException | InvocationTargetException ex) {
-                        throw new RuntimeException(ex);
-                    }
-
-
+                        controller.setValue(checkBox.isSelected(),varGroup,pd);
                 });
-                checkBox.setSelected( (boolean)(pd.getValue("default")!= null?pd.getValue("default"):true ));
+                boolean defaultValue = (boolean)(pd.getValue("default")!= null?pd.getValue("default"):true );
+                controller.setValue(defaultValue,varGroup,pd);
+                checkBox.setSelected(defaultValue);
+
                 // add this to the condition || ((String)pd.getValue("type")).startsWith("oci")
             } else if (propertyType.isEnum() || ((String)pd.getValue("type")).startsWith("oci")  ) {
 
@@ -250,10 +245,8 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                     compartmentName.setEnabled(false);
                     compartmentPanel.add(compartmentName);
                     compartmentPanel.add(selectCompartmentBtn);
-//                    final CompartmentSelection compartmentSelection = CompartmentSelection.newInstance();
-                    Compartment selectedCompartment = (Compartment) pd.getReadMethod().invoke(varGroup);
+                    Compartment selectedCompartment = (Compartment) controller.getValue(varGroup,pd);
 
-//                    compartmentSelection.setSelectedCompartment(selectedCompartment);
                     compartmentName.setText(selectedCompartment.getName());
 
 //                controller.updateDependencies(pd.getName(),varGroup);
@@ -267,17 +260,11 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                             final Compartment selected = compartmentSelection1.getSelectedCompartment();
                             compartmentName.setText(selected.getName());
                             executorService.submit(() -> {
-                                try {
-                                    pd.getWriteMethod().invoke(varGroup, selected);
-
-                                } catch (IllegalAccessException | InvocationTargetException ex) {
-                                    throw new RuntimeException(ex);
-                                }
+                                controller.setValue(selected,varGroup,pd);
                                 return null;
                             });
                         }
                     });
-//                    controller.getPdComponents().put(pd.getName(),compartmentPanel);
                     return compartmentPanel;
                 }else {
 
@@ -341,25 +328,14 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
                     comboBox.addItemListener(e -> {
                         if (e.getStateChange() == ItemEvent.SELECTED) {
-
-//                        pd.setValue("value", comboBox.getSelectedItem());
-                            try {
-                                pd.getWriteMethod().invoke(varGroup,comboBox.getSelectedItem());
-//                                errorLabel.setVisible(false);
-                                comboBox.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
-                                errorLabel.setText("");
-                            } catch (IllegalAccessException | InvocationTargetException ex) {
-                                throw new RuntimeException(ex);
-                            }
-//                        controller.updateDependencies(pd.getName(), varGroup);
-//                        controller.updateVisibility(pd.getName(),varGroup);
+                            controller.setValue(comboBox.getSelectedItem(),varGroup,pd);
                         }
 
                     });
 
                     if (pd.getValue("default") != null) {
+                        controller.setValue(pd.getValue("default"),varGroup,pd);
                         comboBox.setSelectedItem(pd.getValue("default"));
-                        pd.getWriteMethod().invoke(varGroup,pd.getValue("default"));
                     }
 
                     component = comboBox;
@@ -375,8 +351,8 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                     textField.addFocusListener(new FocusAdapter() {
                         @Override
                         public void focusLost(FocusEvent e) {
-                            errorCheck(pd, errorLabel, spinner);
-
+                            controller.setValue(spinner.getValue(),varGroup,pd);
+                           focusValidation(spinner.getValue());
                         }
                     });
                 }
@@ -391,23 +367,13 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                             value = Integer.parseInt((String) value);
                         }
                     }
+                    controller.setValue(value,varGroup,pd);
                     spinner.setValue(value);
-                    pd.getWriteMethod().invoke(varGroup,value);
 
                 }
 
                 spinner.addChangeListener(e->{
-                    try {
-//                    pd.setValue("value",spinner.getValue());
-                        pd.getWriteMethod().invoke(varGroup,spinner.getValue());
-
-
-                        errorCheck(pd, errorLabel, spinner);
-
-
-                    } catch (IllegalAccessException | InvocationTargetException ex) {
-                        throw new RuntimeException(ex);
-                    }
+                    controller.setValue(spinner.getValue(),varGroup,pd);
                 });
 
 
@@ -417,13 +383,11 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 JTextField textField = getjTextField(pd, varGroup);
                 if (pd.getValue("default") != null){
                     textField.setText(pd.getValue("default").toString());
-                    pd.getWriteMethod().invoke(varGroup, pd.getValue("default").toString());
-
+                    controller.setValue(pd.getValue("default").toString(),varGroup,pd);
                 }
 
                 component = textField;
             }
-//            controller.getPdComponents().put(pd.getName(),component);
             component.setPreferredSize(new JBDimension(200,40));
 
 
@@ -446,7 +410,6 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 errorLabel.setText(errorMsg);
             }
 
-//                        errorLabel.setVisible(false);
 
         }
 
@@ -496,29 +459,8 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             textField.addFocusListener(new FocusAdapter() {
                                            @Override
                                            public void focusLost(FocusEvent e) {
-//                                                   pd.setValue("value",textField.getText());
-//                                                   pd.getWriteMethod().invoke(varGroup,textField.getText());
-
-                                                   if (textField.getText().isEmpty() && pd.getValue("required") != null && (boolean) pd.getValue("required")) {
-                                                       textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
-//                                                           errorLabel.setVisible(true);
-                                                       errorLabel.setText("This field is required");
-                                                       return;
-                                                   }
-                                                   if (pd.getValue("pattern") != null){
-                                                       if (!textField.getText().matches((String)pd.getValue("pattern"))) {
-                                                           textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
-                                                           errorLabel.setText("invalid format ");
-                                                           return;
-                                                       }
-                                                   }
-
-//                                                       errorLabel.setVisible(false);
-                                                   textField.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
-                                                   errorLabel.setText("");
-
-//                                                   pd.getWriteMethod().invoke(varGroup, textField.getText());
-
+                                               controller.setValue(textField.getText(),varGroup,pd);
+                                               focusValidation(textField.getText());
                                            }
                                        }
 
@@ -543,36 +485,20 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
                 private void documentChanged() {
                     // Handle text field changes here
-                    try {
-//                                                   pd.setValue("value",textField.getText());
-                        pd.getWriteMethod().invoke(varGroup,textField.getText());
-
-                        if (textField.getText().isEmpty() && pd.getValue("required") != null && (boolean) pd.getValue("required")) {
-                            textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
-//                                                           errorLabel.setVisible(true);
-                            errorLabel.setText("This field is required");
-                            return;
-                        }
-                        if (pd.getValue("pattern") != null){
-                            if (!textField.getText().matches((String)pd.getValue("pattern"))) {
-                                textField.setBorder(BorderFactory.createLineBorder(JBColor.RED));
-                                errorLabel.setText("invalid format ");
-                                return;
-                            }
-                        }
-
-//                                                       errorLabel.setVisible(false);
-                        textField.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
-                        errorLabel.setText("");
-
-                        pd.getWriteMethod().invoke(varGroup, textField.getText());
-                    } catch (IllegalAccessException | InvocationTargetException ex) {
-                        throw new RuntimeException(ex);
-                    }
+                        controller.setValue(textField.getText(),varGroup,pd);
                 }
 
             });
             return textField;
+        }
+
+        void focusValidation(Object value){
+            try {
+                Validator.doValidate(pd,value,null);
+                controller.handleValidated(pd);
+            } catch (PropertyVetoException ex) {
+                controller.handleError(pd,ex.getMessage());
+            }
         }
     }
 }

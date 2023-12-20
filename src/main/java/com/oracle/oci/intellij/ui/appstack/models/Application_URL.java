@@ -5,6 +5,7 @@ import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.beans.PropertyVetoException;
 
 public class Application_URL extends VariableGroup {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
@@ -26,10 +27,11 @@ public class Application_URL extends VariableGroup {
         return create_fqdn;
     }
 
-    public void setCreate_fqdn(boolean newValue) {
+    public void setCreate_fqdn(boolean newValue) throws PropertyVetoException {
         Object oldValue = this.create_fqdn;
         this.create_fqdn = newValue;
         pcs.firePropertyChange("create_fqdn", oldValue, newValue);
+        vcp.fireVetoableChange("create_fqdn", oldValue, newValue);
     }
     @PropertyOrder(2)
     @VariableMetaData(title="DNS and Certificate compartement",description="Compartment containing the DNS Zone and the Certificate",defaultVal="compartment_ocid",type="oci:identity:compartment:id",required=true,visible="create_fqdn")
@@ -38,10 +40,11 @@ public class Application_URL extends VariableGroup {
         return dns_compartment;
     }
 
-    public void setDns_compartment(Object newValue) {
+    public void setDns_compartment(Object newValue) throws PropertyVetoException {
         Object oldValue = this.dns_compartment;
         this.dns_compartment = newValue;
         pcs.firePropertyChange("dns_compartment", oldValue, newValue);
+        vcp.fireVetoableChange("dns_compartment", oldValue, newValue);
     }
     @PropertyOrder(3)
     @VariableMetaData(title="DNS Zone",description="Domain name in which the host name will be created.",type="string",required=true,visible="create_fqdn")
@@ -50,10 +53,11 @@ public class Application_URL extends VariableGroup {
         return zone;
     }
 
-    public void setZone(String newValue) {
+    public void setZone(String newValue) throws PropertyVetoException {
         Object oldValue = this.zone;
         this.zone = newValue;
         pcs.firePropertyChange("zone", oldValue, newValue);
+        vcp.fireVetoableChange("zone", oldValue, newValue);
 
     }
     @PropertyOrder(4)
@@ -62,10 +66,11 @@ public class Application_URL extends VariableGroup {
         return subdomain;
     }
 
-    public void setSubdomain(String newValue) {
+    public void setSubdomain(String newValue) throws PropertyVetoException {
         Object oldValue = this.subdomain;
         this.subdomain = newValue;
         pcs.firePropertyChange("subdomain", oldValue, newValue);
+        vcp.fireVetoableChange("subdomain", oldValue, newValue);
     }
     @PropertyOrder(5)
     @VariableMetaData(title="Certificate OCID",description="You must have a SSL certificate available in OCI Certificates service. Provide the certificate OCID for the host name.",type="string",required=true,visible="create_fqdn")
@@ -73,10 +78,11 @@ public class Application_URL extends VariableGroup {
         return certificate_ocid;
     }
 
-    public void setCertificate_ocid(String newValue) {
+    public void setCertificate_ocid(String newValue) throws PropertyVetoException {
         Object oldValue = this.certificate_ocid;
         this.certificate_ocid = newValue;
         pcs.firePropertyChange("certificate_ocid", oldValue, newValue);
+        vcp.fireVetoableChange("certificate_ocid", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

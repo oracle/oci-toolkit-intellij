@@ -125,14 +125,9 @@ public class CompartmentSelection extends DialogWrapper {
         long currentTime = System.nanoTime();
         final List<Compartment> childCompartments = compartmentCache.getCompartmentList(givenCompartment);
 
-//         if (cachedCompartments.containsKey(givenCompartment.getId())){
-//           childCompartments = cachedCompartments.get(givenCompartment.getId());
-//         }else {
-//           childCompartments = OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(givenCompartment);
-//           cachedCompartments.put(givenCompartment.getId(),childCompartments);
-//         }
+
         long howLong = System.nanoTime() - currentTime ;
-        System.out.println(howLong/(Math.pow(10,9)));
+        System.out.println(howLong);
 
         for(Compartment childCompartment: childCompartments) {
           final DefaultMutableTreeNode childTreeNode = new DefaultMutableTreeNode(childCompartment);

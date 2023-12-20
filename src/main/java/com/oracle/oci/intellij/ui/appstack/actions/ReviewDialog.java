@@ -1,18 +1,20 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.project.Project;
+
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.components.labels.BoldLabel;
 import com.intellij.util.ui.JBDimension;
 import com.oracle.oci.intellij.ui.appstack.models.Controller;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.util.LinkedHashMap;
@@ -40,13 +42,15 @@ public class ReviewDialog extends DialogWrapper {
             try {
                 JPanel groupPanel = new JPanel();
                 String className = varGroup.getClass().getSimpleName().replaceAll("_"," ");
-                groupPanel.setBorder(BorderFactory.createTitledBorder(className));
+                TitledBorder titledBorder = BorderFactory.createTitledBorder(className);
+                titledBorder.setTitleFont(titledBorder.getTitleFont().deriveFont(Font.BOLD));
+                groupPanel.setBorder(titledBorder);
                 groupPanel.setLayout(new BoxLayout(groupPanel,BoxLayout.Y_AXIS));
 
                 pds[0] = controller.getSortedProertyDescriptorsByVarGroup(varGroup);
 
                 for (PropertyDescriptor pd : pds[0]) {
-                    if (pd.getName().equals("class") || pd.getName().equals("db_compartment") || !variables.containsKey(pd.getName())) {
+                    if (pd.getName().equals("class")  || !variables.containsKey(pd.getName())) {
                         continue;
                     }
                     ReviewVarPanel varPanel ;
@@ -59,12 +63,7 @@ public class ReviewDialog extends DialogWrapper {
             }
         });
 
-//        variables.forEach((key,value)->{
-//
-//            // i need to get pd , and
-//
-//
-//        });
+
 
         init();
 
@@ -101,8 +100,58 @@ public class ReviewDialog extends DialogWrapper {
             setBorder(BorderFactory.createEmptyBorder(0,8,0,0));
 
             add(keyLabel,BorderLayout.WEST);
-//            add(border,BorderLayout.EAST);
-            add(valueLabel,BorderLayout.CENTER);
+            JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            buttonsPanel.add(valueLabel);
+
+
+            String fullText = value;
+//            valueLabel.setPreferredSize(new JBDimension(150,10));
+            if (fullText.length()>=30){
+                String truncatedText = fullText.substring(0, Math.min(fullText.length(), 30)) + "...";
+                valueLabel.setText(truncatedText);
+
+                JButton toggleButton = new JButton("show");
+                toggleButton.addActionListener(new ActionListener() {
+                    private boolean isFullTextShown = false;  // Start with the full text hidden
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        if (isFullTextShown) {
+                            valueLabel.setText(truncatedText);
+                            toggleButton.setText("show");
+                            isFullTextShown = false;
+                        } else {
+                            valueLabel.setText(fullText);
+                            toggleButton.setText("hide");
+                            isFullTextShown = true;
+                        }
+
+                    }
+                });
+                buttonsPanel.add(toggleButton);
+            }
+
+
+            if (pd.getValue("type").toString().contains("oci")){
+                JButton copyButton = new JButton("copy");
+                copyButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String textToCopy = value;  // Replace with the actual text you want to copy
+                        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                        StringSelection selection = new StringSelection(textToCopy);
+                        clipboard.setContents(selection, selection);
+
+                        copyButton.setText("copied");
+                        // notify
+                        new Timer(1000,ev->{
+                            copyButton.setText("copy");
+                        }).start();
+                    }
+                });
+                buttonsPanel.add(copyButton);
+            }
+            add(buttonsPanel,BorderLayout.CENTER);
         }
     }
 }

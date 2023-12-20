@@ -29,6 +29,7 @@ public class TabbedExplorer<TabContent extends ITabbedExplorerContent> extends D
     return mainPanel;
   }
 
+
   @Nullable
   @Override
   protected JComponent createCenterPanel() {

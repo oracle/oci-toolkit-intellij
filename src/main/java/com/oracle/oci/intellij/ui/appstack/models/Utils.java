@@ -9,7 +9,6 @@ import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.keymanagement.model.KeySummary;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardStep;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -77,10 +76,10 @@ public class Utils{
 
         suggestedValues.put("oci:database:autonomousdatabase:id",(pd,pds,varGroup)->{
 
-            VariableGroup general_ConfigurationVarGroup = Controller.getInstance().getVariableGroups().get("General_Configuration");
+//            VariableGroup general_ConfigurationVarGroup = Controller.getInstance().getVariableGroup(pd);
 
 
-            String compartment_id = ( (Compartment)pds.get("compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();
+            String compartment_id = ( (Compartment)pds.get("db_compartment").getReadMethod().invoke(varGroup)).getId();
             if (compartment_id== null) return null;
             List<AutonomousDatabaseSummary> autonomousDatabases = OracleCloudAccount.getInstance().getDatabaseClient().getAutonomousDatabaseList(compartment_id);
             return autonomousDatabases;
@@ -124,17 +123,18 @@ public class Utils{
     }
 
     static public Map<String , List<String>> depondsOn = new LinkedHashMap<>(){{
-        put("compartment_id", List.of("availability_domain","autonomous_database"));
+        put("compartment_id", List.of("availability_domain"));
         put("vault_compartment_id",List.of("vault_id","key_id"));
         put("vault_id",List.of("key_id"));
         put("vcn_compartment_id",List.of("existing_vcn_id","existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
         put("existing_vcn_id",List.of("existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
+        put("db_compartment",List.of("autonomous_database"));
     }};
 
-    static public Map<String, List<String>> visibilty = new LinkedHashMap<>() {{
+    static public Map<String, List<String>> visibility = new LinkedHashMap<>() {{
         put("application_source", List.of("application_type", "repo_name", "branch", "build_command", "artifact_location", "artifact_id", "registry_id", "image_path", "exposed_port", "use_username_env", "use_password_env", "use_tns_admin_env", "tns_admin_env", "use_default_ssl_configuration", "cert_pem", "private_key_pem", "ca_pem", "vm_options", "program_arguments"));
         put("application_type", List.of("program_arguments", "use_default_ssl_configuration"));
-        put("use_existing_database", List.of("autonomous_database_display_name", "autonomous_database_admin_password", "data_storage_size_in_tbs", "cpu_core_count", "ocpu_count", "autonomous_database", "autonomous_database_user", "autonomous_database_password", "use_existing_db_subnet", "db_subnet_cidr"));
+        put("use_existing_database", List.of("autonomous_database_display_name", "autonomous_database_admin_password", "data_storage_size_in_tbs", "cpu_core_count", "ocpu_count", "autonomous_database", "autonomous_database_user", "autonomous_database_password", "use_existing_db_subnet", "db_subnet_cidr","db_compartment"));
         put("use_existing_vault", List.of("new_vault_display_name", "vault_compartment_id", "vault_id", "key_id"));
         put("use_existing_token", List.of("current_user_token"));
         put("use_connection_url_env", List.of("connection_url_env"));

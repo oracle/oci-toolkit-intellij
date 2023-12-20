@@ -5,6 +5,7 @@ import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.beans.PropertyVetoException;
 
 public class Application_configuration_SSL_communication_between_backends_and_load_balancer extends VariableGroup {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
@@ -34,8 +35,9 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return use_default_ssl_configuration;
     }
 
-    public void setUse_default_ssl_configuration(boolean newValue) {
+    public void setUse_default_ssl_configuration(boolean newValue) throws PropertyVetoException {
         Object oldValue = this.use_default_ssl_configuration;
+        vcp.fireVetoableChange("use_default_ssl_configuration", oldValue, newValue);
         this.use_default_ssl_configuration = newValue;
         pcs.firePropertyChange("use_default_ssl_configuration", oldValue, newValue);
      }
@@ -46,8 +48,9 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return port_property;
     }
 
-    public void setPort_property(String newValue) {
+    public void setPort_property(String newValue) throws PropertyVetoException {
         Object oldValue = this.port_property;
+        vcp.fireVetoableChange("port_property", oldValue, newValue);
         this.port_property = newValue;
         pcs.firePropertyChange("port_property", oldValue, newValue);
     }
@@ -58,10 +61,11 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return keystore_property;
     }
 
-    public void setKeystore_property(String newValue) {
+    public void setKeystore_property(String newValue) throws PropertyVetoException {
         Object oldValue = this.keystore_property;
         this.keystore_property = newValue;
         pcs.firePropertyChange("keystore_property", oldValue, newValue);
+        vcp.fireVetoableChange("keystore_property", oldValue, newValue);
     }
     @PropertyOrder(4)
     @VariableMetaData(title="SSL key alias property name",description="Assuming that your application can consume a property to configure the SSL key alias property name, this field can be used to specify the name of the property.",defaultVal="server.ssl.key-alias",type="string",required=true,visible="not(use_default_ssl_configuration)")
@@ -70,10 +74,11 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return key_alias_property;
     }
 
-    public void setKey_alias_property(String newValue) {
+    public void setKey_alias_property(String newValue) throws PropertyVetoException {
         Object oldValue = this.key_alias_property;
         this.key_alias_property = newValue;
         pcs.firePropertyChange("key_alias_property", oldValue, newValue);
+        vcp.fireVetoableChange("key_alias_property", oldValue, newValue);
     }
     @PropertyOrder(5)
     @VariableMetaData(title="SSL keystore password property name",description="Assuming that your application can consume a property to configure the SSL keystore password property name, this field can be used to specify the name of the property.",defaultVal="server.ssl.key-store-password",type="string",required=true,visible="not(use_default_ssl_configuration)")
@@ -82,10 +87,11 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return keystore_password_property;
     }
 
-    public void setKeystore_password_property(String newValue) {
+    public void setKeystore_password_property(String newValue) throws PropertyVetoException {
         Object oldValue = this.keystore_password_property;
         this.keystore_password_property = newValue;
         pcs.firePropertyChange("keystore_password_property", oldValue, newValue);
+        vcp.fireVetoableChange("keystore_password_property", oldValue, newValue);
     }
     @PropertyOrder(6)
     @VariableMetaData(title="SSL keystore type property name",description="Assuming that your application can consume a property to configure the SSL keystore type property name, this field can be used to specify the name of the property.",defaultVal="server.ssl.key-store-type",type="string",required=true,visible="not(use_default_ssl_configuration)")
@@ -94,10 +100,11 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return keystore_type_property;
     }
 
-    public void setKeystore_type_property(String newValue) {
+    public void setKeystore_type_property(String newValue) throws PropertyVetoException {
         Object oldValue = this.keystore_type_property;
         this.keystore_type_property = newValue;
         pcs.firePropertyChange("keystore_type_property", oldValue, newValue);
+        vcp.fireVetoableChange("keystore_type_property", oldValue, newValue);
     }
     @VariableMetaData(title="SSL certificate",type="text",required=true,visible="eq(application_source,'IMAGE')")
     @PropertyOrder(7)
@@ -106,10 +113,11 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return cert_pem;
     }
 
-    public void setCert_pem(Object newValue) {
+    public void setCert_pem(Object newValue) throws PropertyVetoException {
         Object oldValue = this.cert_pem;
         this.cert_pem = newValue;
         pcs.firePropertyChange("cert_pem", oldValue, newValue);
+        vcp.fireVetoableChange("cert_pem", oldValue, newValue);
     }
 
     @VariableMetaData(title="Private key",type="text",required=true,visible="eq(application_source,'IMAGE')")
@@ -119,10 +127,11 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return private_key_pem;
     }
 
-    public void setPrivate_key_pem(Object newValue) {
+    public void setPrivate_key_pem(Object newValue) throws PropertyVetoException {
         Object oldValue = this.private_key_pem;
         this.private_key_pem = newValue;
         pcs.firePropertyChange("private_key_pem", oldValue, newValue);
+        vcp.fireVetoableChange("private_key_pem", oldValue, newValue);
     }
     @PropertyOrder(9)
     @VariableMetaData(title="CA certificate",type="text",required=true,visible="eq(application_source,'IMAGE')")
@@ -131,10 +140,11 @@ public class Application_configuration_SSL_communication_between_backends_and_lo
         return ca_pem;
     }
 
-    public void setCa_pem(Object newValue) {
+    public void setCa_pem(Object newValue) throws PropertyVetoException {
         Object oldValue = this.ca_pem;
         this.ca_pem = newValue;
         pcs.firePropertyChange("ca_pem", oldValue, newValue);
+        vcp.fireVetoableChange("ca_pem", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

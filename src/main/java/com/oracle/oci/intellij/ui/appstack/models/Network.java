@@ -5,6 +5,7 @@ import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.beans.PropertyVetoException;
 
 public class Network extends VariableGroup {
 
@@ -188,136 +189,159 @@ public class Network extends VariableGroup {
         return session_affinity_cookie_name;
     }
 
-    public void setCreate_new_vcn(boolean newValue) {
+    public void setCreate_new_vcn(boolean newValue) throws PropertyVetoException {
         Object oldValue = this.create_new_vcn;
         this.create_new_vcn = newValue;
         pcs.firePropertyChange("create_new_vcn", oldValue, newValue);
+        vcp.fireVetoableChange("create_new_vcn", oldValue, newValue);
     }
 
-    public void setVcn_compartment_id(Object newValue) {
+    public void setVcn_compartment_id(Object newValue) throws PropertyVetoException {
         Object oldValue = this.vcn_compartment_id;
         this.vcn_compartment_id = newValue;
         pcs.firePropertyChange("vcn_compartment_id", oldValue, newValue);
+        vcp.fireVetoableChange("vcn_compartment_id", oldValue, newValue);
     }
 
-    public void setExisting_vcn_id(Object newValue) {
+    public void setExisting_vcn_id(Object newValue) throws PropertyVetoException {
         Object oldValue = this.existing_vcn_id;
         this.existing_vcn_id = newValue;
         pcs.firePropertyChange("existing_vcn_id", oldValue, newValue);
+        vcp.fireVetoableChange("existing_vcn_id", oldValue, newValue);
     }
 
-    public void setVcn_cidr(String newValue) {
+    public void setVcn_cidr(String newValue) throws PropertyVetoException {
         Object oldValue = this.vcn_cidr;
         this.vcn_cidr = newValue;
         pcs.firePropertyChange("vcn_cidr", oldValue, newValue);
+        vcp.fireVetoableChange("vcn_cidr", oldValue, newValue);
     }
 
-    public void setUse_existing_app_subnet(boolean newValue) {
+    public void setUse_existing_app_subnet(boolean newValue) throws PropertyVetoException {
         Object oldValue = this.use_existing_app_subnet;
         this.use_existing_app_subnet = newValue;
         pcs.firePropertyChange("use_existing_app_subnet", oldValue, newValue);
+        vcp.fireVetoableChange("use_existing_app_subnet", oldValue, newValue);
     }
 
-    public void setExisting_app_subnet_id(Object newValue) {
+    public void setExisting_app_subnet_id(Object newValue) throws PropertyVetoException {
         Object oldValue = this.existing_app_subnet_id;
         this.existing_app_subnet_id = newValue;
         pcs.firePropertyChange("existing_app_subnet_id", oldValue, newValue);
+        vcp.fireVetoableChange("existing_app_subnet_id", oldValue, newValue);
     }
 
-    public void setApp_subnet_cidr(String newValue) {
+    public void setApp_subnet_cidr(String newValue) throws PropertyVetoException {
         Object oldValue = this.app_subnet_cidr;
         this.app_subnet_cidr = newValue;
         pcs.firePropertyChange("app_subnet_cidr", oldValue, newValue);
+        vcp.fireVetoableChange("app_subnet_cidr", oldValue, newValue);
     }
 
-    public void setUse_existing_db_subnet(boolean newValue) {
+    public void setUse_existing_db_subnet(boolean newValue) throws PropertyVetoException {
         Object oldValue = this.use_existing_db_subnet;
         this.use_existing_db_subnet = newValue;
         pcs.firePropertyChange("use_existing_db_subnet", oldValue, newValue);
+        vcp.fireVetoableChange("use_existing_db_subnet", oldValue, newValue);
     }
 
-    public void setExisting_db_subnet_id(Object newValue) {
+    public void setExisting_db_subnet_id(Object newValue) throws PropertyVetoException {
         Object oldValue = this.use_existing_db_subnet;
         this.existing_db_subnet_id = newValue;
         pcs.firePropertyChange("existing_db_subnet_id", oldValue, newValue);
+        vcp.fireVetoableChange("existing_db_subnet_id", oldValue, newValue);
+
     }
 
-    public void setDb_subnet_cidr(String newValue) {
+    public void setDb_subnet_cidr(String newValue) throws PropertyVetoException {
         Object oldValue = this.db_subnet_cidr;
         this.db_subnet_cidr = newValue;
         pcs.firePropertyChange("db_subnet_cidr", oldValue, newValue);
+        vcp.fireVetoableChange("db_subnet_cidr", oldValue, newValue);
     }
 
-    public void setUse_existing_lb_subnet(boolean newValue) {
+    public void setUse_existing_lb_subnet(boolean newValue) throws PropertyVetoException {
         Object oldValue = this.use_existing_lb_subnet;
         this.use_existing_lb_subnet = newValue;
         pcs.firePropertyChange("use_existing_lb_subnet", oldValue, newValue);
+        vcp.fireVetoableChange("use_existing_lb_subnet", oldValue, newValue);
     }
 
-    public void setExisting_lb_subnet_id(Object newValue) {
+    public void setExisting_lb_subnet_id(Object newValue) throws PropertyVetoException {
         Object oldValue = this.existing_lb_subnet_id;
         this.existing_lb_subnet_id = newValue;
         pcs.firePropertyChange("existing_lb_subnet_id", oldValue, newValue);
+        vcp.fireVetoableChange("existing_lb_subnet_id", oldValue, newValue);
     }
 
-    public void setLb_subnet_cidr(String newValue) {
+    public void setLb_subnet_cidr(String newValue) throws PropertyVetoException {
         Object oldValue = this.lb_subnet_cidr;
         this.lb_subnet_cidr = newValue;
         pcs.firePropertyChange("lb_subnet_cidr", oldValue, newValue);
+        vcp.fireVetoableChange("lb_subnet_cidr", oldValue, newValue);
     }
 
-    public void setOpen_https_port(boolean newValue) {
+    public void setOpen_https_port(boolean newValue) throws PropertyVetoException {
         Object oldValue = this.open_https_port;
         this.open_https_port = newValue;
         pcs.firePropertyChange("open_https_port", oldValue, newValue);
+        vcp.fireVetoableChange("open_https_port", oldValue, newValue);
     }
 
-    public void setUse_default_lb_configuration(boolean newValue) {
+    public void setUse_default_lb_configuration(boolean newValue) throws PropertyVetoException {
         Object oldValue = this.use_default_lb_configuration;
         this.use_default_lb_configuration = newValue;
         pcs.firePropertyChange("use_default_lb_configuration", oldValue, newValue);
+        vcp.fireVetoableChange("use_default_lb_configuration", oldValue, newValue);
     }
 
-    public void setMaximum_bandwidth_in_mbps(int newValue) {
+    public void setMaximum_bandwidth_in_mbps(int newValue) throws PropertyVetoException {
         Object oldValue = this.maximum_bandwidth_in_mbps;
         this.maximum_bandwidth_in_mbps = newValue;
         pcs.firePropertyChange("maximum_bandwidth_in_mbps", oldValue, newValue);
+        vcp.fireVetoableChange("maximum_bandwidth_in_mbps", oldValue, newValue);
     }
 
-    public void setMinimum_bandwidth_in_mbps(int newValue) {
+    public void setMinimum_bandwidth_in_mbps(int newValue) throws PropertyVetoException {
         Object oldValue = this.minimum_bandwidth_in_mbps;
         this.minimum_bandwidth_in_mbps = newValue;
         pcs.firePropertyChange("minimum_bandwidth_in_mbps", oldValue, newValue);
+        vcp.fireVetoableChange("minimum_bandwidth_in_mbps", oldValue, newValue);
     }
 
-    public void setHealth_checker_url_path(String newValue) {
+    public void setHealth_checker_url_path(String newValue) throws PropertyVetoException {
         Object oldValue = this.health_checker_url_path;
         this.health_checker_url_path = newValue;
         pcs.firePropertyChange("health_checker_url_path", oldValue, newValue);
+        vcp.fireVetoableChange("health_checker_url_path", oldValue, newValue);
     }
 
-    public void setHealth_checker_return_code(int newValue) {
+    public void setHealth_checker_return_code(int newValue) throws PropertyVetoException {
         Object oldValue = this.health_checker_return_code;
         this.health_checker_return_code = newValue;
         pcs.firePropertyChange("health_checker_return_code", oldValue, newValue);
+        vcp.fireVetoableChange("health_checker_return_code", oldValue, newValue);
     }
 
-    public void setEnable_session_affinity(boolean newValue) {
+    public void setEnable_session_affinity(boolean newValue) throws PropertyVetoException {
         Object oldValue = this.enable_session_affinity;
         this.enable_session_affinity = newValue;
         pcs.firePropertyChange("enable_session_affinity", oldValue, newValue);
+        vcp.fireVetoableChange("enable_session_affinity", oldValue, newValue);
     }
 
-    public void setSession_affinity(Session_affinity newValue) {
+    public void setSession_affinity(Session_affinity newValue) throws PropertyVetoException {
         Object oldValue = this.session_affinity;
         this.session_affinity = newValue;
         pcs.firePropertyChange("session_affinity", oldValue, newValue);
+        vcp.fireVetoableChange("session_affinity", oldValue, newValue);
     }
 
-    public void setSession_affinity_cookie_name(String newValue) {
+    public void setSession_affinity_cookie_name(String newValue) throws PropertyVetoException {
         Object oldValue = this.session_affinity_cookie_name;
         this.session_affinity_cookie_name = newValue;
         pcs.firePropertyChange("session_affinity_cookie_name", oldValue, newValue);
+        vcp.fireVetoableChange("session_affinity_cookie_name", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
