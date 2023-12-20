@@ -43,12 +43,22 @@ public class ListStackCommand extends AbstractBasicCommand<ListStackResult> {
 		this.compartmentId = compartmentId;
 	}
 
-	@Override
+	@SuppressWarnings("unchecked")
+  @Override
 	protected ListStackResult doExecute() throws Exception {
-	  
-	  List<StackSummary> listOfAppStacks = resManagerClient.listStacks(compartmentId);
-		return new ListStackResult(AbstractBasicCommand.Result.Severity.NONE,
-				Result.Status.OK, listOfAppStacks);
+	  try {
+  	  List<StackSummary> listOfAppStacks = resManagerClient.listStacks(compartmentId);
+  		return new ListStackResult(AbstractBasicCommand.Result.Severity.NONE,
+  				Result.Status.OK, listOfAppStacks);
+	  }
+	  catch (com.oracle.bmc.model.BmcException bmcExcep) {
+	    if (bmcExcep.getStatusCode() == 404) {
+	      // not found or empty; pretend emtpy
+	      return new ListStackResult(AbstractBasicCommand.Result.Severity.WARNING,
+	           Result.Status.FAILED, Collections.EMPTY_LIST);
+	    }
+	    throw bmcExcep;
+	  }
 	}
 
 }

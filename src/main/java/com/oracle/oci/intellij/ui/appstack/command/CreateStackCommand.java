@@ -52,7 +52,7 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 //			CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails = CreateZipUploadConfigSourceDetails
 //      		.builder().zipFileBase64Encoded(zipFileAsString).build();
 
-			CreateStackResponse createStackResponse = resourceManagerClient.createStack(this.variables);
+			CreateStackResponse createStackResponse = resourceManagerClient.createStack(this.compartmentId, variables);
       System.out.println("Created Stack : " + createStackResponse.getStack());
       final String stackId = createStackResponse.getStack().getId();
 

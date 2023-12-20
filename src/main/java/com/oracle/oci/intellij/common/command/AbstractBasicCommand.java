@@ -1,5 +1,7 @@
 package com.oracle.oci.intellij.common.command;
 
+import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Severity;
+
 public abstract class AbstractBasicCommand<RESULT extends AbstractBasicCommand.Result> implements BasicCommand<RESULT> {
 	public static class CommandFailedException extends Exception {
 
@@ -26,15 +28,21 @@ public abstract class AbstractBasicCommand<RESULT extends AbstractBasicCommand.R
 		private final Result.Severity severity;
 
 		public enum Status {
-			OK, CANCELLED, FAILED;
+		  DERIVED /* for things like composites */, OK, CANCELLED, FAILED; 
 		}
 
 		private final Result.Status status;
 		private final String message;
 		private Throwable exception;
 
-		public static final AbstractBasicCommand.Result OK_RESULT = new Result(Severity.NONE, Status.OK);
+		public static final AbstractBasicCommand.Result OK_RESULT = 
+		  new Result(Severity.NONE, Status.OK);
 
+		protected Result() {
+		  this.status = Status.DERIVED;
+		  this.severity = Severity.NONE;
+		  this.message = "Derived";
+		}
 		public Result(Result.Severity severity, Result.Status status) {
 			this(severity, status, (String) null);
 		}
@@ -42,6 +50,10 @@ public abstract class AbstractBasicCommand<RESULT extends AbstractBasicCommand.R
 		public boolean isOk() {
 			return status == Status.OK;
 		}
+
+		public boolean isError() {
+      return this.getSeverity() == Severity.ERROR;
+    }
 
 		public static AbstractBasicCommand.Result exception(Throwable t) {
 			return new Result(Severity.ERROR, Status.FAILED, t);

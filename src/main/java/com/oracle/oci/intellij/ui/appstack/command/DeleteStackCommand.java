@@ -17,21 +17,7 @@ public class DeleteStackCommand extends AbstractBasicCommand<Result> {
 
   @Override
   protected Result doExecute() throws Exception {
-    // Create Destroy Job
-//    final CreateJobResponse destroyJob = createDestroyJob(resManagerClientProxy, stackId);
-//    final GetJobRequest getJobRequest = GetJobRequest.builder().jobId(destroyJob.getJob().getId()).build();
-//    resManagerClientProxy.submitJob(getJobRequest);
     resManagerClientProxy.deleteStack(this.stackId);
     return Result.OK_RESULT;
   }
-
-//  private static CreateJobResponse createDestroyJob(ResourceManagerClientProxy resourceManagerClient, String stackId) {
-//    CreateJobOperationDetails operationDetails = CreateDestroyJobOperationDetails.builder()
-//        .executionPlanStrategy(DestroyJobOperationDetails.ExecutionPlanStrategy.AutoApproved).build();
-//    CreateJobDetails createDestroyJobDetails = CreateJobDetails.builder().stackId(stackId)
-//        .jobOperationDetails(operationDetails).build();
-//    CreateJobRequest createPlanJobRequest = CreateJobRequest.builder().createJobDetails(createDestroyJobDetails)
-//        .build();
-//    resourceManagerClient.submitJob(createPlanJobRequest); 
-//  }
 }
