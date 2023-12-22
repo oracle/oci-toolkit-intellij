@@ -62,7 +62,7 @@ public class Application extends VariableGroup {
         vcp.fireVetoableChange("application_name", oldValue, newValue);
     }
     @PropertyOrder(2)
-    @VariableMetaData(title="Number of deployments",description="This is the number of container instances that will be deployed.",type="number",required=true)
+    @VariableMetaData(title="Number of deployments",description="This is the number of container instances that will be deployed.",type="number",defaultVal = "1",required=true)
 
     public int getNb_copies() {
         return nb_copies;
@@ -154,7 +154,7 @@ public class Application extends VariableGroup {
         vcp.fireVetoableChange("build_command", oldValue, newValue);
     }
     @PropertyOrder(9)
-    @VariableMetaData(title="Artifact path",description="For example: target/MyApplication.jar",type="string",required=true,visible="eq(application_source,'SOURCE_CODE')")
+    @VariableMetaData(title="Artifact path",description="For example: target/MyApplication.jar",defaultVal="ADMIN",type="string",required=true,visible="eq(application_source,'SOURCE_CODE')")
 
     public String getArtifact_location() {
         return artifact_location;

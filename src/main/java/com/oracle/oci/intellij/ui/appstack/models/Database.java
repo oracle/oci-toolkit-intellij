@@ -58,7 +58,7 @@ public class Database extends VariableGroup {
         return autonomous_database_display_name;
     }
     @PropertyOrder(3)
-    @VariableMetaData(title="Database ADMIN password",description="Password must be 12 to 30 characters and contain at least one uppercase letter, one lowercase letter, and one number. The password cannot contain the double quote (\") character or the username \"admin\".",type="password",required=true,visible="not(use_existing_database)")
+    @VariableMetaData(title="Database ADMIN password",description="Password must be 12 to 30 characters and contain at least one uppercase letter, one lowercase letter, and one number. The password cannot contain the double quote (\") character or the username \"admin\".",type="password",required=true,visible="not(use_existing_database)",pattern = "^(?!.*admin)(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])[^\"]{12,30}$",errorMessage = "Password must be 12 to 30 characters and contain at least one uppercase letter, one lowercase letter, and one number. The password cannot contain the double quote (\") character or the username \"admin\".")
 
     public Object getAutonomous_database_admin_password() {
         return autonomous_database_admin_password;
@@ -101,7 +101,7 @@ public class Database extends VariableGroup {
         return autonomous_database_user;
     }
     @PropertyOrder(10)
-    @VariableMetaData(title="DB user password",description="The password of the user used to access the database.",type="password",required=true,visible="and(use_existing_database)")
+    @VariableMetaData(title="DB user password",description="The password of the user used to access the database.",type="password",required=true,visible="and(use_existing_database)",pattern = "^(?!.*admin)(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])[^\"]{12,30}$",errorMessage = "Password must be 12 to 30 characters and contain at least one uppercase letter, one lowercase letter, and one number. The password cannot contain the double quote (\") character or the username \"admin\".")
 
     public Object getAutonomous_database_password() {
         return autonomous_database_password;

@@ -73,7 +73,7 @@ public class Application_URL extends VariableGroup {
         vcp.fireVetoableChange("subdomain", oldValue, newValue);
     }
     @PropertyOrder(5)
-    @VariableMetaData(title="Certificate OCID",description="You must have a SSL certificate available in OCI Certificates service. Provide the certificate OCID for the host name.",type="string",required=true,visible="create_fqdn")
+    @VariableMetaData(title="Certificate OCID",description="You must have a SSL certificate available in OCI Certificates service. Provide the certificate OCID for the host name,that will be used to configure the load balancer.",type="string",required=true,visible="create_fqdn")
     public String getCertificate_ocid() {
         return certificate_ocid;
     }

@@ -19,6 +19,8 @@ public @interface VariableMetaData {
     String dependsOn() default "";
     String description() default "";
     String enumValues() default "";
+    String pattern() default "";
+    String errorMessage() default "";
 
 
 }

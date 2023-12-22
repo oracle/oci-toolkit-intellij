@@ -89,6 +89,12 @@ public class YamlLoader {
                 if (annotation.defaultVal() != null) {
                     pd.setValue("type", annotation.type());
                 }
+                if (annotation.pattern() != null) {
+                    pd.setValue("pattern", annotation.pattern());
+                }
+                if (annotation.errorMessage() != null) {
+                    pd.setValue("errorMessage", annotation.errorMessage());
+                }
 
                 descriptorsState.put(pd.getName(),pd);
 
@@ -146,7 +152,7 @@ public class YamlLoader {
         varGroups.add(new Application_Performance_Monitoring());
         varGroups.add(new Database());
         varGroups.add(new Other_parameters());
-        varGroups.add(new Application_configuration_SSL_communication_between_backends_and_load_balancer());
+        varGroups.add(new Application_configuration_SSL_communication());
         varGroups.add(new Application_URL());
         varGroups.add(new Network());
         varGroups.add(new Container_instance_configuration());

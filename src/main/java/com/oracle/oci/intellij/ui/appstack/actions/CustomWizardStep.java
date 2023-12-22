@@ -1,6 +1,5 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
-import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
@@ -24,7 +23,10 @@ import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 import com.oracle.oci.intellij.ui.common.CompartmentSelection;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -48,7 +50,6 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
     JPanel mainPanel;
     VariableGroup variableGroup;
     boolean dirty = true ;
-//    List<PropertyDescriptor> stepPropertyDescriptors;
     List<VarPanel> varPanels ;
     Controller controller = Controller.getInstance();
 
@@ -66,7 +67,15 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         controller.setDescriptorsState(descriptorsState) ;
 
         String className = varGroup.getClass().getSimpleName().replaceAll("_"," ");
-        mainPanel.setBorder(BorderFactory.createTitledBorder(className));
+        Border emptyBorder = BorderFactory.createEmptyBorder();
+        TitledBorder titledBorder = BorderFactory.createTitledBorder(emptyBorder, className);
+
+        Font currentFont = titledBorder.getTitleFont();
+        if (currentFont == null) {
+            currentFont = UIManager.getFont("TitledBorder.font");
+        }
+        titledBorder.setTitleFont(currentFont.deriveFont(Font.BOLD));
+        mainPanel.setBorder(titledBorder);
 
 
         for (PropertyDescriptor pd : propertyDescriptors) {
@@ -105,11 +114,8 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
     @Override
     public WizardStep onNext(WizardModel model) {
         boolean isValidated = controller.doValidate(this);
-//        if (nextWizardStep != null){
-//            return nextWizardStep;
-//        }
+
         setDirty(!isValidated);
-        // put if this step is dirty or not
 
 
 
@@ -120,9 +126,6 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         return super.onNext(model);
     }
 
-//    public List<PropertyDescriptor> getStepPropertyDescriptors() {
-//        return stepPropertyDescriptors;
-//    }
 
 
     @Override
@@ -136,9 +139,6 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
     @Override
     public WizardStep onPrevious(WizardModel model) {
         boolean isValidated = controller.doValidate(this);
-//        if (previousWizardStep != null){
-//            return previousWizardStep;
-//        }
         setDirty(!isValidated);
 
         CustomWizardModel appStackWizardModel = (CustomWizardModel) model;
@@ -148,9 +148,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         return super.onPrevious(model);
     }
 
-//      public VariableGroup getVariableGroup(PropertyDescriptor pd){
-//        return controller.getVariableGroup(pd);
-//    }
+
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
@@ -180,10 +178,12 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             setLayout(new BorderLayout());
             setPreferredSize(new Dimension(760, 40));
             setMaximumSize(getPreferredSize());
+            String varTitle = "";
+            if (pd.getValue("required").equals(false)){
+                varTitle+=" (Optional)";
+            }
 
-
-//            JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            label = new JLabel("<html><body style='width: 175px'>"+pd.getDisplayName()+"</body></html>");
+            label = new JLabel("<html><body style='width: 175px'>"+pd.getDisplayName()+" <i>"+varTitle+"</i></body></html>");
             label.setPreferredSize(new JBDimension(250,45));
             label.setToolTipText( pd.getShortDescription());
 
@@ -239,7 +239,6 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 if (pd.getValue("type").equals("oci:identity:compartment:id")){
                     JPanel compartmentPanel = new JPanel();
                     JButton selectCompartmentBtn  = new JButton("select");
-//                    compartmentPanel.setPreferredSize(new JBDimension(300,40));
                     JTextField compartmentName = new JTextField("");
                     compartmentName.setPreferredSize(new JBDimension(405,30));
                     compartmentName.setEnabled(false);
@@ -249,7 +248,6 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
                     compartmentName.setText(selectedCompartment.getName());
 
-//                controller.updateDependencies(pd.getName(),varGroup);
                     ExecutorService executorService = Executors.newSingleThreadExecutor();
 
                     selectCompartmentBtn.addActionListener(e->{
@@ -318,6 +316,8 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                                 }else if (value instanceof Compartment) {
                                     Compartment adb = (Compartment) value;
                                     setText(adb.getName()); // Set the display name of the instance
+                                }else if(value == null){
+                                    setText("Nothing found");
                                 }
                                 return this;
                             }
@@ -380,7 +380,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 component = spinner;
             } else {
 
-                JTextField textField = getjTextField(pd, varGroup);
+                JTextComponent textField = getjTextField(pd, varGroup);
                 if (pd.getValue("default") != null){
                     textField.setText(pd.getValue("default").toString());
                     controller.setValue(pd.getValue("default").toString(),varGroup,pd);
@@ -454,8 +454,13 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             this.variableGroup = variableGroup;
         }
 
-        private  JTextField getjTextField(PropertyDescriptor pd, VariableGroup varGroup) {
-            JTextField textField = new JTextField();
+        private JTextComponent getjTextField(PropertyDescriptor pd, VariableGroup varGroup) {
+            JTextComponent textField  ;
+            if (pd.getValue("type").equals("password")){
+                textField = new JPasswordField();
+            }else {
+                textField = new JTextField();
+            }
             textField.addFocusListener(new FocusAdapter() {
                                            @Override
                                            public void focusLost(FocusEvent e) {
@@ -465,6 +470,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                                        }
 
             );
+
 
             textField.getDocument().addDocumentListener(new DocumentListener() {
                 @Override
@@ -478,10 +484,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 }
 
                 @Override
-                public void changedUpdate(javax.swing.event.DocumentEvent e) {
-                    documentChanged();
-
-                }
+                public void changedUpdate(javax.swing.event.DocumentEvent e) {documentChanged();}
 
                 private void documentChanged() {
                     // Handle text field changes here

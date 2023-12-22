@@ -106,7 +106,7 @@ public class Controller {
 
             @Override
             protected void done() {
-                List<ExplicitlySetBmcModel> suggestedValues;
+                List<ExplicitlySetBmcModel> suggestedValues=new ArrayList<>();
                 try {
                     suggestedValues = (List<ExplicitlySetBmcModel>) get();
                 } catch (InterruptedException | ExecutionException e) {
@@ -229,6 +229,8 @@ public class Controller {
         for (CustomWizardStep.VarPanel varPanel:
                 cWizardStep.getVarPanels()) {
             PropertyDescriptor pd = varPanel.getPd();
+
+
             if (varPanel.isVisible() && (boolean)pd.getValue("required")){
 
                 VariableGroup varGroup = getVarGroupByName(pd.getName());
@@ -238,23 +240,38 @@ public class Controller {
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
-                if (value == null || value.equals("") || value.equals(0)){
+
+                if (!focusValidation(value,pd)){
                     errorPd = pd;
                     errorComponent = getComponentByName(pd.getName());
+                    errorComponent.grabFocus();
+                    errorComponent.requestFocusInWindow();
                     isvalide = false;
-                    break;
+                    return false;
                 }
+
             }
         }
-        if (!isvalide){
-            errorComponent.grabFocus();
-            errorComponent.requestFocusInWindow();
-            JLabel errorLabel = (JLabel) getErrorLabelByName(errorPd.getName());
-            errorLabel.setText("This field is required");
-            errorComponent.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+//        if (!isvalide){
+//            errorComponent.grabFocus();
+//            errorComponent.requestFocusInWindow();
+//            JLabel errorLabel = (JLabel) getErrorLabelByName(errorPd.getName());
+//            errorLabel.setText("This field is required");
+//            errorComponent.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+//            return false;
+//        }
+        return true;
+    }
+
+    boolean focusValidation(Object value,PropertyDescriptor pd){
+        try {
+            Validator.doValidate(pd,value,null);
+            handleValidated(pd);
+            return true;
+        } catch (PropertyVetoException ex) {
+            handleError(pd,ex.getMessage());
             return false;
         }
-        return true;
     }
 
     public VariableGroup getVariableGroup(PropertyDescriptor pd) {
@@ -320,8 +337,8 @@ public class Controller {
 
             component.setBorder(BorderFactory.createLineBorder(JBColor.RED));
             errorLabel.setText(errorMessage);
-            if (pd.getValue("pattern") != null)
-                component.setToolTipText("field should be : "+pd.getValue("pattern"));
+            if (pd.getValue("errorMessage") != null)
+                component.setToolTipText("Field should be : "+pd.getValue("errorMessage"));
         }
     }
     public Object getValue(VariableGroup variableGroup,PropertyDescriptor pd){

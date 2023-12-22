@@ -41,7 +41,7 @@ public class Validator implements VetoableChangeListener {
         if ( pd.getValue("required") != null && pd.getValue("required").equals(true) && newValue.trim().isEmpty()){
             throw new PropertyVetoException("This field is required",evt);
         }
-        if (pattern != null) {
+        if (pattern != null && !pattern.isEmpty()) {
             if (!newValue.matches(pattern)) {
                 throw new PropertyVetoException("Invalid input", evt);
             }

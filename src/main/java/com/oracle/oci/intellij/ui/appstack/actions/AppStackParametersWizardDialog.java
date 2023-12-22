@@ -1,5 +1,6 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
+import com.intellij.ui.SeparatorComponent;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.wizard.WizardDialog;
 import com.intellij.ui.wizard.WizardModel;
@@ -11,6 +12,8 @@ import com.oracle.oci.intellij.ui.appstack.models.Controller;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
@@ -20,6 +23,7 @@ import java.util.LinkedHashMap;
 public class AppStackParametersWizardDialog extends WizardDialog {
     public static  boolean isProgramaticChange = false;
     JBList menuList;
+
 
     public AppStackParametersWizardDialog(WizardModel wizardModel){
         super(true ,  wizardModel);
@@ -31,14 +35,38 @@ public class AppStackParametersWizardDialog extends WizardDialog {
     @Override
     protected JComponent createCenterPanel() {
         JComponent wizard = super.createCenterPanel();
+        modifyComponents(wizard);
         JPanel mainPanel = new JPanel(new BorderLayout());
         JPanel leftPanel = (JPanel) createMenuPanel();
 
         mainPanel.add(leftPanel,BorderLayout.WEST);
         mainPanel.add(wizard,BorderLayout.EAST);
-        mainPanel.setPreferredSize(new JBDimension(1100,780));
+        mainPanel.setPreferredSize(new JBDimension(1100,500));
         return mainPanel;
     }
+
+    private void modifyComponents(Container container) {
+        for (Component comp : container.getComponents()) {
+            if (comp instanceof JPanel) {
+                JPanel panel = (JPanel) comp;
+                LayoutManager layout = panel.getLayout();
+
+                // Check if this is the header panel
+                if (layout instanceof BoxLayout) {
+                    panel.setBorder(null); // Remove border from header panel
+                }
+
+                // Continue traversing for nested components
+                modifyComponents(panel);
+            } else if (comp instanceof SeparatorComponent || comp instanceof Box.Filler) {
+                container.remove(comp);
+                container.revalidate();
+                container.repaint();
+            }
+        }
+    }
+
+
 
     JComponent createMenuPanel(){
         CustomWizardModel appStackModel = (CustomWizardModel) this.myModel;
@@ -64,31 +92,17 @@ public class AppStackParametersWizardDialog extends WizardDialog {
                     if(!isProgramaticChange) {
                         int selectedIndex = menuList.getSelectedIndex();
                         WizardStep nextStep = null;
-//                        boolean ischangeValide = true;
                         CustomWizardStep currentStep = (CustomWizardStep) appStackModel.getMySteps().get(lastSelectedIndex[0]);
-//                        currentStep.
                         boolean isValide =  Controller.getInstance().doValidate(currentStep);
                         currentStep.setDirty(!isValide);
-//                        if (nextStep != null) {
-//                            ischangeValide = false;
-//                        }
 
                         nextStep = nextStep != null ? nextStep : appStackModel.getMySteps().get(selectedIndex);
                         if (changeToStep(nextStep,appStackModel)) return;
-//                        if (!ischangeValide) {
-//                            isProgramaticChange = true;
-//                            menuList.setSelectedIndex(lastSelectedIndex[0]);
-//                            isProgramaticChange = false;
-//                        } else {
+
                             lastSelectedIndex[0] = selectedIndex;
-//                        }
                     }
 
-//                    }else {
-//                        // put the title menu in not bold
-//
-//
-//                    }
+
 
                     repaint();
                 }
@@ -208,6 +222,9 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         compartmentCache.setCaching(false);
         compartmentCache.clearCache();
     }
+
+
+
 
 }
 

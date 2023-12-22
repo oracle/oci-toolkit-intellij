@@ -91,6 +91,10 @@ public class ReviewDialog extends DialogWrapper {
             setLayout(new BorderLayout());
 //            setPreferredSize(new JBDimension(760, 40));
 
+            if (pd.getValue("type").equals("password")){
+                value = "****";
+            }
+
             this.keyLabel = new JLabel(pd.getDisplayName()+" : ");
             keyLabel.setToolTipText(pd.getShortDescription());
             keyLabel.setFont(new Font(keyLabel.getFont().getName(), Font.BOLD, keyLabel.getFont().getSize()));
@@ -107,7 +111,8 @@ public class ReviewDialog extends DialogWrapper {
             String fullText = value;
 //            valueLabel.setPreferredSize(new JBDimension(150,10));
             if (fullText.length()>=30){
-                String truncatedText = fullText.substring(0, Math.min(fullText.length(), 30)) + "...";
+                int start = fullText.length() - 9;
+                String truncatedText = "..."+ fullText.substring(start,fullText.length()) ;
                 valueLabel.setText(truncatedText);
 
                 JButton toggleButton = new JButton("show");
@@ -134,10 +139,11 @@ public class ReviewDialog extends DialogWrapper {
 
             if (pd.getValue("type").toString().contains("oci")){
                 JButton copyButton = new JButton("copy");
+                String finalValue = value;
                 copyButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        String textToCopy = value;  // Replace with the actual text you want to copy
+                        String textToCopy = finalValue;  // Replace with the actual text you want to copy
                         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                         StringSelection selection = new StringSelection(textToCopy);
                         clipboard.setContents(selection, selection);
