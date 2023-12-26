@@ -33,6 +33,20 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.oracle.bmc.certificatesmanagement.CertificatesManagementClient;
+import com.oracle.bmc.certificatesmanagement.model.CertificateSummary;
+import com.oracle.bmc.certificatesmanagement.requests.ListCertificatesRequest;
+import com.oracle.bmc.certificatesmanagement.responses.ListCertificatesResponse;
+import com.oracle.bmc.devops.DevopsClient;
+import com.oracle.bmc.devops.model.Repository;
+import com.oracle.bmc.devops.model.RepositorySummary;
+import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
+import com.oracle.bmc.devops.responses.ListRepositoriesResponse;
+import com.oracle.bmc.dns.DnsClient;
+import com.oracle.bmc.dns.model.Scope;
+import com.oracle.bmc.dns.model.ZoneSummary;
+import com.oracle.bmc.dns.requests.ListZonesRequest;
+import com.oracle.bmc.dns.responses.ListZonesResponse;
 import org.apache.commons.io.FileUtils;
 
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
@@ -136,6 +150,7 @@ import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
 import com.oracle.oci.intellij.util.LogHandler;
 
+
 /**
  * The Oracle Cloud account configurator and accessor.
  */
@@ -226,6 +241,7 @@ public class OracleCloudAccount {
     return databaseClientProxy;
   }
 
+
   public VirtualNetworkClientProxy getVirtualNetworkClientProxy() {
     validate();
     return virtualNetworkClientProxy;
@@ -278,6 +294,49 @@ public class OracleCloudAccount {
               identityClient.createCompartment(createCompartmentRequestBuilder.build());
 
       return createCompartmentResponse.getCompartment();
+    }
+    public List<RepositorySummary> getRepoList(String compartmentId){
+      /* Create a service client */
+      DevopsClient client = DevopsClient.builder().build(authenticationDetailsProvider);
+
+      /* Create a request and dependent object(s). */
+
+      ListRepositoriesRequest listRepositoriesRequest = ListRepositoriesRequest.builder()
+              .compartmentId(compartmentId)
+              .build();
+
+      /* Send request to the Client */
+      ListRepositoriesResponse response = client.listRepositories(listRepositoriesRequest);
+      return response.getRepositoryCollection().getItems();
+
+    }
+
+    public List<CertificateSummary>getAllCertificates(String compartmentId){
+      CertificatesManagementClient client = CertificatesManagementClient.builder().build(authenticationDetailsProvider);
+
+      /* Create a request and dependent object(s). */
+
+      ListCertificatesRequest listCertificatesRequest = ListCertificatesRequest.builder()
+              .compartmentId(compartmentId)
+             .build();
+
+      /* Send request to the Client */
+      ListCertificatesResponse response = client.listCertificates(listCertificatesRequest);
+      return response.getCertificateCollection().getItems();
+    }
+
+    public List<ZoneSummary> getAllDnsZone(String compartmentId){
+      DnsClient client = DnsClient.builder().build(authenticationDetailsProvider);
+
+      /* Create a request and dependent object(s). */
+
+      ListZonesRequest listZonesRequest = ListZonesRequest.builder()
+              .compartmentId(compartmentId)
+              .build();
+
+      /* Send request to the Client */
+      ListZonesResponse response = client.listZones(listZonesRequest);
+      return response.getItems() ;
     }
 
     /**
@@ -1025,7 +1084,6 @@ public class OracleCloudAccount {
       System.out.println(stack.getId());
       return createStackResponse;
     }
-    
     private String getBase64EncodingForAFile(String filePath) throws IOException {
       byte[] fileData = Files.readAllBytes(Paths.get(filePath));
       byte[] fileDataBase64Encoded = Base64.getEncoder().encode(fileData);

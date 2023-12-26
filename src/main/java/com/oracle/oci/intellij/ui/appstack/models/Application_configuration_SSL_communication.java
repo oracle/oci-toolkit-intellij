@@ -122,7 +122,6 @@ public class Application_configuration_SSL_communication extends VariableGroup {
 
     @VariableMetaData(title="Private key",type="text",required=true,visible="eq(application_source,'IMAGE')")
     @PropertyOrder(8)
-
     public Object getPrivate_key_pem() {
         return private_key_pem;
     }

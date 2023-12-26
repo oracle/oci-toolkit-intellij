@@ -1,8 +1,11 @@
 package com.oracle.oci.intellij.ui.appstack.models;
 
+import com.oracle.bmc.certificatesmanagement.model.CertificateSummary;
 import com.oracle.bmc.core.model.Subnet;
 import com.oracle.bmc.core.model.Vcn;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
+import com.oracle.bmc.devops.model.RepositorySummary;
+import com.oracle.bmc.dns.model.ZoneSummary;
 import com.oracle.bmc.http.client.internal.ExplicitlySetBmcModel;
 import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.identity.model.Compartment;
@@ -108,6 +111,38 @@ public class Utils{
             return keyList;
 
         });
+        suggestedValues.put("oci:devops:repository:id",(pd,pds,varGroup)->{
+//            VariableGroup general_ConfigurationVarGroup =  Controller.getInstance().getVariableGroups().get("General_Configuration");
+
+            String compartment_id = ( (Compartment) pds.get("devops_compartment").getReadMethod().invoke(varGroup)).getId();
+
+            List<RepositorySummary> repositorySummaries = OracleCloudAccount.getInstance().getIdentityClient().getRepoList(compartment_id);
+
+            return repositorySummaries;
+
+        });
+        suggestedValues.put("oci:certificatesmanagement:certificate:id",(pd,pds,varGroup)->{
+//            VariableGroup general_ConfigurationVarGroup =  Controller.getInstance().getVariableGroups().get("General_Configuration");
+
+            String compartment_id = ( (Compartment) pds.get("dns_compartment").getReadMethod().invoke(varGroup)).getId();
+
+            List<CertificateSummary> certificateSummaries = OracleCloudAccount.getInstance().getIdentityClient().getAllCertificates(compartment_id);
+
+            return certificateSummaries;
+
+        });
+
+        suggestedValues.put("oci:dns:zone:id",(pd,pds,varGroup)->{
+//            VariableGroup general_ConfigurationVarGroup =  Controller.getInstance().getVariableGroups().get("General_Configuration");
+
+            String compartment_id = ( (Compartment) pds.get("dns_compartment").getReadMethod().invoke(varGroup)).getId();
+
+            List<ZoneSummary> repositorySummaries = OracleCloudAccount.getInstance().getIdentityClient().getAllDnsZone(compartment_id);
+
+            return repositorySummaries;
+
+        });
+
 
 
     }
@@ -129,6 +164,9 @@ public class Utils{
         put("vcn_compartment_id",List.of("existing_vcn_id","existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
         put("existing_vcn_id",List.of("existing_app_subnet_id","existing_db_subnet_id","existing_lb_subnet_id"));
         put("db_compartment",List.of("autonomous_database"));
+        put("devops_compartment",List.of("repo_name"));
+        put("dns_compartment",List.of("zone","certificate_ocid"));
+
     }};
 
     static public Map<String, List<String>> visibility = new LinkedHashMap<>() {{

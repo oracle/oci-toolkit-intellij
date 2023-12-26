@@ -6,6 +6,7 @@ import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.JBDimension;
 import com.oracle.oci.intellij.ui.appstack.models.Controller;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
+import com.oracle.oci.intellij.ui.common.Icons;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -97,7 +98,7 @@ public class ReviewDialog extends DialogWrapper {
 
             this.keyLabel = new JLabel(pd.getDisplayName()+" : ");
             keyLabel.setToolTipText(pd.getShortDescription());
-            keyLabel.setFont(new Font(keyLabel.getFont().getName(), Font.BOLD, keyLabel.getFont().getSize()));
+//            keyLabel.setFont(new Font(keyLabel.getFont().getName(), Font.BOLD, keyLabel.getFont().getSize()));
             this.valueLabel = new JLabel(value);
             this.keyLabel.setPreferredSize(new JBDimension(300,20));
 
@@ -111,11 +112,19 @@ public class ReviewDialog extends DialogWrapper {
             String fullText = value;
 //            valueLabel.setPreferredSize(new JBDimension(150,10));
             if (fullText.length()>=30){
+                ImageIcon showIcon = new ImageIcon("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/icons/show.png");
+                ImageIcon hideIcon = new ImageIcon("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/icons/hide.png");
+
+
                 int start = fullText.length() - 9;
                 String truncatedText = "..."+ fullText.substring(start,fullText.length()) ;
                 valueLabel.setText(truncatedText);
 
-                JButton toggleButton = new JButton("show");
+                JButton toggleButton = new JButton(showIcon);
+                toggleButton.setBackground(null);
+                toggleButton.setBorder(null);
+                toggleButton.setPreferredSize(new JBDimension(20,20));
+
                 toggleButton.addActionListener(new ActionListener() {
                     private boolean isFullTextShown = false;  // Start with the full text hidden
 
@@ -123,11 +132,11 @@ public class ReviewDialog extends DialogWrapper {
                     public void actionPerformed(ActionEvent e) {
                         if (isFullTextShown) {
                             valueLabel.setText(truncatedText);
-                            toggleButton.setText("show");
+                            toggleButton.setIcon(showIcon);
                             isFullTextShown = false;
                         } else {
                             valueLabel.setText(fullText);
-                            toggleButton.setText("hide");
+                            toggleButton.setIcon(hideIcon);
                             isFullTextShown = true;
                         }
 
@@ -138,7 +147,15 @@ public class ReviewDialog extends DialogWrapper {
 
 
             if (pd.getValue("type").toString().contains("oci")){
-                JButton copyButton = new JButton("copy");
+                String icon = Icons.COPY.getPath();
+                ImageIcon copyIcon = new ImageIcon("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/icons/copy.png");
+
+                // Create the button and set the icon
+                JButton copyButton = new JButton(copyIcon);
+                copyButton.setBackground(null);
+                copyButton.setPreferredSize(new JBDimension(20,20));
+                copyButton.setBorder(null);
+//                JButton copyButton = new JButton("copy");
                 String finalValue = value;
                 copyButton.addActionListener(new ActionListener() {
                     @Override
@@ -147,11 +164,12 @@ public class ReviewDialog extends DialogWrapper {
                         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                         StringSelection selection = new StringSelection(textToCopy);
                         clipboard.setContents(selection, selection);
-
-                        copyButton.setText("copied");
+                        copyButton.setIcon(null);
+//                        copyButton.setText("copied");
                         // notify
-                        new Timer(1000,ev->{
-                            copyButton.setText("copy");
+                        new Timer(500,ev->{
+//                            copyButton.setText("");
+                            copyButton.setIcon(copyIcon);
                         }).start();
                     }
                 });

@@ -34,7 +34,7 @@ public class Application extends VariableGroup {
 
     private java.lang.Object devops_compartment;
 
-    private java.lang.String repo_name;
+    private java.lang.Object repo_name;
 
     private java.lang.String branch;
 
@@ -114,15 +114,14 @@ public class Application extends VariableGroup {
         vcp.fireVetoableChange("devops_compartment", oldValue, newValue);
     }
     @PropertyOrder(6)
-    @VariableMetaData(title="DevOps repository name (OCID)",description="OCID of the repository containing the application source code.",type="string",required=true,visible="eq(application_source,'SOURCE_CODE')")
+    @VariableMetaData(title="DevOps repository name (OCID)",description="OCID of the repository containing the application source code.",type="oci:devops:repository:id",required=true,visible="eq(application_source,'SOURCE_CODE')")
 
-    public String getRepo_name() {
+    public Object getRepo_name() {
         return repo_name;
     }
 
-    public void setRepo_name(String newValue) throws PropertyVetoException {
+    public void setRepo_name(Object newValue) throws PropertyVetoException {
         Object oldValue = this.repo_name;
-
         this.repo_name = newValue;
         pcs.firePropertyChange("repo_name", oldValue, newValue);
         vcp.fireVetoableChange("repo_name", oldValue, newValue);

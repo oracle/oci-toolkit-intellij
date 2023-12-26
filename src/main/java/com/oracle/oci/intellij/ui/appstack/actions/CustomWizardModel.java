@@ -7,6 +7,8 @@ import com.intellij.ui.wizard.WizardStep;
 import com.oracle.bmc.core.model.Subnet;
 import com.oracle.bmc.core.model.Vcn;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
+import com.oracle.bmc.devops.model.RepositorySummary;
+import com.oracle.bmc.dns.model.ZoneSummary;
 import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.keymanagement.model.KeySummary;
@@ -98,10 +100,16 @@ public class CustomWizardModel extends WizardModel {
             } else if (value instanceof VaultSummary) {
                 VaultSummary adb = (VaultSummary) value;
                 return adb.getId();
+            }else if (value instanceof RepositorySummary){
+                RepositorySummary repositorySummary = (RepositorySummary)value;
+                return repositorySummary.getId();
             }else if (value instanceof KeySummary) {
                 KeySummary adb = (KeySummary) value;
                 return adb.getId() ;
-            }else if (value instanceof AvailabilityDomain) {
+            } else if (value instanceof ZoneSummary) {
+                ZoneSummary zoneSummary = (ZoneSummary) value;
+                return zoneSummary.getId();
+            } else if (value instanceof AvailabilityDomain) {
                 AvailabilityDomain adb = (AvailabilityDomain) value;
                 return adb.getId()  ;
             }else if (value instanceof Subnet) {

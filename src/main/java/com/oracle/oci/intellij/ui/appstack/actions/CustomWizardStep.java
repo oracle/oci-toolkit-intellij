@@ -10,6 +10,8 @@ import com.intellij.util.ui.JBDimension;
 import com.oracle.bmc.core.model.Subnet;
 import com.oracle.bmc.core.model.Vcn;
 import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
+import com.oracle.bmc.devops.model.RepositorySummary;
+import com.oracle.bmc.dns.model.ZoneSummary;
 import com.oracle.bmc.http.client.internal.ExplicitlySetBmcModel;
 import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.identity.model.Compartment;
@@ -301,6 +303,9 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                                 } else if (value instanceof VaultSummary) {
                                     VaultSummary adb = (VaultSummary) value;
                                     setText(adb.getDisplayName()); // Set the display name of the instance
+                                }else if(value instanceof RepositorySummary){
+                                    RepositorySummary repositorySummary = (RepositorySummary)value;
+                                    setText(repositorySummary.getName());
                                 }else if (value instanceof KeySummary) {
                                     KeySummary adb = (KeySummary) value;
                                     setText(adb.getDisplayName()); // Set the display name of the instance
@@ -316,8 +321,11 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                                 }else if (value instanceof Compartment) {
                                     Compartment adb = (Compartment) value;
                                     setText(adb.getName()); // Set the display name of the instance
-                                }else if(value == null){
-                                    setText("Nothing found");
+                                }else if (value instanceof ZoneSummary) {
+                                    ZoneSummary zone = (ZoneSummary) value;
+                                    setText(zone.getName()); // Set the display name of the instance
+                                } else if(value == null){
+                                    setText("No items");
                                 }
                                 return this;
                             }

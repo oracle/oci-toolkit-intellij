@@ -7,6 +7,7 @@ import com.oracle.bmc.http.client.internal.ExplicitlySetBmcModel;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardStep;
 import com.oracle.oci.intellij.ui.appstack.actions.PropertyOrder;
+import jnr.ffi.Struct;
 
 import javax.swing.*;
 import java.awt.*;
@@ -110,7 +111,13 @@ public class Controller {
                 try {
                     suggestedValues = (List<ExplicitlySetBmcModel>) get();
                 } catch (InterruptedException | ExecutionException e) {
-                    throw new RuntimeException(e);
+                    System.out.println(e.getMessage()+"ghjgfjhfj");
+                    comboBox.removeAllItems();
+                    comboBox.setEnabled(true);
+                    String errorMessage = "There was an error retrieving options";
+                    comboBox.setModel(new DefaultComboBoxModel(new String[]{errorMessage}));
+                    setValue(null,varGroup,pd,false);
+                    return;
                 }
                 comboBox.removeAllItems();
                 comboBox.setEnabled(true);
@@ -290,10 +297,6 @@ public class Controller {
             throw new RuntimeException(e);
         }
     }
-
-//    public boolean validateField() {
-//        return false;
-//    }
     public void setValue(Object value, VariableGroup variableGroup,PropertyDescriptor pd,boolean showError ){
         try {
             pd.getWriteMethod().invoke(variableGroup,value);

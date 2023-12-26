@@ -47,6 +47,15 @@ dependencies {
     implementation("com.oracle.oci.sdk:oci-java-sdk-keymanagement:3.24.0") {
         exclude(group="org.slf4j", module="slf4j-api")
     }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-devops:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-certificatesmanagement:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-dns:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
 
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0") // Use the latest version
     

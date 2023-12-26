@@ -14,11 +14,11 @@ public class Application_URL extends VariableGroup {
 
     private java.lang.Object dns_compartment;
 
-    private java.lang.String zone;
+    private java.lang.Object zone;
 
     private java.lang.String subdomain;
 
-    private java.lang.String certificate_ocid;
+    private java.lang.Object certificate_ocid;
 
     @PropertyOrder(1)
     @VariableMetaData(title="Create DNS record",description="If you check this checkbox the stack will create a DNS record that will resolve to the load balancer's IP address.",defaultVal="true",type="boolean",required=true)
@@ -47,13 +47,12 @@ public class Application_URL extends VariableGroup {
         vcp.fireVetoableChange("dns_compartment", oldValue, newValue);
     }
     @PropertyOrder(3)
-    @VariableMetaData(title="DNS Zone",description="Domain name in which the host name will be created.",type="string",required=true,visible="create_fqdn")
-
-    public String getZone() {
+    @VariableMetaData(title="DNS Zone",description="Domain name in which the host name will be created.",type="oci:dns:zone:id",required=true,visible="create_fqdn")
+    public Object getZone() {
         return zone;
     }
 
-    public void setZone(String newValue) throws PropertyVetoException {
+    public void setZone(Object newValue) throws PropertyVetoException {
         Object oldValue = this.zone;
         this.zone = newValue;
         pcs.firePropertyChange("zone", oldValue, newValue);
@@ -73,12 +72,12 @@ public class Application_URL extends VariableGroup {
         vcp.fireVetoableChange("subdomain", oldValue, newValue);
     }
     @PropertyOrder(5)
-    @VariableMetaData(title="Certificate OCID",description="You must have a SSL certificate available in OCI Certificates service. Provide the certificate OCID for the host name,that will be used to configure the load balancer.",type="string",required=true,visible="create_fqdn")
-    public String getCertificate_ocid() {
+    @VariableMetaData(title="Certificate OCID",description="You must have a SSL certificate available in OCI Certificates service. Provide the certificate OCID for the host name,that will be used to configure the load balancer.",type="oci:certificatesmanagement:certificate:id",required=true,visible="create_fqdn")
+    public Object getCertificate_ocid() {
         return certificate_ocid;
     }
 
-    public void setCertificate_ocid(String newValue) throws PropertyVetoException {
+    public void setCertificate_ocid(Object newValue) throws PropertyVetoException {
         Object oldValue = this.certificate_ocid;
         this.certificate_ocid = newValue;
         pcs.firePropertyChange("certificate_ocid", oldValue, newValue);
