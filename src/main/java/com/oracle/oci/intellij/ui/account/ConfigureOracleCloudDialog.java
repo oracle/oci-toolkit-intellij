@@ -4,23 +4,9 @@
  */
 package com.oracle.oci.intellij.ui.account;
 
-import com.intellij.notification.NotificationType;
-import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.ui.components.JBScrollPane;
-import com.oracle.bmc.Region;
-import com.oracle.oci.intellij.account.ConfigFileHandler;
-import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.account.SystemPreferences;
-import com.oracle.oci.intellij.util.LogHandler;
-import com.oracle.oci.intellij.account.ConfigFileHandler.*;
-import com.oracle.oci.intellij.ui.common.UIUtil;
-import org.jetbrains.annotations.Nullable;
+import static com.oracle.bmc.util.internal.FileUtils.expandUserHome;
 
-import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.*;
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
@@ -28,7 +14,30 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.oracle.bmc.util.internal.FileUtils.expandUserHome;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.jetbrains.annotations.Nullable;
+
+import com.intellij.notification.NotificationType;
+import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.ui.TextFieldWithBrowseButton;
+import com.intellij.ui.components.JBScrollPane;
+import com.oracle.bmc.Region;
+import com.oracle.oci.intellij.account.ConfigFileHandler;
+import com.oracle.oci.intellij.account.ConfigFileHandler.Profile;
+import com.oracle.oci.intellij.account.ConfigFileHandler.ProfileSet;
+import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.account.SystemPreferences;
+import com.oracle.oci.intellij.ui.common.UIUtil;
+import com.oracle.oci.intellij.util.LogHandler;
 
 public class ConfigureOracleCloudDialog extends DialogWrapper {
 

@@ -89,6 +89,7 @@ import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.Compartment.LifecycleState;
 import com.oracle.bmc.identity.model.CreateCompartmentDetails;
 import com.oracle.bmc.identity.model.RegionSubscription;
+import com.oracle.bmc.identity.model.Compartment.LifecycleState;
 import com.oracle.bmc.identity.requests.CreateCompartmentRequest;
 import com.oracle.bmc.identity.requests.DeleteCompartmentRequest;
 import com.oracle.bmc.identity.requests.GetCompartmentRequest;
@@ -140,6 +141,7 @@ import com.oracle.oci.intellij.util.LogHandler;
  * The Oracle Cloud account configurator and accessor.
  */
 public class OracleCloudAccount {
+  public static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
   private static final AtomicReference<OracleCloudAccount> ORACLE_CLOUD_ACCOUNT_INSTANCE = new AtomicReference<>();
   public static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
 
