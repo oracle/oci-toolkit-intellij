@@ -12,23 +12,27 @@ import java.awt.event.MouseEvent;
 import java.beans.IntrospectionException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
-import com.oracle.bmc.resourcemanager.model.JobSummary;
-import com.oracle.bmc.resourcemanager.model.LogEntry;
-import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
 import org.jetbrains.annotations.NotNull;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ApplicationManager;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
@@ -39,7 +43,6 @@ import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Severity;
 import com.oracle.oci.intellij.common.command.CommandStack;
 import com.oracle.oci.intellij.common.command.CompositeCommand;
-import com.oracle.oci.intellij.ui.appstack.command.CreateStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.DeleteStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.DestroyStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.GetStackJobsCommand;
@@ -137,82 +140,82 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     });
   }
 
-  private static class StackJobDialog extends DialogWrapper {
-
-    private final List<JobSummary> jobs;
-
-    protected StackJobDialog(List<JobSummary> jobs) {
-      super(true);
-      this.jobs = new ArrayList<>(jobs);
-      init();
-      setTitle("Stack Job");
-      setOKButtonText("Ok");
-    }
-
-    @Override
-    protected @Nullable JComponent createCenterPanel() {
-      JPanel centerPanel = new JPanel();
-      centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-
-      DefaultTableModel jobsModel = new DefaultTableModel();
-      jobsModel.addColumn("Name");
-      jobsModel.addColumn("Operation");
-      jobsModel.addColumn("Status");
-      jobsModel.addColumn("Time Created");
-      List<Object> row = new ArrayList<>();
-      this.jobs.forEach(j -> {
-        row.add(j.getDisplayName());
-        row.add(j.getOperation());
-        row.add(j.getLifecycleState());
-        row.add(j.getTimeCreated());
-        jobsModel.addRow(row.toArray());
-        row.clear();
-      });
-
-      JTable jobsTable = new JTable();
-      jobsTable.setModel(jobsModel);
-      centerPanel.add(jobsTable);
-
-      JTextArea textArea = new JTextArea();
-//      textArea.setText("Hello!");
-      textArea.setLineWrap(true);
-      textArea.setEditable(false);
-      textArea.setVisible(true);
-
-      JScrollPane scroll = new JScrollPane (textArea);
-      scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-            scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-
-      centerPanel.add(scroll);
-  //    centerPanel.add(textArea);
-
-      jobsTable.addMouseListener(new  MouseAdapter() {
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
-          if (e.getButton() == MouseEvent.BUTTON1) {
-            if (jobsTable.getSelectedRowCount() == 1) {
-              int selectedRow = jobsTable.getSelectedRow();
-              JobSummary jobSummary = jobs.get(selectedRow);
-              String id = jobSummary.getId();
-              GetJobLogsResponse jobLogs =
-                OracleCloudAccount.getInstance().getResourceManagerClientProxy().getJobLogs(id);
-              List<LogEntry> items = jobLogs.getItems();
-              textArea.setText(null);
-              StringBuilder builder = new StringBuilder();
-              for (LogEntry logEntry : items) {
-                builder.append(logEntry.getMessage());
-                builder.append("\n");
-              }
-              textArea.setText(builder.toString());
-            }
-          }
-        }
-      });
-
-      return centerPanel;
-    }
-  }
+//  private static class StackJobDialog extends DialogWrapper {
+//
+//    private final List<JobSummary> jobs;
+//
+//    protected StackJobDialog(List<JobSummary> jobs) {
+//      super(true);
+//      this.jobs = new ArrayList<>(jobs);
+//      init();
+//      setTitle("Stack Job");
+//      setOKButtonText("Ok");
+//    }
+//
+//    @Override
+//    protected @Nullable JComponent createCenterPanel() {
+//      JPanel centerPanel = new JPanel();
+//      centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+//
+//      DefaultTableModel jobsModel = new DefaultTableModel();
+//      jobsModel.addColumn("Name");
+//      jobsModel.addColumn("Operation");
+//      jobsModel.addColumn("Status");
+//      jobsModel.addColumn("Time Created");
+//      List<Object> row = new ArrayList<>();
+//      this.jobs.forEach(j -> {
+//        row.add(j.getDisplayName());
+//        row.add(j.getOperation());
+//        row.add(j.getLifecycleState());
+//        row.add(j.getTimeCreated());
+//        jobsModel.addRow(row.toArray());
+//        row.clear();
+//      });
+//
+//      JTable jobsTable = new JTable();
+//      jobsTable.setModel(jobsModel);
+//      centerPanel.add(jobsTable);
+//
+//      JTextArea textArea = new JTextArea();
+////      textArea.setText("Hello!");
+//      textArea.setLineWrap(true);
+//      textArea.setEditable(false);
+//      textArea.setVisible(true);
+//
+//      JScrollPane scroll = new JScrollPane (textArea);
+//      scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+//            scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+//
+//      centerPanel.add(scroll);
+//  //    centerPanel.add(textArea);
+//
+//      jobsTable.addMouseListener(new  MouseAdapter() {
+//
+//        @Override
+//        public void mouseClicked(MouseEvent e) {
+//          if (e.getButton() == MouseEvent.BUTTON1) {
+//            if (jobsTable.getSelectedRowCount() == 1) {
+//              int selectedRow = jobsTable.getSelectedRow();
+//              JobSummary jobSummary = jobs.get(selectedRow);
+//              String id = jobSummary.getId();
+//              GetJobLogsResponse jobLogs =
+//                OracleCloudAccount.getInstance().getResourceManagerClientProxy().getJobLogs(id);
+//              List<LogEntry> items = jobLogs.getItems();
+//              textArea.setText(null);
+//              StringBuilder builder = new StringBuilder();
+//              for (LogEntry logEntry : items) {
+//                builder.append(logEntry.getMessage());
+//                builder.append("\n");
+//              }
+//              textArea.setText(builder.toString());
+//            }
+//          }
+//        }
+//      });
+//
+//      return centerPanel;
+//    }
+//  }
 
   private static class LoadStackJobsAction extends AbstractAction {
 
