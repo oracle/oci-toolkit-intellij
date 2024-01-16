@@ -48,7 +48,7 @@ pass_phrase=<your_passphrase>
 
 For more details, see [SDK and CLI Configuration File](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm).
 
-## Download and Installation
+## Installation
 
 The latest version of toolkit can be downloaded from the [releases section on GitHub](https://github.com/oracle/oci-toolkit-intellij/releases).
 
@@ -75,9 +75,13 @@ To contribute, see [CONTRIBUTING](./CONTRIBUTING.md) for details.
   4. Build the plugin using the Gradle ``build`` target.
   5. After the successful build, install ``oci-toolkit-intellij/build/distributions/oci-intellij-plugin-x.y.z.zip`` through IntelliJ's plugin wizard.
 
+## Security
+
+Please consult the [security guide](./SECURITY.md) for our responsible security vulnerability disclosure process
+
 ## License
 
-Copyright (c) 2021, Oracle and/or its affiliates.
+Copyright (c) 2021, 2023 Oracle and/or its affiliates.
 
 Licensed under the Universal Permissive License v 1.0 as shown at https://opensource.oracle.com/licenses/upl
 

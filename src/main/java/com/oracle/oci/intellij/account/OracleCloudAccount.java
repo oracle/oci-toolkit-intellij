@@ -138,11 +138,11 @@ import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
 import com.oracle.oci.intellij.util.LogHandler;
 
-
 /**
  * The Oracle Cloud account configurator and accessor.
  */
 public class OracleCloudAccount {
+  public static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
   private static final AtomicReference<OracleCloudAccount> ORACLE_CLOUD_ACCOUNT_INSTANCE = new AtomicReference<>();
   public static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
 
@@ -435,7 +435,6 @@ public class OracleCloudAccount {
     }
 
     public List<VaultSummary> getVaultsList(String compartmentId){
-      System.out.println(      authenticationDetailsProvider.getUserId());
       if (authenticationDetailsProvider != null) {
         KmsVaultClient client = KmsVaultClient.builder().build(authenticationDetailsProvider);
 
@@ -1059,7 +1058,7 @@ public class OracleCloudAccount {
     public CreateStackResponse createStack(String compartmentId, Map<String, String> variables) throws IOException {
       CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
         CreateZipUploadConfigSourceDetails.builder()
-        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/aallali/Downloads/appstackforjava.zip"))
+        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/cbateman/Downloads/appstackforjava.zip"))
         .build();
 
       CreateStackDetails stackDetails =
@@ -1072,10 +1071,10 @@ public class OracleCloudAccount {
                           .build();
       CreateStackRequest createStackRequest =
         CreateStackRequest.builder().createStackDetails(stackDetails)
-//        .opcRequestId("app-stack-test-create-stack-request-"
-//          + UUID.randomUUID()
-//              .toString())
-//        .opcRetryToken("app-stack-test-create-stack-retry-token-" + UUID.randomUUID().toString())
+        .opcRequestId("app-stack-test-create-stack-request-"
+          + UUID.randomUUID()
+              .toString())
+        .opcRetryToken("app-stack-test-create-stack-retry-token-" + UUID.randomUUID().toString())
           .build();
       CreateStackResponse createStackResponse =
         resourceManagerClient.createStack(createStackRequest);
