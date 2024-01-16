@@ -259,14 +259,7 @@ public class Controller {
 
             }
         }
-//        if (!isvalide){
-//            errorComponent.grabFocus();
-//            errorComponent.requestFocusInWindow();
-//            JLabel errorLabel = (JLabel) getErrorLabelByName(errorPd.getName());
-//            errorLabel.setText("This field is required");
-//            errorComponent.setBorder(BorderFactory.createLineBorder(JBColor.RED));
-//            return false;
-//        }
+
         return true;
     }
 
@@ -321,11 +314,12 @@ public class Controller {
     public void handleValidated(PropertyDescriptor pd) {
         CustomWizardStep.VarPanel varPanel = getVarPanelByName(pd.getName());
 
-        if (varPanel != null && !(varPanel.getMainComponent() instanceof JPanel)){
+        if (varPanel != null ){
             JComponent component = varPanel.getMainComponent();
+            JComponent inputComponent = varPanel.getInputComponent();
             JLabel errorLabel = varPanel.getErrorLabel();
 
-            component.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+            inputComponent.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
             errorLabel.setText("");
         }
 
@@ -335,13 +329,14 @@ public class Controller {
         CustomWizardStep.VarPanel varPanel = getVarPanelByName(pd.getName());
         if (varPanel != null){
             JComponent component = varPanel.getMainComponent();
+            JComponent inputComponent = varPanel.getInputComponent();
             JLabel errorLabel = varPanel.getErrorLabel();
 
 
-            component.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+            inputComponent.setBorder(BorderFactory.createLineBorder(JBColor.RED));
             errorLabel.setText(errorMessage);
-            if (pd.getValue("errorMessage") != null)
-                component.setToolTipText("Field should be : "+pd.getValue("errorMessage"));
+            if (pd.getValue("errorMessage") != null && !((String)pd.getValue("errorMessage")).isEmpty())
+                inputComponent.setToolTipText("Field should be : "+pd.getValue("errorMessage"));
         }
     }
     public Object getValue(VariableGroup variableGroup,PropertyDescriptor pd){

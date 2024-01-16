@@ -1,8 +1,12 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.ui.ValidationInfo;
 import com.intellij.ui.JBColor;
+import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.table.JBTable;
 import com.intellij.ui.wizard.WizardModel;
 import com.intellij.ui.wizard.WizardNavigationState;
 import com.intellij.ui.wizard.WizardStep;
@@ -13,6 +17,7 @@ import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.bmc.dns.model.ZoneSummary;
 import com.oracle.bmc.http.client.internal.ExplicitlySetBmcModel;
+import com.oracle.bmc.identity.model.AuthToken;
 import com.oracle.bmc.identity.model.AvailabilityDomain;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.keymanagement.model.KeySummary;
@@ -23,11 +28,13 @@ import com.oracle.oci.intellij.ui.appstack.models.Utils;
 import com.oracle.oci.intellij.ui.appstack.models.Validator;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 import com.oracle.oci.intellij.ui.common.CompartmentSelection;
+import io.github.resilience4j.core.lang.Nullable;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
@@ -165,6 +172,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
     public class VarPanel extends JPanel {
         JLabel label ;
         JComponent mainComponent ;
+        JComponent inputComponent;
         JLabel errorLabel;
         PropertyDescriptor pd;
         VariableGroup variableGroup;
@@ -265,6 +273,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                             });
                         }
                     });
+                    inputComponent = compartmentName;
                     return compartmentPanel;
                 }else {
 
@@ -393,12 +402,29 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                     textField.setText(pd.getValue("default").toString());
                     controller.setValue(pd.getValue("default").toString(),varGroup,pd);
                 }
+                if (pd.getName().equals("current_user_token")){
+                    JPanel tokenPanel = new JPanel();
+                    tokenPanel.setLayout(new BoxLayout(tokenPanel,BoxLayout.X_AXIS));
+                    JButton createTokenButton = new JButton("create");
+                    textField.setPreferredSize(new JBDimension(405,30));
 
-                component = textField;
+                    tokenPanel.add(textField);
+                    tokenPanel.add(createTokenButton);
+
+                    createTokenButton.addActionListener(e->{
+                        List<AuthToken> tokens = OracleCloudAccount.getInstance().getIdentityClient().getAuthTokenList();
+//                        TokenDialog tokenDialog = new TokenDialog(tokens);
+//                        tokenDialog.show();
+                    });
+                    inputComponent = textField;
+                    return tokenPanel;
+                }else {
+                    component = textField;
+                }
             }
             component.setPreferredSize(new JBDimension(200,40));
 
-
+            inputComponent = component;
             return component;
         }
 
@@ -432,6 +458,10 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
         public JComponent getMainComponent() {
             return mainComponent;
+        }
+
+        public JComponent getInputComponent() {
+            return inputComponent;
         }
 
         public void setMainComponent(JComponent mainComponent) {
@@ -513,6 +543,105 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         }
     }
 }
+//
+// class TokenDialog extends DialogWrapper {
+//    private final List<AuthToken> tokens; // Token is a custom class to hold token data
+//    private JTextField descriptionField;
+//    private JBTable tokenTabel;
+//
+//    public TokenDialog(List<AuthToken> tokens) {
+//        super(true); // use current window as parent
+//        this.tokens = tokens;
+//        init();
+//        setTitle("Manage Tokens");
+//    }
+//
+//    @Nullable
+//    @Override
+//    protected JComponent createCenterPanel() {
+//        JPanel dialogPanel = new JPanel(new BorderLayout());
+//
+//        // Token list
+//        tokenTabel = new JBTable(new DefaultListModel<>());
+//        tokens.forEach(token -> ((DefaultListModel<AuthToken>) tokenList.getModel()).addElement(token));
+//        tokenList.setCellRenderer(new TokenCellRenderer()); // Custom cell renderer to display token info
+//        dialogPanel.add(new JBScrollPane(tokenList), BorderLayout.CENTER);
+//
+//        // New token form
+//        JPanel newTokenPanel = new JPanel(new FlowLayout());
+//        descriptionField = new JTextField(20);
+//        newTokenPanel.add(new JLabel("Description:"));
+//        newTokenPanel.add(descriptionField);
+//
+//        dialogPanel.add(newTokenPanel, BorderLayout.SOUTH);
+//
+//        return dialogPanel;
+//    }
+//
+//    @Nullable
+//    @Override
+//    protected ValidationInfo doValidate() {
+//        if (tokens.size() >= 2) {
+//            return new ValidationInfo("Cannot create more than 2 tokens.");
+//        }
+//        if (descriptionField.getText().trim().isEmpty()) {
+//            return new ValidationInfo("Description cannot be empty.", descriptionField);
+//        }
+//        return null;
+//    }
+//
+//    @Override
+//    protected void doOKAction() {
+//        if (!myOKAction.isEnabled()) {
+//            return;
+//        }
+//        // Logic to handle new token creation
+//        String description = descriptionField.getText().trim();
+//        // Add logic to create a new token and add it to the list
+//
+//        super.doOKAction();
+//    }
+//
+//    private static class TokenCellRenderer extends JLabel implements ListCellRenderer<AuthToken> {
+//        @Override
+//        public Component getListCellRendererComponent(JList<? extends AuthToken> list, AuthToken value, int index, boolean isSelected, boolean cellHasFocus) {
+//            setText("<html>Description: " + value.getDescription() + "<br>Date Created: " + value.getTimeCreated() + "</html>");
+//            setOpaque(true);
+//            setBackground(isSelected ? list.getSelectionBackground() : list.getBackground());
+//            setForeground(isSelected ? list.getSelectionForeground() : list.getForeground());
+//            return this;
+//        }
+//    }
+//}
+//class AppStackTableModel extends DefaultTableModel {
+//    public static final String[] APPSTACK_COLUMN_NAMES =
+//            new String[] { "Description","Created" };
+//    /**
+//     *
+//     */
+//    private static final long serialVersionUID = 1L;
+//
+//    public AppStackTableModel(int rowCount) {
+//        super(APPSTACK_COLUMN_NAMES, rowCount);
+//    }
+//
+//    @Override
+//    public boolean isCellEditable(int row, int column){
+//        return false;
+//    }
+//
+//    @Override
+//    public String getColumnName(int index){
+//        return APPSTACK_COLUMN_NAMES[index];
+//    }
+//
+//    @Override
+//    public Class<?> getColumnClass(int column){
+//        return String.class; //(column == 2) ? JLabel.class : String.class;
+//    }
+//
+//
+//}
 
 
 

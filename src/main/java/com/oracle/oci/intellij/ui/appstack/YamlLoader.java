@@ -30,7 +30,7 @@ public class YamlLoader {
     Compartment compartment ;
     CompartmentCache compartmentCache ;
 
-    public  void load() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
+    public  Map load() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
         // start caching compartments
         compartmentCache = CompartmentCache.getInstance();
         compartmentCache.setCaching(true);
@@ -112,6 +112,10 @@ public class YamlLoader {
         CustomWizardModel customWizardModel = new CustomWizardModel(varGroups,descriptorsState);
         AppStackParametersWizardDialog dialog = new AppStackParametersWizardDialog(customWizardModel);
         dialog.show();
+        if (dialog.isApply()){
+            return dialog.getUserInput();
+        }
+        return null;
 
 
     }

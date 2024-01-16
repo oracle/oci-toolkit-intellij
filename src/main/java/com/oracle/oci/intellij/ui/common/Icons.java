@@ -9,9 +9,9 @@ package com.oracle.oci.intellij.ui.common;
  */
 public enum Icons {
     BUCKET("icons/bucket.png"),
-    COPY("icons/copy.png"),
-    SHOW("icons/show.png"),
-    HIDE("icons/hide.png"),
+    COPY("/icons/copy.png"),
+    SHOW("/icons/show.png"),
+    HIDE("/icons/hide.png"),
     TOOLBAR_LOGIN("icons/toolbar-login.png"),
     COMPUTE("icons/compute.png"),
     COMPUTE_INSTANCE("icons/compute-instance.png"),

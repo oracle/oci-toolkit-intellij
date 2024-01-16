@@ -98,7 +98,6 @@ public class ReviewDialog extends DialogWrapper {
 
             this.keyLabel = new JLabel(pd.getDisplayName()+" : ");
             keyLabel.setToolTipText(pd.getShortDescription());
-//            keyLabel.setFont(new Font(keyLabel.getFont().getName(), Font.BOLD, keyLabel.getFont().getSize()));
             this.valueLabel = new JLabel(value);
             this.keyLabel.setPreferredSize(new JBDimension(300,20));
 
@@ -110,10 +109,11 @@ public class ReviewDialog extends DialogWrapper {
 
 
             String fullText = value;
-//            valueLabel.setPreferredSize(new JBDimension(150,10));
-            if (fullText.length()>=30){
-                ImageIcon showIcon = new ImageIcon("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/icons/show.png");
-                ImageIcon hideIcon = new ImageIcon("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/icons/hide.png");
+            if (fullText.length()>=30 && ((String)pd.getValue("type")).contains("oci")){
+                String showIconPath = Icons.SHOW.getPath();
+                String hideIconPath = Icons.HIDE.getPath();
+                ImageIcon showIcon = new ImageIcon(ReviewDialog.class.getResource(showIconPath));
+                ImageIcon hideIcon = new ImageIcon(ReviewDialog.class.getResource(hideIconPath));
 
 
                 int start = fullText.length() - 9;
@@ -148,7 +148,7 @@ public class ReviewDialog extends DialogWrapper {
 
             if (pd.getValue("type").toString().contains("oci")){
                 String icon = Icons.COPY.getPath();
-                ImageIcon copyIcon = new ImageIcon("/Users/aallali/Desktop/working/oci-toolkit-repo/oci-intellij-plugin/src/main/resources/icons/copy.png");
+                ImageIcon copyIcon = new ImageIcon(ReviewDialog.class.getResource(icon));
 
                 // Create the button and set the icon
                 JButton copyButton = new JButton(copyIcon);

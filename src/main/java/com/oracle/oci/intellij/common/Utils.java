@@ -14,6 +14,7 @@ import java.util.Base64;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.CommandFailedException;
 import com.oracle.oci.intellij.ui.appstack.models.Application.Application_source;
 import com.oracle.oci.intellij.ui.appstack.models.Application.Application_type;
+import com.oracle.oci.intellij.ui.appstack.models.Container_instance_configuration;
 
 public class Utils {
 
@@ -85,8 +86,10 @@ public class Utils {
       return Application_source.valueOf(newValue);
     }
     else if (Application_type.class.equals(propertyType)) {
-      return Application_type.valueOf(newValue);
-    }
-    return newValue;
+		return Application_type.valueOf(newValue);
+	} else if (Container_instance_configuration.Shape.class.equals(propertyType)) {
+		return Container_instance_configuration.Shape.valueOf("CI_Standard_E3_Flex") ;
+	}
+	  return newValue;
   }
 }

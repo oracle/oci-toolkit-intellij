@@ -110,8 +110,10 @@ public class CustomWizardModel extends WizardModel {
                 ZoneSummary zoneSummary = (ZoneSummary) value;
                 return zoneSummary.getId();
             } else if (value instanceof AvailabilityDomain) {
+
                 AvailabilityDomain adb = (AvailabilityDomain) value;
-                return adb.getId()  ;
+
+                return adb.getName() ;
             }else if (value instanceof Subnet) {
                 Subnet adb = (Subnet) value;
                 return adb.getId()  ;
@@ -122,6 +124,9 @@ public class CustomWizardModel extends WizardModel {
                 Compartment adb = (Compartment) value;
                 return adb.getId() ;
             }
+        }
+        if (pd.getName().equals("shape")) {
+            return "CI.Standard.E3.Flex";
         }
         return value!= null ?value.toString() : "";
     }

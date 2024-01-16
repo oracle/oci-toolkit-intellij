@@ -15,18 +15,8 @@ import java.util.Optional;
 
 import com.oracle.oci.intellij.ui.appstack.command.SetCommand;
 import com.oracle.oci.intellij.ui.appstack.command.SetCommand.SetCommandResult;
-import com.oracle.oci.intellij.ui.appstack.models.Application;
-import com.oracle.oci.intellij.ui.appstack.models.Application_Performance_Monitoring;
-import com.oracle.oci.intellij.ui.appstack.models.Application_URL;
-import com.oracle.oci.intellij.ui.appstack.models.Application_configuration_SSL_communication_between_backends_and_load_balancer;
-import com.oracle.oci.intellij.ui.appstack.models.Container_instance_configuration;
-import com.oracle.oci.intellij.ui.appstack.models.Database;
-import com.oracle.oci.intellij.ui.appstack.models.General_Configuration;
-import com.oracle.oci.intellij.ui.appstack.models.Hide_constants_and_internal_variables;
-import com.oracle.oci.intellij.ui.appstack.models.Network;
-import com.oracle.oci.intellij.ui.appstack.models.Other_parameters;
-import com.oracle.oci.intellij.ui.appstack.models.Stack_authentication;
-import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
+import com.oracle.oci.intellij.ui.appstack.models.*;
+//import com.oracle.oci.intellij.ui.appstack.models.;
 import com.oracle.oci.intellij.common.Utils;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.CommandFailedException;
 
@@ -160,7 +150,7 @@ public class ModelLoader {
 
 	private void loadModel(String string) throws IntrospectionException {
 		vgClasses = new ArrayList<>();
-		vgClasses.add(Application_configuration_SSL_communication_between_backends_and_load_balancer.class);
+		vgClasses.add(Application_configuration_SSL_communication.class);
 		vgClasses.add(Application_Performance_Monitoring.class);
 		vgClasses.add(Application_URL.class);
 		vgClasses.add(Application.class);

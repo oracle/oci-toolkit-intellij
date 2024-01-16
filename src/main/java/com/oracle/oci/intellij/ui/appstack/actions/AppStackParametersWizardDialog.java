@@ -1,5 +1,6 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
+import com.intellij.ui.OnePixelSplitter;
 import com.intellij.ui.SeparatorComponent;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.wizard.WizardDialog;
@@ -7,22 +8,24 @@ import com.intellij.ui.wizard.WizardModel;
 import com.intellij.ui.wizard.WizardStep;
 import com.intellij.util.ui.JBDimension;
 import com.intellij.util.ui.JBUI;
-import com.intellij.util.ui.UIUtil;
+import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.appstack.models.Controller;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class AppStackParametersWizardDialog extends WizardDialog {
     public static  boolean isProgramaticChange = false;
     JBList menuList;
+    private LinkedHashMap<String,String> userInput;
+    private boolean apply=false;
 
 
     public AppStackParametersWizardDialog(WizardModel wizardModel){
@@ -36,12 +39,22 @@ public class AppStackParametersWizardDialog extends WizardDialog {
     protected JComponent createCenterPanel() {
         JComponent wizard = super.createCenterPanel();
         modifyComponents(wizard);
+        OnePixelSplitter splighter =  new OnePixelSplitter(false);
+        splighter.setHonorComponentsMinimumSize(true);
+
         JPanel mainPanel = new JPanel(new BorderLayout());
         JPanel leftPanel = (JPanel) createMenuPanel();
 
+        leftPanel.setBackground(Color.white);
+
+//        splighter.setFirstComponent(leftPanel);
+//        splighter.setSecondComponent(mainPanel);
+//        splighter.getDivider().setOpaque(false);
+
         mainPanel.add(leftPanel,BorderLayout.WEST);
         mainPanel.add(wizard,BorderLayout.EAST);
-        mainPanel.setPreferredSize(new JBDimension(1100,500));
+        mainPanel.setMinimumSize(new JBDimension(1010,mainPanel.getHeight()));
+//        mainPanel.setPreferredSize(new JBDimension(1100,500));
         return mainPanel;
     }
 
@@ -54,7 +67,13 @@ public class AppStackParametersWizardDialog extends WizardDialog {
                 // Check if this is the header panel
                 if (layout instanceof BoxLayout) {
                     panel.setBorder(null); // Remove border from header panel
+                }else if (layout instanceof BorderLayout){
+                   LayoutManager borderLayout =  panel.getLayout();
+                    BorderLayout brd = (BorderLayout) borderLayout;
+                    brd.setHgap(0);
+                    brd.setVgap(0);
                 }
+
 
                 // Continue traversing for nested components
                 modifyComponents(panel);
@@ -113,22 +132,23 @@ public class AppStackParametersWizardDialog extends WizardDialog {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 CustomWizardStep currentStep = (CustomWizardStep) appStackModel.getMySteps().get(index);
+                JLabel renderedLabel = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
 
                 JPanel itemPanel = new JPanel(new BorderLayout());
                 itemPanel.setOpaque(true);
-                Color bg = isSelected ? UIUtil.getListSelectionBackground(true) : UIUtil.getListBackground();
-                itemPanel.setBackground(bg);
-                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+//                Color bg = isSelected ? UIUtil.getListSelectionBackground(true) : UIUtil.getListBackground();
+//                itemPanel.setBackground(bg);
                 itemPanel.setToolTipText((String) value);
-                label.setBackground(bg);
-                label.setForeground(UIUtil.getListForeground());
+//                renderedLabel.setBackground(bg);
+//                renderedLabel.setForeground(UIUtil.getListForeground());
                 if (currentStep.isDirty()){
-                    label.setFont(label.getFont().deriveFont(1));
+                    renderedLabel.setFont(renderedLabel.getFont().deriveFont(1));
                 }else {
-                    label.setFont(label.getFont().deriveFont(0));
+                    renderedLabel.setFont(renderedLabel.getFont().deriveFont(0));
                 }
-                label.setBorder(JBUI.Borders.emptyLeft(20));
-                itemPanel.add(label, "West");
+                renderedLabel.setBorder(JBUI.Borders.emptyLeft(20));
+                itemPanel.add(renderedLabel);
                 setPreferredSize(new JBDimension(270,30));
 //                itemPanel.setPreferredSize(new JBDimension(340,30));
 
@@ -140,8 +160,8 @@ public class AppStackParametersWizardDialog extends WizardDialog {
 
         leftPanel.add(menuList);
 
-        leftPanel.setPreferredSize(new JBDimension(320,leftPanel.getHeight()));
-        leftPanel.setBorder(BorderFactory.createTitledBorder("Groups"));
+//        leftPanel.setPreferredSize(new JBDimension(320,leftPanel.getHeight()));
+//        leftPanel.setBorder(BorderFactory.createTitledBorder("Groups"));
 
         return leftPanel;
     }
@@ -202,18 +222,51 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         }
 
         LinkedHashMap<String,String> variables = appStackModel.collectVariables();
+        // add cuurent user id , tenency id , region name
+        addNeededParameters(variables);
 
 
         ReviewDialog reviewDialog = new ReviewDialog(variables,appStackModel.getVarGroups());
         if (reviewDialog.showAndGet()){
+            apply = true;
+            userInput = variables;
+//            createAppStack();
             freeCache();
-
             System.out.println(variables);
             super.doOKAction();
         }
 
 
 
+    }
+    public Map<String,String> getUserInput(){
+        return userInput;
+    }
+
+//    private void createAppStack() {
+//        try {
+//          OracleCloudAccount.ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+//          String compartmentId = SystemPreferences.getCompartmentId();
+//          ClassLoader cl = AppStackDashboard.class.getClassLoader();
+//          CreateStackCommand command =
+//            new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
+//            Map<String,String> variables = new ModelLoader().loadTestVariables();
+//            command.setVariables(variables);
+//          this.dashboard.commandStack.execute(command);
+//        } catch (Exception e1) {
+//          throw new RuntimeException(e1);
+//        }
+//    }
+
+    private void addNeededParameters(LinkedHashMap<String, String> variables) {
+        String currentUserId =   OracleCloudAccount.getInstance().getCurrentUserId();
+        String currentTenancy = OracleCloudAccount.getInstance().getCurrentTenancy();
+        String currentRegion = SystemPreferences.getRegionName();
+
+        variables.put("current_user_ocid",currentUserId);
+        variables.put("tenancy_ocid",currentTenancy);
+        variables.put("region",currentRegion);
+        variables.put("compartment_ocid",SystemPreferences.getCompartmentId());
     }
 
     private void freeCache() {
@@ -224,7 +277,8 @@ public class AppStackParametersWizardDialog extends WizardDialog {
     }
 
 
-
-
+    public boolean isApply() {
+        return apply;
+    }
 }
 

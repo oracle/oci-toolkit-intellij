@@ -47,6 +47,9 @@ import com.oracle.bmc.dns.model.Scope;
 import com.oracle.bmc.dns.model.ZoneSummary;
 import com.oracle.bmc.dns.requests.ListZonesRequest;
 import com.oracle.bmc.dns.responses.ListZonesResponse;
+import com.oracle.bmc.identity.model.*;
+import com.oracle.bmc.identity.requests.*;
+import com.oracle.bmc.identity.responses.*;
 import org.apache.commons.io.FileUtils;
 
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
@@ -98,22 +101,7 @@ import com.oracle.bmc.database.responses.ListAutonomousDatabaseBackupsResponse;
 import com.oracle.bmc.database.responses.ListAutonomousDatabasesResponse;
 import com.oracle.bmc.database.responses.ListDbVersionsResponse;
 import com.oracle.bmc.identity.IdentityClient;
-import com.oracle.bmc.identity.model.AvailabilityDomain;
-import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.identity.model.Compartment.LifecycleState;
-import com.oracle.bmc.identity.model.CreateCompartmentDetails;
-import com.oracle.bmc.identity.model.RegionSubscription;
-import com.oracle.bmc.identity.requests.CreateCompartmentRequest;
-import com.oracle.bmc.identity.requests.DeleteCompartmentRequest;
-import com.oracle.bmc.identity.requests.GetCompartmentRequest;
-import com.oracle.bmc.identity.requests.ListAvailabilityDomainsRequest;
-import com.oracle.bmc.identity.requests.ListCompartmentsRequest;
-import com.oracle.bmc.identity.requests.ListRegionSubscriptionsRequest;
-import com.oracle.bmc.identity.responses.CreateCompartmentResponse;
-import com.oracle.bmc.identity.responses.GetCompartmentResponse;
-import com.oracle.bmc.identity.responses.ListAvailabilityDomainsResponse;
-import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
-import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
 import com.oracle.bmc.keymanagement.KmsManagementClient;
 import com.oracle.bmc.keymanagement.KmsVaultClient;
 import com.oracle.bmc.keymanagement.model.KeySummary;
@@ -251,6 +239,13 @@ public class OracleCloudAccount {
     validate();
     return resourceManagerClientProxy;
   }
+  public String  getCurrentUserId(){
+    return authenticationDetailsProvider.getUserId();
+  }
+  public String getCurrentTenancy(){
+    return authenticationDetailsProvider.getTenantId();
+  }
+
 
   private void reset() {
     authenticationDetailsProvider = null;
@@ -309,6 +304,11 @@ public class OracleCloudAccount {
       ListRepositoriesResponse response = client.listRepositories(listRepositoriesRequest);
       return response.getRepositoryCollection().getItems();
 
+    }
+    public List<AuthToken> getAuthTokenList(){
+      ListAuthTokensRequest listAuthTokensRequest = ListAuthTokensRequest.builder().userId(authenticationDetailsProvider.getUserId()).build();
+      ListAuthTokensResponse listAuthTokensResponse = identityClient.listAuthTokens(listAuthTokensRequest);
+      return listAuthTokensResponse.getItems();
     }
 
     public List<CertificateSummary>getAllCertificates(String compartmentId){
@@ -435,6 +435,7 @@ public class OracleCloudAccount {
     }
 
     public List<VaultSummary> getVaultsList(String compartmentId){
+      System.out.println(      authenticationDetailsProvider.getUserId());
       if (authenticationDetailsProvider != null) {
         KmsVaultClient client = KmsVaultClient.builder().build(authenticationDetailsProvider);
 
@@ -1058,7 +1059,7 @@ public class OracleCloudAccount {
     public CreateStackResponse createStack(String compartmentId, Map<String, String> variables) throws IOException {
       CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
         CreateZipUploadConfigSourceDetails.builder()
-        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/cbateman/Downloads/appstackforjava.zip"))
+        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/aallali/Downloads/appstackforjava.zip"))
         .build();
 
       CreateStackDetails stackDetails =
@@ -1071,10 +1072,10 @@ public class OracleCloudAccount {
                           .build();
       CreateStackRequest createStackRequest =
         CreateStackRequest.builder().createStackDetails(stackDetails)
-        .opcRequestId("app-stack-test-create-stack-request-"
-          + UUID.randomUUID()
-              .toString())
-        .opcRetryToken("app-stack-test-create-stack-retry-token-" + UUID.randomUUID().toString())
+//        .opcRequestId("app-stack-test-create-stack-request-"
+//          + UUID.randomUUID()
+//              .toString())
+//        .opcRetryToken("app-stack-test-create-stack-retry-token-" + UUID.randomUUID().toString())
           .build();
       CreateStackResponse createStackResponse =
         resourceManagerClient.createStack(createStackRequest);

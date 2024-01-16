@@ -9,24 +9,23 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.beans.IntrospectionException;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
+import java.beans.*;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
+import com.oracle.bmc.identity.model.AuthToken;
 import com.oracle.bmc.resourcemanager.model.JobSummary;
 import com.oracle.bmc.resourcemanager.model.LogEntry;
 import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
+import com.oracle.oci.intellij.ui.appstack.command.*;
 import org.jetbrains.annotations.NotNull;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ApplicationManager;
 import org.jetbrains.annotations.Nullable;
+
 
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -39,12 +38,7 @@ import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Severity;
 import com.oracle.oci.intellij.common.command.CommandStack;
 import com.oracle.oci.intellij.common.command.CompositeCommand;
-import com.oracle.oci.intellij.ui.appstack.command.CreateStackCommand;
-import com.oracle.oci.intellij.ui.appstack.command.DeleteStackCommand;
-import com.oracle.oci.intellij.ui.appstack.command.DestroyStackCommand;
-import com.oracle.oci.intellij.ui.appstack.command.GetStackJobsCommand;
 import com.oracle.oci.intellij.ui.appstack.command.GetStackJobsCommand.GetStackJobsResult;
-import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand.ListStackResult;
 import com.oracle.oci.intellij.ui.appstack.uimodel.AppStackTableModel;
 import com.oracle.oci.intellij.ui.common.UIUtil;
@@ -67,6 +61,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   private CommandStack commandStack = new CommandStack();
 
 
+
   private static final AppStackDashboard INSTANCE =
           new AppStackDashboard();
 
@@ -78,6 +73,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     //initializeWorkLoadTypeFilter();
     initializeTableStructure();
     initializeLabels();
+
 
     if (refreshAppStackButton != null) {
       refreshAppStackButton.setAction(new RefreshAction(this, "Refresh"));
@@ -434,55 +430,52 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
   private static class CreateAction extends AbstractAction {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
     private AppStackDashboard dashboard;
 
     public CreateAction(AppStackDashboard dashboard, String actionName) {
       super(actionName);
+      List<AuthToken> list = OracleCloudAccount.getInstance().getIdentityClient().getAuthTokenList();
+      System.out.println(list);
+
       this.dashboard = dashboard;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-//      try {
-//        OracleCloudAccount.getInstance().getResourceManagerClientProxy().createStack();
-//      } catch (IOException e1) {
-//        // TODO Auto-generated catch block
-//        e1.printStackTrace();
-//      }
 
-//      try {
-//        dashboard.createAppStackButton.setEnabled(false);
-//        YamlLoader.Load();
-          dashboard.createAppStackButton.setEnabled(false);
-          Runnable runnable = ()->{
-              YamlLoader loader = new YamlLoader();
-              try {
-                  loader.load();
-              } catch (IntrospectionException | IllegalAccessException | InvocationTargetException ex) {
-                  throw new RuntimeException(ex);
-              }
-              dashboard.createAppStackButton.setEnabled(true);
-          };
-          ApplicationManager.getApplication().invokeLater(runnable);
+      AtomicReference<Map<String, String>> variables = new AtomicReference<>(new LinkedHashMap<>());
 
-//        dashboard.createAppStackButton.setEnabled(true);
-//      } catch (IntrospectionException ex) {
-//        try {
-//          ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
-//          String compartmentId = SystemPreferences.getCompartmentId();
-//          ClassLoader cl = AppStackDashboard.class.getClassLoader();
-//          CreateStackCommand command =
-//            new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
-//          this.dashboard.commandStack.execute(command);
-//        } catch (Exception e1) {
-//          throw new RuntimeException(e1);
-//        }
-//      } catch (InvocationTargetException | IllegalAccessException ex) {
-//          throw new RuntimeException(ex);
-//      }
+      dashboard.createAppStackButton.setEnabled(false);
+      Runnable runnable = () -> {
+        YamlLoader loader = new YamlLoader();
+        try {
+          variables.set(loader.load());
+        } catch (IntrospectionException | IllegalAccessException | InvocationTargetException ex) {
+          throw new RuntimeException(ex);
+        }
+        if (variables.get() == null)
+          return;
+        try {
+          ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+          String compartmentId = SystemPreferences.getCompartmentId();
+          ClassLoader cl = AppStackDashboard.class.getClassLoader();
+          CreateStackCommand command =
+                  new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
+//          Map<String,String> variables = new ModelLoader().loadTestVariables();
+//          variables.put("shape","CI.Standard.E3.Flex");
+          command.setVariables(variables.get());
+//          command.setVariables(variables.get());
+          this.dashboard.commandStack.execute(command);
+        } catch (Exception e1) {
+          throw new RuntimeException(e1);
+        }
+      };
+      ApplicationManager.getApplication().invokeLater(runnable);
+
+      dashboard.createAppStackButton.setEnabled(true);
     }
   }
   
