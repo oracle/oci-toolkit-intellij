@@ -150,16 +150,17 @@ public class YamlLoader {
 
     private static List<VariableGroup> init() {
         List<VariableGroup> varGroups = new ArrayList<>();
+        varGroups.add(new Stack_Information());
         varGroups.add(new General_Configuration());
         varGroups.add(new Application());
-        varGroups.add(new Stack_authentication());
+        varGroups.add(new Stack_Authentication());
         varGroups.add(new Application_Performance_Monitoring());
         varGroups.add(new Database());
-        varGroups.add(new Other_parameters());
-        varGroups.add(new Application_configuration_SSL_communication());
+        varGroups.add(new Other_Parameters());
+        varGroups.add(new Application_Configuration_SSL_Communication());
         varGroups.add(new Application_URL());
         varGroups.add(new Network());
-        varGroups.add(new Container_instance_configuration());
+        varGroups.add(new Container_Instance_Configuration());
         return varGroups;
     }
 }

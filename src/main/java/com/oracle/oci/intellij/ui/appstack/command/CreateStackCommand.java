@@ -52,21 +52,21 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 //			CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails = CreateZipUploadConfigSourceDetails
 //      		.builder().zipFileBase64Encoded(zipFileAsString).build();
 
-			CreateStackResponse createStackResponse = resourceManagerClient.createStack(this.compartmentId, variables);
-      System.out.println("Created Stack : " + createStackResponse.getStack());
-      final String stackId = createStackResponse.getStack().getId();
+            CreateStackResponse createStackResponse = resourceManagerClient.createStack(this.compartmentId, variables);
+            System.out.println("Created Stack : " + createStackResponse.getStack());
+            final String stackId = createStackResponse.getStack().getId();
 
-      System.out.println(stackId);
-			
-			CreateJobResponse createApplyJobResponse = createApplyJob(resourceManagerClient, stackId);
-			String applyJobId = createApplyJobResponse.getJob().getId();
-			System.out.println(applyJobId);
+            System.out.println(stackId);
 
-			// Get Job Terraform state GetJobTfStateRequest getJobTfStateRequest =
-			GetJobTfStateResponse jobTfState = resourceManagerClient.getJobTfState(applyJobId);
-			System.out.println(jobTfState.toString());
+            CreateJobResponse createApplyJobResponse = createApplyJob(resourceManagerClient, stackId);
+            String applyJobId = createApplyJobResponse.getJob().getId();
+            System.out.println(applyJobId);
 
-      return CreateResult.create().stackId(stackId).build();
+            // Get Job Terraform state GetJobTfStateRequest getJobTfStateRequest =
+            GetJobTfStateResponse jobTfState = resourceManagerClient.getJobTfState(applyJobId);
+            System.out.println(jobTfState.toString());
+
+            return CreateResult.create().stackId(stackId).build();
 		}
 			  
 //	  private static CreateJobResponse createPlanJob(ResourceManagerClientProxy resourceManagerClient, String stackId) {

@@ -39,22 +39,17 @@ public class AppStackParametersWizardDialog extends WizardDialog {
     protected JComponent createCenterPanel() {
         JComponent wizard = super.createCenterPanel();
         modifyComponents(wizard);
-        OnePixelSplitter splighter =  new OnePixelSplitter(false);
-        splighter.setHonorComponentsMinimumSize(true);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
         JPanel leftPanel = (JPanel) createMenuPanel();
 
         leftPanel.setBackground(Color.white);
 
-//        splighter.setFirstComponent(leftPanel);
-//        splighter.setSecondComponent(mainPanel);
-//        splighter.getDivider().setOpaque(false);
 
         mainPanel.add(leftPanel,BorderLayout.WEST);
-        mainPanel.add(wizard,BorderLayout.EAST);
-        mainPanel.setMinimumSize(new JBDimension(1010,mainPanel.getHeight()));
-//        mainPanel.setPreferredSize(new JBDimension(1100,500));
+        wizard.setBorder(BorderFactory.createEmptyBorder(0,10,0,0));
+        mainPanel.add(wizard,BorderLayout.CENTER);
+        mainPanel.setMinimumSize(new JBDimension(1090, mainPanel.getHeight()));
         return mainPanel;
     }
 

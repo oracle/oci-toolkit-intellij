@@ -6,7 +6,7 @@ import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
-public class Other_parameters extends VariableGroup {
+public class Other_Parameters extends VariableGroup {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     private java.lang.String other_environment_variables;

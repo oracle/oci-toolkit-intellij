@@ -144,7 +144,6 @@ import com.oracle.oci.intellij.util.LogHandler;
 public class OracleCloudAccount {
   public static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
   private static final AtomicReference<OracleCloudAccount> ORACLE_CLOUD_ACCOUNT_INSTANCE = new AtomicReference<>();
-  public static final String ROOT_COMPARTMENT_NAME = "[Root Compartment]";
 
   private AuthenticationDetailsProvider authenticationDetailsProvider = null;
   private final IdentityClientProxy identityClientProxy = new IdentityClientProxy();
@@ -1058,23 +1057,25 @@ public class OracleCloudAccount {
     public CreateStackResponse createStack(String compartmentId, Map<String, String> variables) throws IOException {
       CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
         CreateZipUploadConfigSourceDetails.builder()
-        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/cbateman/Downloads/appstackforjava.zip"))
+        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/aallali/Downloads/appstackforjava.zip"))
         .build();
-
+      String uuid = UUID.randomUUID().toString();
+      String displayName = variables.get("appstack_name") == null ? "New App Stack "+uuid:variables.get("appstack_name");
+      String description = variables.get("appstack_description") == null ? "New App Stack "+uuid:variables.get("appstack_description");
       CreateStackDetails stackDetails =
         CreateStackDetails.builder()
                           .compartmentId(compartmentId)
                           .configSource(zipUploadConfigSourceDetails)
-                          .displayName("Create New AppStack")
-                          .description("Creates a new App Stack")
+                          .displayName(displayName)
+                          .description(description)
                           .variables(variables == null ? Collections.emptyMap() : variables)
                           .build();
       CreateStackRequest createStackRequest =
         CreateStackRequest.builder().createStackDetails(stackDetails)
-        .opcRequestId("app-stack-test-create-stack-request-"
-          + UUID.randomUUID()
-              .toString())
-        .opcRetryToken("app-stack-test-create-stack-retry-token-" + UUID.randomUUID().toString())
+//        .opcRequestId("app-stack-test-create-stack-request-"
+//          + UUID.randomUUID()
+//              .toString())
+//        .opcRetryToken("app-stack-test-create-stack-retry-token-" + UUID.randomUUID().toString())
           .build();
       CreateStackResponse createStackResponse =
         resourceManagerClient.createStack(createStackRequest);

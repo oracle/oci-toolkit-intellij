@@ -442,7 +442,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
   private static class CreateAction extends AbstractAction {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 1L;
     private AppStackDashboard dashboard;
@@ -460,6 +460,8 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
       dashboard.createAppStackButton.setEnabled(false);
       Runnable runnable = () -> {
         YamlLoader loader = new YamlLoader();
+        dashboard.createAppStackButton.setEnabled(true);
+
         try {
           variables.set(loader.load());
         } catch (IntrospectionException | IllegalAccessException | InvocationTargetException ex) {
@@ -484,7 +486,6 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
       };
       ApplicationManager.getApplication().invokeLater(runnable);
 
-      dashboard.createAppStackButton.setEnabled(true);
     }
   }
   

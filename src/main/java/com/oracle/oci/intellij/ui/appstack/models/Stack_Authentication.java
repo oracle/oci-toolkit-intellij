@@ -7,7 +7,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.beans.PropertyVetoException;
 
-public class Stack_authentication extends VariableGroup {
+public class Stack_Authentication extends VariableGroup {
 
     private boolean use_existing_token;
 

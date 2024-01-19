@@ -7,7 +7,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.beans.PropertyVetoException;
 
-public class Container_instance_configuration extends VariableGroup {
+public class Container_Instance_Configuration extends VariableGroup {
 
     public enum Shape{
         CI_Standard_E3_Flex,

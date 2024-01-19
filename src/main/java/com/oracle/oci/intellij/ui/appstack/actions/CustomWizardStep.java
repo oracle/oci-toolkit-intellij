@@ -6,6 +6,7 @@ import com.intellij.openapi.ui.ValidationInfo;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.table.JBTable;
 import com.intellij.ui.wizard.WizardModel;
 import com.intellij.ui.wizard.WizardNavigationState;
@@ -186,8 +187,10 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         }
         private void createVarPanel( PropertyDescriptor pd,VariableGroup variableGroup) throws InvocationTargetException, IllegalAccessException {
             setLayout(new BorderLayout());
-            setPreferredSize(new Dimension(760, 40));
-            setMaximumSize(getPreferredSize());
+            if (!pd.getValue("type").equals("textArea")){
+                setPreferredSize(new Dimension(760, 40));
+                setMaximumSize(getPreferredSize());
+            }
             String varTitle = "";
             if (pd.getValue("required").equals(false)){
                 varTitle+=" (Optional)";
@@ -353,6 +356,8 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                     if (pd.getValue("default") != null) {
                         controller.setValue(pd.getValue("default"),varGroup,pd);
                         comboBox.setSelectedItem(pd.getValue("default"));
+                    }else{
+                        controller.setValue(comboBox.getSelectedItem(),varGroup,pd);
                     }
 
                     component = comboBox;
@@ -402,25 +407,11 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                     textField.setText(pd.getValue("default").toString());
                     controller.setValue(pd.getValue("default").toString(),varGroup,pd);
                 }
-                if (pd.getName().equals("current_user_token")){
-                    JPanel tokenPanel = new JPanel();
-                    tokenPanel.setLayout(new BoxLayout(tokenPanel,BoxLayout.X_AXIS));
-                    JButton createTokenButton = new JButton("create");
-                    textField.setPreferredSize(new JBDimension(405,30));
-
-                    tokenPanel.add(textField);
-                    tokenPanel.add(createTokenButton);
-
-                    createTokenButton.addActionListener(e->{
-                        List<AuthToken> tokens = OracleCloudAccount.getInstance().getIdentityClient().getAuthTokenList();
-//                        TokenDialog tokenDialog = new TokenDialog(tokens);
-//                        tokenDialog.show();
-                    });
+                if (pd.getValue("type").equals("textArea")) {
                     inputComponent = textField;
-                    return tokenPanel;
-                }else {
-                    component = textField;
+                    return textField;
                 }
+                component = textField;
             }
             component.setPreferredSize(new JBDimension(200,40));
 
@@ -496,7 +487,13 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             JTextComponent textField  ;
             if (pd.getValue("type").equals("password")){
                 textField = new JPasswordField();
-            }else {
+            } else if (pd.getValue("type").equals("textArea")) {
+                JBTextArea textArea = new JBTextArea(4,4);
+//                textArea.setRows(3);
+//                textArea.setColumns(10);
+//                textArea.setPreferredSize(new JBDimension(200,100));
+                textField = textArea;
+            } else {
                 textField = new JTextField();
             }
             textField.addFocusListener(new FocusAdapter() {

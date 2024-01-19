@@ -7,7 +7,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.beans.PropertyVetoException;
 
-public class Application_configuration_SSL_communication extends VariableGroup {
+public class Application_Configuration_SSL_Communication extends VariableGroup {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     private boolean use_default_ssl_configuration;
