@@ -60,17 +60,30 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
     initializeTableStructure();
     initializeLabels();
 
-    refreshADBInstancesButton.setAction(new RefreshAction(this, "Refresh"));
-    createADBInstanceButton.setAction(new CreateAction("Create Autonomous Database"));
+    if (refreshADBInstancesButton != null) {
+      refreshADBInstancesButton.setAction(new RefreshAction(this, "Refresh"));
+    }
+    
+    if (createADBInstanceButton != null) {
+      createADBInstanceButton.setAction(new CreateAction("Create Autonomous Database"));
+    }
   }
 
   private void initializeLabels() {
+    if (profileValueLabel == null || compartmentValueLabel == null || regionValueLabel == null) {
+      LogHandler.info("Skipping Labels; form not populated");
+      return;
+    }
     profileValueLabel.setText(SystemPreferences.getProfileName());
     compartmentValueLabel.setText(SystemPreferences.getCompartmentName());
     regionValueLabel.setText(SystemPreferences.getRegionName());
   }
 
   private void initializeWorkLoadTypeFilter() {
+    if (workloadCombo == null) {
+      LogHandler.info("Skipping WorkLoadTypeFilter; form not populated");
+      return;
+    }
     workloadCombo.addItem(WORKLOAD_ALL);
     workloadCombo.addItem(WORKLOAD_OLTP);
     workloadCombo.addItem(WORKLOAD_DW);
@@ -101,6 +114,10 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
   }
 
   private void initializeTableStructure() {
+    if (workloadCombo == null) {
+      LogHandler.info("Skipping Table; form not populated.");
+      return;
+    }
     adbInstancesTable.setModel(new DefaultTableModel(ADB_COLUMN_NAMES, 0) {
       /**
          * 

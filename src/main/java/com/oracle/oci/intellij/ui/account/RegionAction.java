@@ -4,6 +4,22 @@
  */
 package com.oracle.oci.intellij.ui.account;
 
+import java.awt.event.MouseEvent;
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+
+import org.jetbrains.annotations.NotNull;
+
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.oracle.bmc.Region;
@@ -11,14 +27,6 @@ import com.oracle.bmc.identity.model.RegionSubscription;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.common.Icons;
-import org.jetbrains.annotations.NotNull;
-
-import javax.swing.*;
-import java.awt.event.MouseEvent;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Action handler for selection event of UI component 'Region'.
@@ -41,12 +49,81 @@ public class RegionAction extends AnAction {
         put("ap-tokyo-1", Icons.REGION_JAPAN.getPath());
         put("eu-zurich-1", Icons.REGION_SWITZERLAND.getPath());
         put("ap-sydney-1", Icons.REGION_AUSTRALIA.getPath());
+
+
+        put("ap-hyderabad-1", Icons.REGION_INDIA.getPath());
+        put("ap-osaka-1", Icons.REGION_JAPAN.getPath());
+        put("us-chicago-1", Icons.REGION_US.getPath());
+        put("ap-melbourne-1", Icons.REGION_AUSTRALIA.getPath());
+        put("us-sanjose-1", Icons.REGION_US.getPath());
+        put("ap-chuncheon-1", Icons.REGION_SOUTH_KOREA.getPath());
+        put("ca-montreal-1", Icons.REGION_CANADA.getPath());
+
+
+        put("eu-amsterdam-1", Icons.REGION_NETHERLANDS.getPath());
+        put("eu-stockholm-1", Icons.REGION_SWEDEN.getPath());
+        put("me-abudhabi-1", Icons.REGION_UNITED_ARABE_EMIRATES.getPath());
+        put("eu-paris-1", Icons.REGION_FRANCE.getPath());
+        put("uk-cardiff-1", Icons.REGION_WALES.getPath());
+        put("me-dubai-1", Icons.REGION_UNITED_ARABE_EMIRATES.getPath());
+        put("sa-saopaulo-1", Icons.REGION_BRAZIL.getPath());
+        put("me-jeddah-1", Icons.REGION_SAUDI_ARABIA.getPath());
+        put("af-johannesburg-1", Icons.REGION_SOUTH_AFRICA.getPath());
+        put("eu-madrid-1", Icons.REGION_SPAIN.getPath());
+        put("eu-marseille-1", Icons.REGION_FRANCE.getPath());
+        put("il-jerusalem-1", Icons.REGION_ISRAEL.getPath());
+        put("mx-queretaro-1", Icons.REGION_MEXICO.getPath());
+        put("sa-santiago-1", Icons.REGION_CHILE.getPath());
+        put("ap-singapore-1", Icons.REGION_SINGAPORE.getPath());
+        put("sa-vinhedo-1", Icons.REGION_BRAZIL.getPath());
+
+        put("eu-milan-1", Icons.REGION_ITALY.getPath());
+        put("us-langley-1", Icons.REGION_CANADA.getPath());
+        put("us-luke-1", Icons.REGION_BRAZIL.getPath());
+        put("us-gov-ashburn-1", Icons.REGION_US.getPath());
+        put("us-gov-chicago-1", Icons.REGION_US.getPath());
+        put("us-gov-phoenix-1", Icons.REGION_US.getPath());
+        put("uk-gov-london-1", Icons.REGION_UK.getPath());
+        put("uk-gov-cardiff-1", Icons.REGION_WALES.getPath());
+        put("ap-chiyoda-1", Icons.REGION_JAPAN.getPath());
+        put("ap-ibaraki-1", Icons.REGION_JAPAN.getPath());
+        put("me-dcc-muscat-1", Icons.REGION_OMAN.getPath());
+        put("ap-dcc-canberra-1", Icons.REGION_AUSTRALIA.getPath());
+        put("eu-dcc-milan-1", Icons.REGION_ITALY.getPath());
+        put("eu-dcc-milan-2", Icons.REGION_ITALY.getPath());
+        put("eu-dcc-dublin-2", Icons.REGION_IRELAND.getPath());
+        put("eu-dcc-dublin-1", Icons.REGION_IRELAND.getPath());
+        put("eu-dcc-rating-2",Icons.REGION_GERMANY.getPath());
+        put("eu-dcc-rating-1",Icons.REGION_GERMANY.getPath());
+        put("eu-jovanovac-1", Icons.REGION_SERBIA.getPath());
+        put("eu-madrid-2", Icons.REGION_SPAIN.getPath());
+        put("eu-frankfurt-2", Icons.REGION_GERMANY.getPath());
+        put("mx-monterrey-1", Icons.REGION_MEXICO.getPath());
       }
     };
+    String regionName = SystemPreferences.getRegionName();
+    regionIcon = getCurrentRegionIcon(regionName);
+  }
+/* this method does a repetitive instructions which are load the icon
+  *I added to it the  parameter regionName just to  be suitable to  a test
+  */
+public static ImageIcon getCurrentRegionIcon(String regionName) {
 
-    regionIcon = new ImageIcon(
-            RegionAction.class
-                    .getResource(iconMap.get(SystemPreferences.getRegionName())));
+    if (regionName != null) {
+      String icon = iconMap.get(regionName);
+      if (icon != null) {
+        return new ImageIcon(
+                RegionAction.class
+                        .getResource(icon));
+      }
+
+    }
+
+    return   new ImageIcon(RegionAction.class.getResource(Icons.DEFAULT_REGION.getPath()));
+  }
+
+  public static Map<String,String> getIcons(){
+    return Collections.unmodifiableMap(iconMap);
   }
 
   public RegionAction(){
@@ -105,8 +182,7 @@ public class RegionAction extends AnAction {
 
   @Override
   public void update(@NotNull AnActionEvent event) {
-    event.getPresentation().setIcon(new ImageIcon(RegionAction.class
-            .getResource(iconMap.get(SystemPreferences.getRegionName()))));
+    event.getPresentation().setIcon(getCurrentRegionIcon(SystemPreferences.getRegionName()));
     super.update(event);
   }
 
