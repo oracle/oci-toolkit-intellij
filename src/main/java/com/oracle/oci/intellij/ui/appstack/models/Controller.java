@@ -91,9 +91,6 @@ public class Controller {
                 jComboBox.setEnabled(false);
                 PropertyDescriptor dependentPd = descriptorsState.get(dependent);
                 loadComboBoxValues(dependentPd,varPanel.getVariableGroup(),jComboBox);
-
-
-
             }
         }
     }

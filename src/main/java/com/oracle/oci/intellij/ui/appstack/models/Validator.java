@@ -32,6 +32,14 @@ public class Validator implements VetoableChangeListener {
             validateString(pd,(String)newValue,evt);
         }else if(pdType.equals("number")) {
             validateNumber(pd,(int)newValue,evt);
+        }else if (pdType.startsWith("oci")){
+            validateOciResource(pd,newValue,evt);
+        }
+    }
+
+    private static void validateOciResource(PropertyDescriptor pd, Object newValue, PropertyChangeEvent evt) throws PropertyVetoException {
+        if (newValue == null || newValue instanceof String){
+            throw new PropertyVetoException("This field is required",evt);
         }
     }
 

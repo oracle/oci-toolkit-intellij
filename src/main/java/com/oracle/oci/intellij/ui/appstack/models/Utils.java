@@ -90,7 +90,7 @@ public class Utils{
         });
 
         suggestedValues.put("oci:kms:vault:id",(pd,pds,varGroup)->{
-            VariableGroup general_ConfigurationVarGroup = Controller.getInstance().getVariableGroups().get("Stack_authentication");
+            VariableGroup general_ConfigurationVarGroup = Controller.getInstance().getVariableGroups().get("Stack_Authentication");
 
             String vault_compartment_id = ((Compartment) pds.get("vault_compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();;
 
@@ -99,11 +99,13 @@ public class Utils{
         });
 
         suggestedValues.put("oci:kms:key:id",(pd,pds,varGroup)->{
-            VariableGroup general_ConfigurationVarGroup =  Controller.getInstance().getVariableGroups().get("Stack_authentication");
+            VariableGroup general_ConfigurationVarGroup =  Controller.getInstance().getVariableGroups().get("Stack_Authentication");
 
             String vault_compartment_id = ( (Compartment) pds.get("vault_compartment_id").getReadMethod().invoke(general_ConfigurationVarGroup)).getId();
-            VaultSummary vault =(VaultSummary) pds.get("vault_id").getReadMethod().invoke(varGroup);
-            if (vault == null) return null ;
+            Object vaultObj =  pds.get("vault_id").getReadMethod().invoke(varGroup);
+            if (vaultObj == null || vaultObj instanceof String) return null ;
+
+            VaultSummary vault =(VaultSummary) vaultObj;
 
 
             List<KeySummary> keyList = OracleCloudAccount.getInstance().getIdentityClient().getKeyList(vault_compartment_id,vault);

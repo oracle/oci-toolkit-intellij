@@ -187,17 +187,19 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         }
         private void createVarPanel( PropertyDescriptor pd,VariableGroup variableGroup) throws InvocationTargetException, IllegalAccessException {
             setLayout(new BorderLayout());
-            if (!pd.getValue("type").equals("textArea")){
-                setPreferredSize(new Dimension(760, 40));
-                setMaximumSize(getPreferredSize());
-            }
             String varTitle = "";
             if (pd.getValue("required").equals(false)){
                 varTitle+=" (Optional)";
             }
 
             label = new JLabel("<html><body style='width: 175px'>"+pd.getDisplayName()+" <i>"+varTitle+"</i></body></html>");
+            if (!pd.getValue("type").equals("textArea"))
+                setPreferredSize(new JBDimension(760, 40));
+            else
+                setPreferredSize(new JBDimension(760,100));
             label.setPreferredSize(new JBDimension(250,45));
+            setMaximumSize(getPreferredSize());
+
             label.setToolTipText( pd.getShortDescription());
 
 
@@ -253,7 +255,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                     JPanel compartmentPanel = new JPanel();
                     JButton selectCompartmentBtn  = new JButton("select");
                     JTextField compartmentName = new JTextField("");
-                    compartmentName.setPreferredSize(new JBDimension(405,30));
+                    compartmentName.setPreferredSize(new JBDimension(408,30));
                     compartmentName.setEnabled(false);
                     compartmentPanel.add(compartmentName);
                     compartmentPanel.add(selectCompartmentBtn);
@@ -311,31 +313,31 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                                 if (value instanceof AutonomousDatabaseSummary) {
                                     AutonomousDatabaseSummary adb = (AutonomousDatabaseSummary) value;
-                                    setText(adb.getDisplayName()); // Set the display name of the instance
+                                    setText(adb.getDisplayName()+" ("+getId(adb.getId())+")"); // Set the display name of the instance
                                 } else if (value instanceof VaultSummary) {
                                     VaultSummary adb = (VaultSummary) value;
-                                    setText(adb.getDisplayName()); // Set the display name of the instance
+                                    setText(adb.getDisplayName()+" ("+getId(adb.getId())+")"); // Set the display name of the instance
                                 }else if(value instanceof RepositorySummary){
                                     RepositorySummary repositorySummary = (RepositorySummary)value;
-                                    setText(repositorySummary.getName());
+                                    setText(repositorySummary.getName()+" ("+getId(repositorySummary.getId())+")");
                                 }else if (value instanceof KeySummary) {
                                     KeySummary adb = (KeySummary) value;
-                                    setText(adb.getDisplayName()); // Set the display name of the instance
+                                    setText(adb.getDisplayName()+" ("+getId(adb.getId())+")"); // Set the display name of the instance
                                 }else if (value instanceof AvailabilityDomain) {
                                     AvailabilityDomain adb = (AvailabilityDomain) value;
-                                    setText(adb.getName()); // Set the display name of the instance
+                                    setText(adb.getName()+" ("+getId(adb.getId())+")"); // Set the display name of the instance
                                 }else if (value instanceof Subnet) {
                                     Subnet adb = (Subnet) value;
-                                    setText(adb.getDisplayName()); // Set the display name of the instance
+                                    setText(adb.getDisplayName()+" ("+getId(adb.getId())+")"); // Set the display name of the instance
                                 }else if (value instanceof Vcn) {
                                     Vcn adb = (Vcn) value;
-                                    setText(adb.getDisplayName()); // Set the display name of the instance
+                                    setText(adb.getDisplayName()+" ("+getId(adb.getId())+")"); // Set the display name of the instance
                                 }else if (value instanceof Compartment) {
                                     Compartment adb = (Compartment) value;
-                                    setText(adb.getName()); // Set the display name of the instance
+                                    setText(adb.getName()+" ("+getId(adb.getId())+")"); // Set the display name of the instance
                                 }else if (value instanceof ZoneSummary) {
                                     ZoneSummary zone = (ZoneSummary) value;
-                                    setText(zone.getName()); // Set the display name of the instance
+                                    setText(zone.getName()+" ("+getId(zone.getId())+")"); // Set the display name of the instance
                                 } else if(value == null){
                                     setText("No items");
                                 }
@@ -403,20 +405,21 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             } else {
 
                 JTextComponent textField = getjTextField(pd, varGroup);
+
                 if (pd.getValue("default") != null){
                     textField.setText(pd.getValue("default").toString());
                     controller.setValue(pd.getValue("default").toString(),varGroup,pd);
                 }
-                if (pd.getValue("type").equals("textArea")) {
-                    inputComponent = textField;
-                    return textField;
-                }
                 component = textField;
             }
-            component.setPreferredSize(new JBDimension(200,40));
+            component.setPreferredSize(new JBDimension(200,100));
 
             inputComponent = component;
             return component;
+        }
+        String getId(String ocid){
+            int start = ocid.length() - 9;
+            return ocid.substring(start);
         }
 
         private void errorCheck(PropertyDescriptor pd, JLabel errorLabel, JSpinner spinner) {
@@ -488,10 +491,10 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
             if (pd.getValue("type").equals("password")){
                 textField = new JPasswordField();
             } else if (pd.getValue("type").equals("textArea")) {
-                JBTextArea textArea = new JBTextArea(4,4);
-//                textArea.setRows(3);
-//                textArea.setColumns(10);
-//                textArea.setPreferredSize(new JBDimension(200,100));
+                JBTextArea textArea = new JBTextArea(4,15);
+                textArea.setBorder(null);
+                textArea.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
+
                 textField = textArea;
             } else {
                 textField = new JTextField();
@@ -540,105 +543,6 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
         }
     }
 }
-//
-// class TokenDialog extends DialogWrapper {
-//    private final List<AuthToken> tokens; // Token is a custom class to hold token data
-//    private JTextField descriptionField;
-//    private JBTable tokenTabel;
-//
-//    public TokenDialog(List<AuthToken> tokens) {
-//        super(true); // use current window as parent
-//        this.tokens = tokens;
-//        init();
-//        setTitle("Manage Tokens");
-//    }
-//
-//    @Nullable
-//    @Override
-//    protected JComponent createCenterPanel() {
-//        JPanel dialogPanel = new JPanel(new BorderLayout());
-//
-//        // Token list
-//        tokenTabel = new JBTable(new DefaultListModel<>());
-//        tokens.forEach(token -> ((DefaultListModel<AuthToken>) tokenList.getModel()).addElement(token));
-//        tokenList.setCellRenderer(new TokenCellRenderer()); // Custom cell renderer to display token info
-//        dialogPanel.add(new JBScrollPane(tokenList), BorderLayout.CENTER);
-//
-//        // New token form
-//        JPanel newTokenPanel = new JPanel(new FlowLayout());
-//        descriptionField = new JTextField(20);
-//        newTokenPanel.add(new JLabel("Description:"));
-//        newTokenPanel.add(descriptionField);
-//
-//        dialogPanel.add(newTokenPanel, BorderLayout.SOUTH);
-//
-//        return dialogPanel;
-//    }
-//
-//    @Nullable
-//    @Override
-//    protected ValidationInfo doValidate() {
-//        if (tokens.size() >= 2) {
-//            return new ValidationInfo("Cannot create more than 2 tokens.");
-//        }
-//        if (descriptionField.getText().trim().isEmpty()) {
-//            return new ValidationInfo("Description cannot be empty.", descriptionField);
-//        }
-//        return null;
-//    }
-//
-//    @Override
-//    protected void doOKAction() {
-//        if (!myOKAction.isEnabled()) {
-//            return;
-//        }
-//        // Logic to handle new token creation
-//        String description = descriptionField.getText().trim();
-//        // Add logic to create a new token and add it to the list
-//
-//        super.doOKAction();
-//    }
-//
-//    private static class TokenCellRenderer extends JLabel implements ListCellRenderer<AuthToken> {
-//        @Override
-//        public Component getListCellRendererComponent(JList<? extends AuthToken> list, AuthToken value, int index, boolean isSelected, boolean cellHasFocus) {
-//            setText("<html>Description: " + value.getDescription() + "<br>Date Created: " + value.getTimeCreated() + "</html>");
-//            setOpaque(true);
-//            setBackground(isSelected ? list.getSelectionBackground() : list.getBackground());
-//            setForeground(isSelected ? list.getSelectionForeground() : list.getForeground());
-//            return this;
-//        }
-//    }
-//}
-//class AppStackTableModel extends DefaultTableModel {
-//    public static final String[] APPSTACK_COLUMN_NAMES =
-//            new String[] { "Description","Created" };
-//    /**
-//     *
-//     */
-//    private static final long serialVersionUID = 1L;
-//
-//    public AppStackTableModel(int rowCount) {
-//        super(APPSTACK_COLUMN_NAMES, rowCount);
-//    }
-//
-//    @Override
-//    public boolean isCellEditable(int row, int column){
-//        return false;
-//    }
-//
-//    @Override
-//    public String getColumnName(int index){
-//        return APPSTACK_COLUMN_NAMES[index];
-//    }
-//
-//    @Override
-//    public Class<?> getColumnClass(int column){
-//        return String.class; //(column == 2) ? JLabel.class : String.class;
-//    }
-//
-//
-//}
 
 
 
