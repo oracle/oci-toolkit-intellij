@@ -62,6 +62,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
     boolean dirty = true ;
     List<VarPanel> varPanels ;
     Controller controller = Controller.getInstance();
+    static private List<Stack> stackList ;
 
 
     public CustomWizardStep(VariableGroup varGroup, PropertyDescriptor[] propertyDescriptors, LinkedHashMap<String, PropertyDescriptor> descriptorsState, List<VariableGroup> varGroups) {

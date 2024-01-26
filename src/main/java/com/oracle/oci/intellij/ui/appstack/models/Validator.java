@@ -6,10 +6,12 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyDescriptor;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
+import java.util.List;
 
 public class Validator implements VetoableChangeListener {
     private static Validator INSTANCE;
-    private static Controller controller = Controller.getInstance();
+    private static final Controller controller = Controller.getInstance();
+    static List<String > appNames ;
 
 
 
@@ -22,8 +24,6 @@ public class Validator implements VetoableChangeListener {
         doValidate(pd,newValue,evt);
         //todo check type of the variable , then validate depending on the type ....
         //todo then update the view by showing the error
-
-
     }
     public static void doValidate(PropertyDescriptor pd,Object newValue,PropertyChangeEvent evt) throws PropertyVetoException {
         String pdType = (String) pd.getValue("type");
@@ -52,6 +52,11 @@ public class Validator implements VetoableChangeListener {
         if (pattern != null && !pattern.isEmpty()) {
             if (!newValue.matches(pattern)) {
                 throw new PropertyVetoException("Invalid input", evt);
+            }
+        }
+        if (pd.getName().equals("application_name")){
+            if (appNames != null && appNames.contains(newValue)){
+                throw new PropertyVetoException("application name already exist", evt);
             }
         }
     }

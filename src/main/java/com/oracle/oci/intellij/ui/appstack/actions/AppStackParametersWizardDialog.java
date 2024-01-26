@@ -112,8 +112,7 @@ public class AppStackParametersWizardDialog extends WizardDialog {
 
                         nextStep = nextStep != null ? nextStep : appStackModel.getMySteps().get(selectedIndex);
                         if (changeToStep(nextStep,appStackModel)) return;
-
-                            lastSelectedIndex[0] = selectedIndex;
+                        lastSelectedIndex[0] = selectedIndex;
                     }
 
 

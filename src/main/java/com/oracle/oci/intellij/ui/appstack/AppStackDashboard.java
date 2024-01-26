@@ -471,6 +471,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
           return;
         try {
           ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+          //todo get the compartment from the form , that i will add in the stack infos
           String compartmentId = SystemPreferences.getCompartmentId();
           ClassLoader cl = AppStackDashboard.class.getClassLoader();
           CreateStackCommand command =

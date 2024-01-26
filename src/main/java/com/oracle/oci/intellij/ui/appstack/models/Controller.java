@@ -1,12 +1,23 @@
 package com.oracle.oci.intellij.ui.appstack.models;
 
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.wizard.WizardStep;
 import com.oracle.bmc.http.client.internal.ExplicitlySetBmcModel;
 import com.oracle.bmc.identity.model.Compartment;
+import com.oracle.bmc.resourcemanager.model.Stack;
+import com.oracle.bmc.resourcemanager.model.StackSummary;
+import com.oracle.bmc.resourcemanager.responses.ListStacksResponse;
+import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.account.SystemPreferences;
+import com.oracle.oci.intellij.common.command.AbstractBasicCommand;
+import com.oracle.oci.intellij.common.command.CommandStack;
 import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardStep;
 import com.oracle.oci.intellij.ui.appstack.actions.PropertyOrder;
+import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand;
+import com.oracle.oci.intellij.ui.common.UIUtil;
+import com.oracle.oci.intellij.util.LogHandler;
 import jnr.ffi.Struct;
 
 import javax.swing.*;
@@ -16,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 public class Controller {
     Map<String, PropertyDescriptor> descriptorsState;
@@ -23,6 +35,8 @@ public class Controller {
     Map<String, VariableGroup> variableGroups ;
     private static Controller instance ;
     Map<String, List<Compartment>> cachedCompartmentList = new LinkedHashMap<>();
+
+
 
 
     public Map<String, PropertyDescriptor> getDescriptorsState() {
@@ -356,4 +370,45 @@ public class Controller {
         return propertyDescriptors;
     }
 
+    public void initApplicationNames() {
+
+        Executors.newSingleThreadExecutor().submit(()->{
+            List<StackSummary> appStackList;
+            List<String> appNames =new ArrayList<>() ;
+            try {
+
+                // I need to get the list of summary stacks
+                CommandStack commandStack = new CommandStack();
+                General_Configuration generalConfiguration=(General_Configuration) variableGroups.get("General_Configuration") ;
+                String compartmentId = ((Compartment)generalConfiguration.getCompartment_id()).getId();
+                ListStackCommand command = new ListStackCommand(OracleCloudAccount.getInstance().getResourceManagerClientProxy(), compartmentId);
+                ListStackCommand.ListStackResult result =(ListStackCommand.ListStackResult) commandStack.execute(command);
+                if (!result.isError()){
+                    appStackList = result.getStacks();
+                }
+                else
+                {
+                    throw new AbstractBasicCommand.CommandFailedException("Failed refreshing list of stacks");
+                }
+            } catch (Exception exception) {
+                appStackList = null;
+                UIUtil.fireNotification(NotificationType.ERROR, exception.getMessage(), null);
+                LogHandler.error(exception.getMessage(), exception);
+            }
+            //then get Stack of each summary stack
+            for (StackSummary stackSummary: appStackList){
+                String stackId = stackSummary.getId();
+                String applicationName = getAppName(OracleCloudAccount.getInstance().getResourceManagerClientProxy().getStackDetails(stackId)) ;
+                appNames.add(applicationName);
+            }
+            Validator.appNames = appNames ;
+        });
+
+
+
+    }
+
+    private String getAppName(Stack stackDetails) {
+        return stackDetails.getVariables().get("application_name");
+    }
 }

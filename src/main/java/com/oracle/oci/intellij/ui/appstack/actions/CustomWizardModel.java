@@ -27,6 +27,7 @@ import java.util.*;
 public class CustomWizardModel extends WizardModel {
     private final List<WizardStep> mySteps = new ArrayList<>();
     private  JBList<String> groupMenuList = new JBList<>() ;
+    private Controller controller = Controller.getInstance();
     private LinkedHashMap<String,String> appStackVariables;
 
     List<VariableGroup> varGroups;
@@ -54,6 +55,9 @@ public class CustomWizardModel extends WizardModel {
     }
 
     private void initWizardSteps() throws IntrospectionException {
+        // initiate the
+        initApplicationNames();
+        // initiate the list first here
         for (VariableGroup varGroup : varGroups) {
 
             Class<? extends VariableGroup> varGroupClazz = varGroup.getClass();
@@ -73,10 +77,14 @@ public class CustomWizardModel extends WizardModel {
         }
     }
 
+    private void initApplicationNames() {
+        controller.initApplicationNames();
+    }
+
     public LinkedHashMap<String,String> collectVariables(){
         LinkedHashMap<String,String> vars = new LinkedHashMap<>();
         descriptorsState.forEach((key,value)->{
-            boolean isEnabled = Controller.getInstance().getVarPanelByName(value.getName()).isVisible();
+            boolean isEnabled = controller.getVarPanelByName(value.getName()).isVisible();
             if (isEnabled ){
                 String mappedValue = mapValue(value);
                 vars.put(value.getName(),mappedValue);
@@ -86,7 +94,7 @@ public class CustomWizardModel extends WizardModel {
     }
 
     private String mapValue(PropertyDescriptor pd) {
-        VariableGroup variableGroup = Controller.getInstance().getVarGroupByName(pd.getName());
+        VariableGroup variableGroup = controller.getVarGroupByName(pd.getName());
         Object value;
         try {
             value = pd.getReadMethod().invoke(variableGroup);
