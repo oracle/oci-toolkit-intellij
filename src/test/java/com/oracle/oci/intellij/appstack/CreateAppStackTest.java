@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
 
+import com.oracle.bmc.database.model.AutonomousDatabase;
+import com.oracle.bmc.database.model.AutonomousDatabase.LifecycleState;
+import com.oracle.bmc.database.model.AutonomousDatabaseSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;
@@ -47,8 +50,27 @@ public class CreateAppStackTest {
       new CreateStackCommand(resourceManagerClientProxy, compartmentId,
         CreateAppStackTest.class.getClassLoader(), "com/oracle/oci/intellij/appstack/appstackforjava.zip");
     Map<String,String> variables = new ModelLoader().loadTestVariables();
+    System.out.println("Validating (could take a while....");
+    validate(variables, compartmentId, OracleCloudAccount.getInstance());
     createCommand.setVariables(variables);
     Result result = createCommand.execute();
     System.out.println(result);
+  }
+
+  private static Result validate(Map<String, String> variables,
+                                 String compartmentId2,
+                                 OracleCloudAccount instance) {
+    String dbId = variables.get("autonomous_database");
+    System.out.printf("Checking db exists and is running %s\n", dbId);
+    AutonomousDatabase dbSummary = 
+      instance.getDatabaseClient().getAutonomousDatabaseSummary(compartmentId2, dbId);
+    if (dbSummary == null) {
+      throw new RuntimeException(String.format("No database for ocid: %s", dbId));
+    }
+    if (dbSummary.getLifecycleState() != LifecycleState.Available) {
+      throw new RuntimeException(
+        String.format("Database %s is in state %s not Available", dbId, dbSummary.getLifecycleState()));
+    }
+    return Result.OK_RESULT;
   }
 }

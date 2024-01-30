@@ -5,13 +5,21 @@
 package com.oracle.oci.intellij.ui.appstack;
 
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.beans.*;
+import java.beans.IntrospectionException;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.AbstractAction;
@@ -27,15 +35,8 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
-import com.oracle.bmc.identity.model.AuthToken;
-import com.oracle.bmc.resourcemanager.model.JobSummary;
-import com.oracle.bmc.resourcemanager.model.LogEntry;
-import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
-import com.oracle.oci.intellij.ui.appstack.command.*;
 import org.jetbrains.annotations.NotNull;
-import com.intellij.openapi.application.ApplicationManager;
 import org.jetbrains.annotations.Nullable;
-
 
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
@@ -49,10 +50,12 @@ import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Severity;
 import com.oracle.oci.intellij.common.command.CommandStack;
 import com.oracle.oci.intellij.common.command.CompositeCommand;
+import com.oracle.oci.intellij.ui.appstack.command.CreateStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.DeleteStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.DestroyStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.GetStackJobsCommand;
 import com.oracle.oci.intellij.ui.appstack.command.GetStackJobsCommand.GetStackJobsResult;
+import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand.ListStackResult;
 import com.oracle.oci.intellij.ui.appstack.uimodel.AppStackTableModel;
 import com.oracle.oci.intellij.ui.common.UIUtil;
@@ -255,7 +258,32 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
       }
     }
   }
-  
+  private static class LoadAppUrlAction extends AbstractAction {
+
+    public LoadAppUrlAction(StackSummary stack) {
+      super("Launch App Url..");
+     // this.stack = stack;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent event) {
+      Desktop desktop = java.awt.Desktop.getDesktop();
+      try {
+        //specify the protocol along with the URL
+        URI oURL = new URI(
+            "http://129.153.104.43");
+        desktop.browse(oURL);
+      } catch (URISyntaxException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace(); 
+      }
+    }
+    
+  }
+
   private JPopupMenu getStackSummaryActionMenu(StackSummary selectedSummary) {
     final JPopupMenu popupMenu = new JPopupMenu();
 //
@@ -264,6 +292,8 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 //
     if (selectedSummary != null) {
       popupMenu.add(new JMenuItem(new LoadStackJobsAction(selectedSummary)));
+      popupMenu.add(new JMenuItem(new LoadAppUrlAction(selectedSummary)));
+     
 //      if (selectedSummary.getLifecycleState() == LifecycleState.Available) {
 
 //        popupMenu.add(new JMenuItem(new AutonomousDatabaseMoreActions(

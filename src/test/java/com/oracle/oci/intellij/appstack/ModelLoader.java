@@ -13,12 +13,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.oracle.oci.intellij.ui.appstack.command.SetCommand;
-import com.oracle.oci.intellij.ui.appstack.command.SetCommand.SetCommandResult;
-import com.oracle.oci.intellij.ui.appstack.models.*;
 //import com.oracle.oci.intellij.ui.appstack.models.;
 import com.oracle.oci.intellij.common.Utils;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.CommandFailedException;
+import com.oracle.oci.intellij.ui.appstack.command.SetCommand;
+import com.oracle.oci.intellij.ui.appstack.command.SetCommand.SetCommandResult;
+import com.oracle.oci.intellij.ui.appstack.models.Application;
+import com.oracle.oci.intellij.ui.appstack.models.Application_Configuration_SSL_Communication;
+import com.oracle.oci.intellij.ui.appstack.models.Application_Performance_Monitoring;
+import com.oracle.oci.intellij.ui.appstack.models.Application_URL;
+import com.oracle.oci.intellij.ui.appstack.models.Container_Instance_Configuration;
+import com.oracle.oci.intellij.ui.appstack.models.Database;
+import com.oracle.oci.intellij.ui.appstack.models.General_Configuration;
+import com.oracle.oci.intellij.ui.appstack.models.Hide_constants_and_internal_variables;
+import com.oracle.oci.intellij.ui.appstack.models.Network;
+import com.oracle.oci.intellij.ui.appstack.models.Other_Parameters;
+import com.oracle.oci.intellij.ui.appstack.models.Stack_Authentication;
+import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
@@ -150,17 +161,17 @@ public class ModelLoader {
 
 	private void loadModel(String string) throws IntrospectionException {
 		vgClasses = new ArrayList<>();
-		vgClasses.add(Application_configuration_SSL_communication.class);
+    vgClasses.add(Application_Configuration_SSL_Communication.class);
 		vgClasses.add(Application_Performance_Monitoring.class);
 		vgClasses.add(Application_URL.class);
 		vgClasses.add(Application.class);
-		vgClasses.add(Container_instance_configuration.class);
+		vgClasses.add(Container_Instance_Configuration.class);
 		vgClasses.add(Database.class);
 		vgClasses.add(General_Configuration.class);
 		vgClasses.add(Hide_constants_and_internal_variables.class);
 		vgClasses.add(Network.class);
-		vgClasses.add(Other_parameters.class);
-		vgClasses.add(Stack_authentication.class);
+		vgClasses.add(Other_Parameters.class);
+		vgClasses.add(Stack_Authentication.class);
 
 		variableGroupsByVarName = new HashMap<>();
 		variablesByName = new HashMap<>();
