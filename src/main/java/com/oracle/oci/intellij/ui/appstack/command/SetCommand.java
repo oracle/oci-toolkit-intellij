@@ -1,6 +1,7 @@
 package com.oracle.oci.intellij.ui.appstack.command;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
 
 import com.oracle.oci.intellij.ui.appstack.command.SetCommand.SetCommandResult;
 import com.oracle.oci.intellij.common.Utils;
@@ -68,7 +69,7 @@ public class SetCommand<ModelType, ObjType> extends AbstractBasicCommand<SetComm
 	}
 
 	@Override
-	protected SetCommand.SetCommandResult doExecute() throws Exception {
+	protected SetCommand.SetCommandResult doExecute() throws Exception, InvocationTargetException {
 		Object propValue =  Utils.setPropertyValue(modelObj, pd, newValue);
 		this.oldValue = (ObjType) propValue;
 		SetCommand.SetCommandResult<ModelType, ObjType> result = new SetCommandResult(Severity.NONE, Status.OK);

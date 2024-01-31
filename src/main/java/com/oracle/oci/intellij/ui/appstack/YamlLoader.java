@@ -56,8 +56,6 @@ public class YamlLoader {
                 if (pd.getName().equals("class") || annotation == null ) {
                     continue;
                 }
-
-
                 pd.setDisplayName((annotation.title() != null)? annotation.title() : "");
                 pd.setShortDescription((annotation.description() != null) ? annotation.description() :  "" );
                 //                // recheck this default value thing
@@ -67,7 +65,7 @@ public class YamlLoader {
                     System.out.println(pd.getName());
                     pd.setValue("default", defaultValue);
 
-//                    pd.setValue("value",defaultValue);
+                //  pd.setValue("value",defaultValue);
                     pd.getWriteMethod().invoke(appVarGroup,defaultValue);
                 }
                 if (annotation.dependsOn() != null && !annotation.dependsOn().isEmpty()) {
@@ -98,15 +96,7 @@ public class YamlLoader {
 
                 descriptorsState.put(pd.getName(),pd);
 
-
-
             }
-
-
-
-
-
-
 
         }
         CustomWizardModel customWizardModel = new CustomWizardModel(varGroups,descriptorsState);

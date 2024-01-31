@@ -19,8 +19,7 @@ public class Validator implements VetoableChangeListener {
     public void vetoableChange(PropertyChangeEvent evt) throws PropertyVetoException {
         String propertyName = evt.getPropertyName();
         Object newValue = evt.getNewValue();
-        CustomWizardStep.VarPanel varPanel = controller.getVarPanelByName(propertyName);
-        PropertyDescriptor pd = varPanel.getPd();
+        PropertyDescriptor pd = controller.getPdByName(propertyName);
         doValidate(pd,newValue,evt);
         //todo check type of the variable , then validate depending on the type ....
         //todo then update the view by showing the error

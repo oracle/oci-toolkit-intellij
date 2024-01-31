@@ -15,7 +15,7 @@ public abstract class AbstractBasicCommand<RESULT extends AbstractBasicCommand.R
 			super(cause);
 		}
 
-    public CommandFailedException(String message) {
+    	public CommandFailedException(String message) {
       super(message);
     }
 	}
@@ -28,21 +28,22 @@ public abstract class AbstractBasicCommand<RESULT extends AbstractBasicCommand.R
 		private final Result.Severity severity;
 
 		public enum Status {
-		  DERIVED /* for things like composites */, OK, CANCELLED, FAILED; 
+			DERIVED /* for things like composites */, OK, CANCELLED, FAILED;
 		}
 
 		private final Result.Status status;
 		private final String message;
 		private Throwable exception;
 
-		public static final AbstractBasicCommand.Result OK_RESULT = 
-		  new Result(Severity.NONE, Status.OK);
+		public static final AbstractBasicCommand.Result OK_RESULT =
+				new Result(Severity.NONE, Status.OK);
 
 		protected Result() {
-		  this.status = Status.DERIVED;
-		  this.severity = Severity.NONE;
-		  this.message = "Derived";
+			this.status = Status.DERIVED;
+			this.severity = Severity.NONE;
+			this.message = "Derived";
 		}
+
 		public Result(Result.Severity severity, Result.Status status) {
 			this(severity, status, (String) null);
 		}
@@ -52,8 +53,8 @@ public abstract class AbstractBasicCommand<RESULT extends AbstractBasicCommand.R
 		}
 
 		public boolean isError() {
-      return this.getSeverity() == Severity.ERROR;
-    }
+			return this.getSeverity() == Severity.ERROR;
+		}
 
 		public static AbstractBasicCommand.Result exception(Throwable t) {
 			return new Result(Severity.ERROR, Status.FAILED, t);

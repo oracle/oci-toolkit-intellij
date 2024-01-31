@@ -46,15 +46,15 @@ public class Utils {
 		}
 	}
 	
-	public static Object setPropertyValue(Object target, PropertyDescriptor pd, Object newValue) throws CommandFailedException {
+	public static Object setPropertyValue(Object target, PropertyDescriptor pd, Object newValue) throws CommandFailedException,InvocationTargetException {
 		Method writeMethod = pd.getWriteMethod();
 		Object oldValue;
 		try {
 			oldValue = getPropertyValue(target, pd);
-			Object converted = mapValue(oldValue, newValue, pd);
-			writeMethod.invoke(target, converted);
+//			Object converted = mapValue(oldValue, newValue, pd);
+			writeMethod.invoke(target, newValue);
 			return oldValue;
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		} catch (IllegalAccessException | IllegalArgumentException e) {
 			throw new CommandFailedException(e);
 		}
 	}

@@ -4,7 +4,7 @@
  */
 package com.oracle.oci.intellij.ui.appstack;
 
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -12,25 +12,13 @@ import java.awt.event.MouseEvent;
 import java.beans.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.swing.AbstractAction;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
-import com.oracle.bmc.identity.model.AuthToken;
-import com.oracle.bmc.resourcemanager.model.JobSummary;
-import com.oracle.bmc.resourcemanager.model.LogEntry;
-import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
+import com.intellij.ui.CommonActionsPanel;
 import com.oracle.oci.intellij.ui.appstack.command.*;
 import org.jetbrains.annotations.NotNull;
 import com.intellij.openapi.application.ApplicationManager;
@@ -38,7 +26,6 @@ import org.jetbrains.annotations.Nullable;
 
 
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
@@ -71,6 +58,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   private JLabel profileValueLabel;
   private JLabel compartmentValueLabel;
   private JLabel regionValueLabel;
+  private JButton destroyAppStackButton;
   private List<StackSummary> appStackList;
   private CommandStack commandStack = new CommandStack();
 
@@ -97,6 +85,12 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     
     if (deleteAppStackButton != null) {
       deleteAppStackButton.setAction(new DeleteAction(this, "Delete AppStack"));
+    }
+    if (destroyAppStackButton != null){
+      destroyAppStackButton.setOpaque(true);
+      destroyAppStackButton.setBackground(Color.RED);
+      destroyAppStackButton.setBorderPainted(false);
+      destroyAppStackButton.setAction(new DestroyAction(this,"Destroy AppStack"));
     }
   }
 
@@ -420,6 +414,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         break;
     }
     // TODO: populateTableData();
+    populateTableData();
   }
 
   private static class RefreshAction extends AbstractAction {
@@ -472,14 +467,14 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         try {
           ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
           //todo get the compartment from the form , that i will add in the stack infos
-          String compartmentId = SystemPreferences.getCompartmentId();
+          String compartmentId = variables.get().get("appstack_compartment");
           ClassLoader cl = AppStackDashboard.class.getClassLoader();
           CreateStackCommand command =
                   new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
-//          Map<String,String> variables = new ModelLoader().loadTestVariables();
-//          variables.put("shape","CI.Standard.E3.Flex");
+          //          Map<String,String> variables = new ModelLoader().loadTestVariables();
+          //          variables.put("shape","CI.Standard.E3.Flex");
           command.setVariables(variables.get());
-//          command.setVariables(variables.get());
+          //          command.setVariables(variables.get());
           this.dashboard.commandStack.execute(command);
         } catch (Exception e1) {
           throw new RuntimeException(e1);
@@ -489,17 +484,126 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
     }
   }
+
+  public static class DestroyAction extends AbstractAction {
+
+    private static final long serialVersionUID = 7216149349340773007L;
+    private final AppStackDashboard dashboard;
+    public DestroyAction(AppStackDashboard dashboard, String title) {
+      super("Destroy");
+      this.dashboard = dashboard;
+    }
+
+    private static class DestroyYesNoDialog extends DialogWrapper {
+
+      protected DestroyYesNoDialog() {
+        super(true);
+        init();
+        setTitle("Confirm Destroy");
+        setOKButtonText("Ok");
+      }
+
+      @Override
+      protected @Nullable JComponent createNorthPanel() {
+        JPanel northPanel = new JPanel();
+        JLabel label = new JLabel();
+        label.setText("Destroy Stack.  Are you sure?");
+        northPanel.add(label);
+        return northPanel;
+      }
+
+//      @Override
+//      protected @NotNull JPanel createButtonsPanel(@NotNull List<? extends JButton> buttons) {
+//        return new JPanel();
+//      }
+
+      @Override
+      protected @Nullable JComponent createCenterPanel() {
+        JPanel messagePanel = new JPanel(new BorderLayout());
+
+//        JPanel yesNoButtonPanel = new JPanel();
+//        yesNoButtonPanel.setLayout(new BoxLayout(yesNoButtonPanel, BoxLayout.X_AXIS));
+//        JButton yesButton = new JButton();
+//        yesButton.setText("Yes");
+//        yesButton.addActionListener(new ActionListener() {
+//          @Override
+//          public void actionPerformed(ActionEvent e) {
+//            close(OK_EXIT_CODE);
+//          }
+//        });
+//        yesNoButtonPanel.add(yesButton);
+//        JButton noButton = new JButton();
+//        noButton.setText("No");
+//        noButton.addActionListener(new ActionListener() {
+//
+//          @Override
+//          public void actionPerformed(ActionEvent e) {
+//            close(CANCEL_EXIT_CODE);
+//          }
+//
+//        });
+//        yesNoButtonPanel.add(noButton);
+//
+//        messagePanel.add(yesNoButtonPanel, BorderLayout.CENTER);
+//
+//        JCheckBox myCheckBox = new JCheckBox();
+//        myCheckBox.setText("Destroy stack before deleting");
+//        myCheckBox.setSelected(true);
+//        messagePanel.add(myCheckBox, BorderLayout.SOUTH);
+//
+//        // pack();
+//
+        return messagePanel;
+      }
+
+    }
+    @Override
+    public void actionPerformed(ActionEvent e) {
+
+      int selectedRow = this.dashboard.appStacksTable.getSelectedRow();
+      // TODO: should be better way to get select row object
+      if (selectedRow >=0 && selectedRow < this.dashboard.appStackList.size()) {
+        StackSummary stackSummary = this.dashboard.appStackList.get(selectedRow);
+        ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+        DestroyYesNoDialog dialog = new DestroyYesNoDialog();
+        boolean yesToDelete = dialog.showAndGet();
+        if (yesToDelete) {
+          DestroyStackCommand destroyCommmand = new DestroyStackCommand(proxy, stackSummary.getId());
+          CompositeCommand compositeCommand = new CompositeCommand(destroyCommmand);
+          invokeLater(this.dashboard,compositeCommand);
+        }
+      }
+    }
+  }
+  private static void invokeLater(AppStackDashboard appStackDashboard,CompositeCommand command){
+    Thread t = new Thread(() -> {
+      try {
+        Result r = appStackDashboard.commandStack.execute(command);
+        if (r.getSeverity() != Severity.ERROR) {
+          SwingUtilities.invokeAndWait(() -> {
+            appStackDashboard.populateTableData();
+          });
+        }
+      } catch (CommandFailedException | InvocationTargetException | InterruptedException e1) {
+        // TODO:
+        e1.printStackTrace();
+      }
+    });
+    t.start();
+  }
   
   public static class DeleteAction extends AbstractAction {
 
     private static final long serialVersionUID = 7216149349340773007L;
     private AppStackDashboard dashboard;
+
     public DeleteAction(AppStackDashboard dashboard, String title) {
       super("Delete");
       this.dashboard = dashboard;
     }
     
     private static class DeleteYesNoDialog extends DialogWrapper {
+      JCheckBox myCheckBox ;
 
       protected DeleteYesNoDialog() {
         super(true);
@@ -550,8 +654,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         yesNoButtonPanel.add(noButton);
         
         messagePanel.add(yesNoButtonPanel, BorderLayout.CENTER);
-        
-        JCheckBox myCheckBox = new JCheckBox();
+        myCheckBox = new JCheckBox();
         myCheckBox.setText("Destroy stack before deleting");
         myCheckBox.setSelected(true);
         messagePanel.add(myCheckBox, BorderLayout.SOUTH);
@@ -559,6 +662,10 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
        // pack();
 
         return messagePanel;
+      }
+
+      boolean shouldDestroy(){
+        return myCheckBox.isSelected();
       }
       
     }
@@ -572,25 +679,17 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
         DeleteYesNoDialog dialog = new DeleteYesNoDialog();
         boolean yesToDelete = dialog.showAndGet();
+        CompositeCommand compositeCommand;
         if (yesToDelete) {
-          DestroyStackCommand destroyCommmand = new DestroyStackCommand(proxy, stackSummary.getId());
-          DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId());
-          CompositeCommand compositeCommand = new CompositeCommand(destroyCommmand, deleteCommand);
-          
-          Thread t = new Thread(() -> {
-            try {
-              Result r = this.dashboard.commandStack.execute(compositeCommand);
-              if (r.getSeverity() != Severity.ERROR) {
-                SwingUtilities.invokeAndWait(() -> {
-                  this.dashboard.populateTableData();
-                });
-              }
-            } catch (CommandFailedException | InvocationTargetException | InterruptedException e1) {
-              // TODO:
-              e1.printStackTrace();
-            }
-          });
-          t.start();
+          if (dialog.shouldDestroy()){
+            DestroyStackCommand destroyCommmand = new DestroyStackCommand(proxy, stackSummary.getId());
+            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId());
+            compositeCommand = new CompositeCommand(destroyCommmand, deleteCommand);
+          }else {
+            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId());
+            compositeCommand = new CompositeCommand(deleteCommand);
+          }
+          invokeLater(this.dashboard,compositeCommand);
         }
       }
     }

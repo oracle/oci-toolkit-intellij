@@ -54,9 +54,9 @@ public class Utils{
 
             String vcn_compartment_id ;
             vcn_compartment_id =((Compartment) compartmentPd.getReadMethod().invoke(networkVarGroup)).getId();
-            Vcn vcn = (Vcn) pds.get("existing_vcn_id").getReadMethod().invoke(networkVarGroup);
-            if (vcn == null) return null;
-            String existing_vcn_id =vcn.getId();;
+            Object vcnObject = pds.get("existing_vcn_id").getReadMethod().invoke(networkVarGroup);
+            if (vcnObject == null || vcnObject instanceof String ) return null;
+            String existing_vcn_id =((Vcn)vcnObject).getId();
 
 
             // todo

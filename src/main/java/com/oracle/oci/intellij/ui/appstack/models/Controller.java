@@ -16,6 +16,7 @@ import com.oracle.oci.intellij.common.command.CommandStack;
 import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardStep;
 import com.oracle.oci.intellij.ui.appstack.actions.PropertyOrder;
 import com.oracle.oci.intellij.ui.appstack.command.ListStackCommand;
+import com.oracle.oci.intellij.ui.appstack.command.SetCommand;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.util.LogHandler;
 import jnr.ffi.Struct;
@@ -88,6 +89,10 @@ public class Controller {
             instance = new Controller();
         }
         return instance;
+    }
+
+    public PropertyDescriptor getPdByName(String pdName){
+        return descriptorsState.get(pdName);
     }
 
 
@@ -301,18 +306,19 @@ public class Controller {
             throw new RuntimeException(e);
         }
     }
-    public void setValue(Object value, VariableGroup variableGroup,PropertyDescriptor pd,boolean showError ){
+    public void setValue(Object newValue, VariableGroup variableGroup,PropertyDescriptor pd,boolean showError ){
         try {
-            pd.getWriteMethod().invoke(variableGroup,value);
+            SetCommand setCommand = new SetCommand(variableGroup,pd,newValue);
+            SetCommand.SetCommandResult result = (SetCommand.SetCommandResult) setCommand.execute();
+            System.out.println(result);
             handleValidated(pd);
 
         }catch (InvocationTargetException ex){
             if (ex.getCause() instanceof PropertyVetoException) {
                 if (showError)
                     handleError(pd,ex.getCause().getMessage());
-
             }
-        }catch (IllegalAccessException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -326,11 +332,13 @@ public class Controller {
         CustomWizardStep.VarPanel varPanel = getVarPanelByName(pd.getName());
 
         if (varPanel != null ){
-            JComponent component = varPanel.getMainComponent();
             JComponent inputComponent = varPanel.getInputComponent();
             JLabel errorLabel = varPanel.getErrorLabel();
+            if (pd.getValue("type").equals("textArea"))
+                inputComponent.setBorder(UIManager.getBorder("TextArea.border")); // Reset to default border
+            else
+                inputComponent.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
 
-            inputComponent.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
             errorLabel.setText("");
         }
 

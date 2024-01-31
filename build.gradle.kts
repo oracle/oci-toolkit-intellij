@@ -8,6 +8,7 @@ plugins {
     id("org.jetbrains.intellij") version "1.13.1"
     id("maven-publish")
     id("distribution")
+
 }
 
 group = properties("pluginGroup")
@@ -54,6 +55,9 @@ dependencies {
         exclude(group="org.slf4j", module="slf4j-api")
     }
     implementation("com.oracle.oci.sdk:oci-java-sdk-dns:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-artifacts:3.24.0") {
         exclude(group="org.slf4j", module="slf4j-api")
     }
 

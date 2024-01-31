@@ -30,8 +30,6 @@ public class Application extends VariableGroup {
 
     private Application_type application_type;
 
-;
-
     private java.lang.Object devops_compartment;
 
     private java.lang.Object repo_name;

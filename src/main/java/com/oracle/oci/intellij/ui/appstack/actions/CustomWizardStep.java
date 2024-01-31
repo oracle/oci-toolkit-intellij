@@ -4,9 +4,7 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;
 import com.intellij.ui.JBColor;
-import com.intellij.ui.components.JBList;
-import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.components.JBTextArea;
+import com.intellij.ui.components.*;
 import com.intellij.ui.table.JBTable;
 import com.intellij.ui.wizard.WizardModel;
 import com.intellij.ui.wizard.WizardNavigationState;
@@ -256,7 +254,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                     JPanel compartmentPanel = new JPanel();
                     JButton selectCompartmentBtn  = new JButton("select");
                     JTextField compartmentName = new JTextField("");
-                    compartmentName.setPreferredSize(new JBDimension(408,30));
+                    compartmentName.setPreferredSize(new JBDimension(409,30));
                     compartmentName.setEnabled(false);
                     compartmentPanel.add(compartmentName);
                     compartmentPanel.add(selectCompartmentBtn);
@@ -292,6 +290,12 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
                             Enum<?> enumValue1 = Enum.valueOf((Class<Enum>) type, normalizedItem);
                             comboBox.addItem(enumValue1);
+                        }
+                        if (pd.getValue("default") != null) {
+                            controller.setValue(pd.getValue("default"),varGroup,pd);
+                            comboBox.setSelectedItem(pd.getValue("default"));
+                        }else{
+                            controller.setValue(comboBox.getSelectedItem(),varGroup,pd);
                         }
 
                     } else {
@@ -356,12 +360,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
                     });
 
-                    if (pd.getValue("default") != null) {
-                        controller.setValue(pd.getValue("default"),varGroup,pd);
-                        comboBox.setSelectedItem(pd.getValue("default"));
-                    }else{
-                        controller.setValue(comboBox.getSelectedItem(),varGroup,pd);
-                    }
+
 
                     component = comboBox;
                 }
@@ -489,16 +488,20 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
         private JTextComponent getjTextField(PropertyDescriptor pd, VariableGroup varGroup) {
             JTextComponent textField  ;
+            Font commonFont = new JBTextField().getFont();
             if (pd.getValue("type").equals("password")){
-                textField = new JPasswordField();
+                textField = new JBPasswordField();
             } else if (pd.getValue("type").equals("textArea")) {
-                JBTextArea textArea = new JBTextArea(4,15);
-                textArea.setBorder(null);
-                textArea.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
-
+                JTextArea textArea = new JTextArea(4,20);
+                Font newFont = new Font(commonFont.getName(),commonFont.getStyle(),13);
+                textArea.setFont(newFont);
+                Insets currentInsets = textArea.getMargin();
+                Insets newInsets = new Insets(10, 10, currentInsets.bottom, currentInsets.right);
+                textArea.setMargin(newInsets);
+//                textArea.setBorder(UIManager.getBorder("TextField.border")); // Reset to default border
                 textField = textArea;
             } else {
-                textField = new JTextField();
+                textField = new JBTextField();
             }
             textField.addFocusListener(new FocusAdapter() {
                                            @Override

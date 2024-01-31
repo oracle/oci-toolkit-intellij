@@ -5,6 +5,7 @@
 package com.oracle.oci.intellij.account;
 
 import static com.oracle.bmc.ClientRuntime.setClientUserAgent;
+import static com.oracle.oci.intellij.account.SystemPreferences.getRegionName;
 import static com.oracle.oci.intellij.account.SystemPreferences.getUserAgent;
 
 import java.beans.PropertyChangeEvent;
@@ -33,6 +34,12 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.oracle.bmc.artifacts.ArtifactsClient;
+import com.oracle.bmc.artifacts.model.GenericArtifactSummary;
+import com.oracle.bmc.artifacts.requests.DeleteGenericArtifactRequest;
+import com.oracle.bmc.artifacts.requests.ListGenericArtifactsRequest;
+import com.oracle.bmc.artifacts.responses.DeleteGenericArtifactResponse;
+import com.oracle.bmc.artifacts.responses.ListGenericArtifactsResponse;
 import com.oracle.bmc.certificatesmanagement.CertificatesManagementClient;
 import com.oracle.bmc.certificatesmanagement.model.CertificateSummary;
 import com.oracle.bmc.certificatesmanagement.requests.ListCertificatesRequest;
@@ -50,8 +57,10 @@ import com.oracle.bmc.dns.responses.ListZonesResponse;
 import com.oracle.bmc.identity.model.*;
 import com.oracle.bmc.identity.requests.*;
 import com.oracle.bmc.identity.responses.*;
+import com.oracle.bmc.resourcemanager.model.*;
 import com.oracle.bmc.resourcemanager.requests.*;
 import com.oracle.bmc.resourcemanager.responses.*;
+import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import org.apache.commons.io.FileUtils;
 
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
@@ -113,14 +122,6 @@ import com.oracle.bmc.keymanagement.requests.ListVaultsRequest;
 import com.oracle.bmc.keymanagement.responses.ListKeysResponse;
 import com.oracle.bmc.keymanagement.responses.ListVaultsResponse;
 import com.oracle.bmc.resourcemanager.ResourceManagerClient;
-import com.oracle.bmc.resourcemanager.model.CreateDestroyJobOperationDetails;
-import com.oracle.bmc.resourcemanager.model.CreateJobDetails;
-import com.oracle.bmc.resourcemanager.model.CreateJobOperationDetails;
-import com.oracle.bmc.resourcemanager.model.CreateStackDetails;
-import com.oracle.bmc.resourcemanager.model.CreateZipUploadConfigSourceDetails;
-import com.oracle.bmc.resourcemanager.model.DestroyJobOperationDetails;
-import com.oracle.bmc.resourcemanager.model.Stack;
-import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
@@ -144,6 +145,7 @@ public class OracleCloudAccount {
     SystemPreferences.addPropertyChangeListener(identityClientProxy);
     SystemPreferences.addPropertyChangeListener(databaseClientProxy);
     SystemPreferences.addPropertyChangeListener(AutonomousDatabasesDashboard.getInstance());
+    SystemPreferences.addPropertyChangeListener(AppStackDashboard.getInstance());
     // TODO: property change listener for resource manager
   }
 
@@ -985,6 +987,24 @@ public class OracleCloudAccount {
     }
 
     public CreateJobResponse destroyStack(String stackId) {
+      //    remove the artifact before destroying resources ....
+      ListStackAssociatedResourcesRequest resourcesRequest = ListStackAssociatedResourcesRequest.builder()
+                      .stackId(stackId)
+                              .build();
+      ListStackAssociatedResourcesResponse response = resourceManagerClient.listStackAssociatedResources(resourcesRequest);
+      AssociatedResourcesCollection associatedResourcesCollection = response.getAssociatedResourcesCollection();
+      AssociatedResourceSummary artifactRepo = null ;
+      for (AssociatedResourceSummary associatedResourceSummary :associatedResourcesCollection.getItems()){
+        if (associatedResourceSummary.getResourceType().equals("oci_artifacts_repository")){
+          artifactRepo = associatedResourceSummary;
+        }
+      }
+      String artifactRegistryId = artifactRepo.getResourceId();
+      String compartment_id = artifactRepo.getAttributes().get("compartment_id");
+      String status = deleteArtifact(artifactRegistryId, compartment_id.substring(1,compartment_id.length()-1));
+      System.out.println("Delete Artifact:" + status);
+
+      System.out.println(associatedResourcesCollection);
       // Destroy resources but don't remove stack defn
       CreateJobOperationDetails operationDetails =
         CreateDestroyJobOperationDetails.builder()
@@ -1000,6 +1020,27 @@ public class OracleCloudAccount {
                         .createJobDetails(createDestroyJobDetails)
                         .build();
       return resourceManagerClient.createJob(createPlanJobRequest);
+    }
+
+    private String deleteArtifact(String artifactRegistryId, String compartmentId) {
+      ArtifactsClient client = ArtifactsClient.builder().region(getRegionName()).build(authenticationDetailsProvider);
+      ListGenericArtifactsRequest listGenericArtifactsRequest = ListGenericArtifactsRequest.builder()
+              .compartmentId(compartmentId)
+              .repositoryId(artifactRegistryId)
+              .build();
+
+      ListGenericArtifactsResponse response = client.listGenericArtifacts(listGenericArtifactsRequest);
+      for (GenericArtifactSummary item : response.getGenericArtifactCollection().getItems()) {
+        DeleteGenericArtifactRequest deleteGenericArtifactRequest = DeleteGenericArtifactRequest.builder()
+                .artifactId(item.getId())
+                .opcRequestId(UUID.randomUUID().toString()).build();
+        DeleteGenericArtifactResponse deleteResponse = client.deleteGenericArtifact(deleteGenericArtifactRequest);
+        int statusCode = deleteResponse.get__httpStatusCode__();
+        if (statusCode < 200 || statusCode > 300) {
+          return "FAILED";
+        }
+      }
+      return "SUCCEDED";
     }
 
     public List<StackSummary> listStacks(String compartmentId) {

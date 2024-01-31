@@ -134,7 +134,9 @@ public class CustomWizardModel extends WizardModel {
             }
         }
         if (pd.getName().equals("shape")) {
-            return "CI.Standard.E3.Flex";
+            return value.toString().replace("_",".");
+        } else if (pd.getName().equals("session_affinity")) {
+            return value.toString().replace("_"," ");
         }
         return value!= null ?value.toString() : "";
     }
