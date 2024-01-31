@@ -122,6 +122,32 @@ import com.oracle.bmc.keymanagement.requests.ListVaultsRequest;
 import com.oracle.bmc.keymanagement.responses.ListKeysResponse;
 import com.oracle.bmc.keymanagement.responses.ListVaultsResponse;
 import com.oracle.bmc.resourcemanager.ResourceManagerClient;
+import com.oracle.bmc.resourcemanager.model.CreateDestroyJobOperationDetails;
+import com.oracle.bmc.resourcemanager.model.CreateJobDetails;
+import com.oracle.bmc.resourcemanager.model.CreateJobOperationDetails;
+import com.oracle.bmc.resourcemanager.model.CreateStackDetails;
+import com.oracle.bmc.resourcemanager.model.CreateZipUploadConfigSourceDetails;
+import com.oracle.bmc.resourcemanager.model.DestroyJobOperationDetails;
+import com.oracle.bmc.resourcemanager.model.Stack;
+import com.oracle.bmc.resourcemanager.model.StackSummary;
+import com.oracle.bmc.resourcemanager.requests.CreateJobRequest;
+import com.oracle.bmc.resourcemanager.requests.CreateStackRequest;
+import com.oracle.bmc.resourcemanager.requests.DeleteStackRequest;
+import com.oracle.bmc.resourcemanager.requests.GetJobLogsRequest;
+import com.oracle.bmc.resourcemanager.requests.GetJobTfStateRequest;
+import com.oracle.bmc.resourcemanager.requests.ListJobOutputsRequest;
+import com.oracle.bmc.resourcemanager.requests.ListJobsRequest;
+import com.oracle.bmc.resourcemanager.requests.ListStacksRequest;
+import com.oracle.bmc.resourcemanager.responses.CreateJobResponse;
+import com.oracle.bmc.resourcemanager.responses.CreateStackResponse;
+import com.oracle.bmc.resourcemanager.responses.DeleteStackResponse;
+import com.oracle.bmc.resourcemanager.responses.GetJobLogsContentResponse;
+import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
+import com.oracle.bmc.resourcemanager.responses.GetJobResponse;
+import com.oracle.bmc.resourcemanager.responses.GetJobTfStateResponse;
+import com.oracle.bmc.resourcemanager.responses.ListJobOutputsResponse;
+import com.oracle.bmc.resourcemanager.responses.ListJobsResponse;
+import com.oracle.bmc.resourcemanager.responses.ListStacksResponse;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
@@ -866,6 +892,15 @@ public class OracleCloudAccount {
       return response.getItems();
     }
 
+    public AutonomousDatabase getAutonomousDatabaseSummary(String compartmentId, String dbId) {
+      final GetAutonomousDatabaseRequest getAutonomousDatabaseRequest =
+            GetAutonomousDatabaseRequest.builder().autonomousDatabaseId(dbId).build();
+
+      GetAutonomousDatabaseResponse autonomousDatabase =
+        databaseClient.getAutonomousDatabase(getAutonomousDatabaseRequest);
+      return autonomousDatabase.getAutonomousDatabase();
+    }
+
     public AutonomousDatabaseSummary getAutonomousDatabaseSummary(String instanceId) {
       return instancesMap.get(instanceId);
     }
@@ -1087,6 +1122,12 @@ public class OracleCloudAccount {
       return resourceManagerClient.getJobTfState(getJobTfStateRequest);
     }
 
+    public ListJobOutputsResponse listJobOutputs(String jobId) {
+      ListJobOutputsRequest request =
+        ListJobOutputsRequest.builder().jobId(jobId).build();
+      return resourceManagerClient.listJobOutputs(request);
+    }
+
     public CreateStackResponse createStack(Map<String, String> variables) throws IOException {
       return createStack(SystemPreferences.getCompartmentId(), variables);
     }
@@ -1094,7 +1135,7 @@ public class OracleCloudAccount {
     public CreateStackResponse createStack(String compartmentId, Map<String, String> variables) throws IOException {
       CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
         CreateZipUploadConfigSourceDetails.builder()
-        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/aallali/Downloads/appstackforjava.zip"))
+        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/cbateman/Downloads/appstackforjava.zip"))
         .build();
       String uuid = UUID.randomUUID().toString();
       String displayName = variables.get("appstack_name") == null ? "New App Stack "+uuid:variables.get("appstack_name");
