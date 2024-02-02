@@ -23,8 +23,10 @@ import com.oracle.oci.intellij.ui.account.RegionAction;
 import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
+import com.oracle.oci.intellij.ui.devops.DevOpsDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
 import com.oracle.oci.intellij.util.LogHandler;
+import com.oracle.oci.intellij.util.SafeRunnerUtil;
 
 public class OCIExplorerFactory implements ToolWindowFactory {
 
@@ -37,8 +39,9 @@ public class OCIExplorerFactory implements ToolWindowFactory {
           try {
             OracleCloudAccount.getInstance().configure(SystemPreferences.getConfigFilePath(),
                                                        SystemPreferences.getProfileName());
-            AutonomousDatabasesDashboard.getInstance().populateTableData();
-            AppStackDashboard.getInstance();//.populate();
+            SafeRunnerUtil.run((Void) -> { AutonomousDatabasesDashboard.getInstance().populateTableData();},null);
+            SafeRunnerUtil.run((Void) -> { AppStackDashboard.getInstance(); }, null);
+            SafeRunnerUtil.run((Void) -> { DevOpsDashboard.getInstance(); }, null);// populate();
           } catch (Exception ex) {
            final String message = "Oracle Cloud account configuration failed: " + ex.getMessage();
            LogHandler.warn(message);
@@ -59,24 +62,20 @@ public class OCIExplorerFactory implements ToolWindowFactory {
     actionGroup.add(new RegionAction());
     actionGroup.add(new CompartmentAction());
     toolWindow.setTitleActions(Arrays.asList(actionGroup));
-    {
-      final TabbedExplorer ociTabbedToolBar =
-        new TabbedExplorer(toolWindow,
-                           AutonomousDatabasesDashboard.getInstance());
-      final ContentFactory contentFactory =
-        ContentFactory.SERVICE.getInstance();
-      final Content ociTabbedToolBarContent =
-        contentFactory.createContent(ociTabbedToolBar.getContent(), "Autonomous Database", false);
-      toolWindow.getContentManager().addContent(ociTabbedToolBarContent);
-    }
-    {
-      final TabbedExplorer ociTabbedToolBar =
-        new TabbedExplorer(toolWindow, AppStackDashboard.getInstance());
-      final ContentFactory contentFactory =
-        ContentFactory.SERVICE.getInstance();
-      final Content ociTabbedToolBarContent =
-        contentFactory.createContent(ociTabbedToolBar.getContent(), "Application Stack", false);
-      toolWindow.getContentManager().addContent(ociTabbedToolBarContent);
-    }
+    
+    
+    SafeRunnerUtil.run((Void) -> createTab(toolWindow, AutonomousDatabasesDashboard.getInstance(), "Autonomous Database"), null);
+    SafeRunnerUtil.run((Void) -> createTab(toolWindow, AppStackDashboard.getInstance(), "Application Stack"), null);
+    SafeRunnerUtil.run((Void) -> createTab(toolWindow, DevOpsDashboard.getInstance(), "DevOps"), null);
   }
+
+  private void createTab(ToolWindow toolWindow, ITabbedExplorerContent tabbedContent, String title) {
+    final TabbedExplorer ociTabbedToolBar = new TabbedExplorer(toolWindow, tabbedContent);
+    final ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+    final Content ociTabbedToolBarContent =
+      contentFactory.createContent(ociTabbedToolBar.getContent(), title, false);
+    toolWindow.getContentManager().addContent(ociTabbedToolBarContent);
+  }
+  
+
 }

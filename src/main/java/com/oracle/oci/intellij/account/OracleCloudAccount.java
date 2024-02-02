@@ -55,6 +55,31 @@ import com.oracle.bmc.certificatesmanagement.CertificatesManagementClient;
 import com.oracle.bmc.certificatesmanagement.model.CertificateSummary;
 import com.oracle.bmc.certificatesmanagement.requests.ListCertificatesRequest;
 import com.oracle.bmc.certificatesmanagement.responses.ListCertificatesResponse;
+import com.oracle.bmc.devops.DevopsClient;
+import com.oracle.bmc.devops.model.Repository;
+import com.oracle.bmc.devops.model.RepositorySummary;
+import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
+import com.oracle.bmc.devops.responses.ListRepositoriesResponse;
+import com.oracle.bmc.dns.DnsClient;
+import com.oracle.bmc.dns.model.Scope;
+import com.oracle.bmc.dns.model.ZoneSummary;
+import com.oracle.bmc.dns.requests.ListZonesRequest;
+import com.oracle.bmc.dns.responses.ListZonesResponse;
+import com.oracle.bmc.identity.model.*;
+import com.oracle.bmc.identity.requests.*;
+import com.oracle.bmc.identity.responses.*;
+import com.oracle.bmc.resourcemanager.model.*;
+import com.oracle.bmc.resourcemanager.requests.*;
+import com.oracle.bmc.resourcemanager.responses.*;
+import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
+import org.apache.commons.io.FileUtils;
+
+import com.oracle.bmc.auth.AuthenticationDetailsProvider;
+import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
+import com.oracle.bmc.certificatesmanagement.CertificatesManagementClient;
+import com.oracle.bmc.certificatesmanagement.model.CertificateSummary;
+import com.oracle.bmc.certificatesmanagement.requests.ListCertificatesRequest;
+import com.oracle.bmc.certificatesmanagement.responses.ListCertificatesResponse;
 import com.oracle.bmc.core.VirtualNetworkClient;
 import com.oracle.bmc.core.model.NetworkSecurityGroup;
 import com.oracle.bmc.core.model.Subnet;
@@ -104,6 +129,12 @@ import com.oracle.bmc.database.responses.ListDbVersionsResponse;
 import com.oracle.bmc.devops.DevopsClient;
 import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
+import com.oracle.bmc.devops.model.ProjectSummary;
+import com.oracle.bmc.devops.model.RepositorySummary;
+import com.oracle.bmc.devops.requests.ListProjectsRequest;
+import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
+import com.oracle.bmc.devops.requests.MirrorRepositoryRequest;
+import com.oracle.bmc.devops.responses.ListProjectsResponse;
 import com.oracle.bmc.devops.responses.ListRepositoriesResponse;
 import com.oracle.bmc.dns.DnsClient;
 import com.oracle.bmc.dns.model.ZoneSummary;
@@ -143,6 +174,7 @@ import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
 import com.oracle.oci.intellij.util.LogHandler;
+import com.oracle.oci.intellij.util.SafeRunnerUtil;
 
 /**
  * The Oracle Cloud account configurator and accessor.
@@ -156,6 +188,7 @@ public class OracleCloudAccount {
   private final DatabaseClientProxy databaseClientProxy = new DatabaseClientProxy();
   private final VirtualNetworkClientProxy virtualNetworkClientProxy = new VirtualNetworkClientProxy();
   private final ResourceManagerClientProxy resourceManagerClientProxy = new ResourceManagerClientProxy();
+  private final DevOpsClientProxy devOpsClientProxy = new DevOpsClientProxy();
 
   private OracleCloudAccount() {
     // Add the property change listeners in the order they have to be notified.
@@ -211,10 +244,12 @@ public class OracleCloudAccount {
     }
     setClientUserAgent(getUserAgent());
 
-    identityClientProxy.init(profile.get("region"));
-    databaseClientProxy.init(profile.get("region"));
-    virtualNetworkClientProxy.init(profile.get("region"));
-    resourceManagerClientProxy.init(profile.get("region"));
+    final String region = profile.get("region");
+    SafeRunnerUtil.run((r) -> identityClientProxy.init(r), region);
+    SafeRunnerUtil.run((r) -> databaseClientProxy.init(r), region);
+    SafeRunnerUtil.run((r) -> virtualNetworkClientProxy.init(r), region);
+    SafeRunnerUtil.run((r) -> resourceManagerClientProxy.init(r), region);
+    SafeRunnerUtil.run((r) -> devOpsClientProxy.init(r), region);
     SystemPreferences.setConfigInfo(configFile, profile.getName(),
             profile.get("region"), identityClientProxy.getRootCompartment());
   }
@@ -245,13 +280,19 @@ public class OracleCloudAccount {
     validate();
     return resourceManagerClientProxy;
   }
-  public String  getCurrentUserId(){
+
+  public DevOpsClientProxy getDevOpsClient() {
+    validate();
+    return this.devOpsClientProxy;
+    
+  }
+  public String getCurrentUserId() {
     return authenticationDetailsProvider.getUserId();
   }
-  public String getCurrentTenancy(){
+
+  public String getCurrentTenancy() {
     return authenticationDetailsProvider.getTenantId();
   }
-
 
   private void reset() {
     authenticationDetailsProvider = null;
@@ -1249,4 +1290,44 @@ public class OracleCloudAccount {
       return listJobs(compartmentId,stackId).getItems().get(0);
     }
   }
+  
+  public class DevOpsClientProxy {
+    private DevopsClient devOpsClient;
+    
+    // Instance of this should be taken from the outer class factory method only.
+    private DevOpsClientProxy() {
+    }
+
+     void init(String region) {
+      reset();
+      devOpsClient = DevopsClient.builder().build(authenticationDetailsProvider);
+      devOpsClient.setRegion(region);
+    }
+
+    private void reset() {
+      if (devOpsClient != null) {
+        devOpsClient.close();
+        devOpsClient = null;
+      }
+    }
+    
+    public List<ProjectSummary> listDevOpsProjects() {
+      ListProjectsRequest request = ListProjectsRequest.builder().compartmentId(SystemPreferences.getCompartmentId()).build();
+      ListProjectsResponse listProjects = devOpsClient.listProjects(request);
+      List<ProjectSummary> items = listProjects.getProjectCollection().getItems();
+      return items == null ? Collections.emptyList() : items;
+    }
+    public List<RepositorySummary> listRepositories(ProjectSummary projectSummary) {
+      ListRepositoriesRequest request = ListRepositoriesRequest.builder().projectId(projectSummary.getId()).build();
+      ListRepositoriesResponse listRepositories = devOpsClient.listRepositories(request);
+      List<RepositorySummary> items = listRepositories.getRepositoryCollection().getItems();
+      return items == null ? Collections.emptyList() : items;
+    }
+    
+    public void mirrorRepository() {
+      //MirrorRepositoryRequest request = MirrorRepositoryRequest.builder().
+    }
+  }
+
+
 }

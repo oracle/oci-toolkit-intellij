@@ -4,6 +4,21 @@
  */
 package com.oracle.oci.intellij.ui.common;
 
+import java.awt.Desktop;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import javax.swing.JComponent;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.Application;
@@ -13,16 +28,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.openapi.wm.WindowManager;
 import com.oracle.oci.intellij.account.SystemPreferences;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 public class UIUtil {
   private static Project currentProject;
@@ -86,5 +91,43 @@ public class UIUtil {
         }
       }
     });
+  }
+  
+  public static <MODEL> ModelHolder<MODEL> holdModel(MODEL m) {
+    return new ModelHolder<MODEL>(m);
+  }
+
+  public static class ModelHolder<MODEL> implements Supplier<MODEL>{
+    private final MODEL model;
+    private Optional<Function<MODEL, String>> textProvider;
+    
+    public ModelHolder(@NotNull MODEL model) {
+      this.model = model;
+    }
+
+    @Override
+    public MODEL get() {
+      return this.model;
+    }
+
+    @Override
+    public int hashCode() {
+      return this.model.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return this.model.equals(obj);
+    }
+
+    @Override
+    public String toString() {
+      return textProvider.orElse((m) -> {return m.toString();}).apply(this.model);
+    }
+    
+    public ModelHolder<MODEL> setTextProvider(Function<MODEL, String> provider) {
+      this.textProvider = Optional.of(provider);
+      return this;
+    }
   }
 }
