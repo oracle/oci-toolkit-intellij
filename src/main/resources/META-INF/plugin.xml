@@ -5,7 +5,7 @@
 
 <idea-plugin>
     <id>com.oracle.ocidbtest</id>
-    <name>OCI Toolkit</name>
+    <name>Oracle OCI Toolkit</name>
     <vendor email="support@oracle.com" url="http://www.oracle.com">Oracle</vendor>
     <idea-version since-build="211" />
     <description><![CDATA[
