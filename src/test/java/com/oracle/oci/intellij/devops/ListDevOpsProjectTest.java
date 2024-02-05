@@ -51,7 +51,7 @@ public class ListDevOpsProjectTest {
     final DevOpsClientProxy devOpsClientProxy = 
       OracleCloudAccount.getInstance().getDevOpsClient();
 
-    List<ProjectSummary> listDevOpsProjects = devOpsClientProxy.listDevOpsProjects();
+    List<ProjectSummary> listDevOpsProjects = devOpsClientProxy.listDevOpsProjects(compartmentId);
     System.out.println(listDevOpsProjects);
 //    ListStackCommand listCommand = new ListStackCommand(resourceManagerClientProxy, compartmentId);
 //    ListStackResult result = listCommand.execute();

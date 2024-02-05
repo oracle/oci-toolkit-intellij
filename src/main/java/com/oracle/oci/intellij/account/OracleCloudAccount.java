@@ -133,7 +133,6 @@ import com.oracle.bmc.devops.model.ProjectSummary;
 import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.bmc.devops.requests.ListProjectsRequest;
 import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
-import com.oracle.bmc.devops.requests.MirrorRepositoryRequest;
 import com.oracle.bmc.devops.responses.ListProjectsResponse;
 import com.oracle.bmc.devops.responses.ListRepositoriesResponse;
 import com.oracle.bmc.dns.DnsClient;
@@ -1312,7 +1311,10 @@ public class OracleCloudAccount {
     }
     
     public List<ProjectSummary> listDevOpsProjects() {
-      ListProjectsRequest request = ListProjectsRequest.builder().compartmentId(SystemPreferences.getCompartmentId()).build();
+      return listDevOpsProjects(SystemPreferences.getCompartmentId());
+    }
+    public List<ProjectSummary> listDevOpsProjects(String compartmentId) {
+      ListProjectsRequest request = ListProjectsRequest.builder().compartmentId(compartmentId).build();
       ListProjectsResponse listProjects = devOpsClient.listProjects(request);
       List<ProjectSummary> items = listProjects.getProjectCollection().getItems();
       return items == null ? Collections.emptyList() : items;
