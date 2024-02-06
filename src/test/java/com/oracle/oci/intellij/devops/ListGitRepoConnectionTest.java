@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.List;
 
 import com.oracle.bmc.devops.model.ProjectSummary;
+import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.account.OracleCloudAccount.DevOpsClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;
+import com.oracle.oci.intellij.account.OracleCloudAccount.DevOpsClientProxy;
 
-public class ListDevOpsProjectTest {
-
+public class ListGitRepoConnectionTest {
   private static final String compartmentId;
   
   static {
@@ -43,24 +43,10 @@ public class ListDevOpsProjectTest {
   public static void main(String args[]) throws Exception {
     final DevOpsClientProxy devOpsClientProxy = 
       OracleCloudAccount.getInstance().getDevOpsClient();
+    final String projectId = "ocid1.devopsproject.oc1.phx.amaaaaaadxiv6saadyecvba5jkqkbb2tvsxnc2i3g4xagtlqxqefbaxrgmxa";
 
-    List<ProjectSummary> listDevOpsProjects = devOpsClientProxy.listDevOpsProjects(compartmentId);
-    System.out.println(listDevOpsProjects);
-//    ListStackCommand listCommand = new ListStackCommand(resourceManagerClientProxy, compartmentId);
-//    ListStackResult result = listCommand.execute();
-//    List<StackSummary> stacks = result.getStacks();
-//    AppStackContentProvider provider = new AppStackContentProvider();
-//    List<AppStackContent> elements = provider.getElements(stacks);
-//    if (!elements.isEmpty()) {
-//      elements.forEach(appstack -> 
-//        { System.out.printf("%s\t%s\t%s\n", appstack.getDisplayName(), appstack.getId(), appstack.getLifecycleState());
-//          ListJobsResponse listJobs = resourceManagerClientProxy.listJobs(appstack.getCompartmentId(), appstack.getId());
-//          listJobs.getItems().forEach(job -> 
-//              System.out.printf("\t\t%s\t%s\t%s\n", job.getId(), job.getLifecycleState(), job.getJobOperationDetails().toString()));
-//        });
-//    }
-//    else {
-//      System.out.println("No stacks found.");
-//    }
+    List<RepositorySummary> listRepos = devOpsClientProxy.listGitRepositoryConnections(projectId);
+    System.out.println(listRepos);
+
   }
 }

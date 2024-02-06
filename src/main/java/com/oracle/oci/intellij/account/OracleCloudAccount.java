@@ -129,12 +129,23 @@ import com.oracle.bmc.database.responses.ListDbVersionsResponse;
 import com.oracle.bmc.devops.DevopsClient;
 import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
+import com.oracle.bmc.devops.model.CreateConnectionDetails;
+import com.oracle.bmc.devops.model.CreateGithubAccessTokenConnectionDetails;
+import com.oracle.bmc.devops.model.CreateRepositoryDetails;
+import com.oracle.bmc.devops.model.MirrorRepositoryConfig;
 import com.oracle.bmc.devops.model.ProjectSummary;
 import com.oracle.bmc.devops.model.RepositorySummary;
+import com.oracle.bmc.devops.model.TriggerSchedule;
+import com.oracle.bmc.devops.model.TriggerSchedule.ScheduleType;
+import com.oracle.bmc.devops.requests.CreateConnectionRequest;
+import com.oracle.bmc.devops.requests.CreateRepositoryRequest;
 import com.oracle.bmc.devops.requests.ListProjectsRequest;
 import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
+import com.oracle.bmc.devops.requests.MirrorRepositoryRequest;
+import com.oracle.bmc.devops.responses.CreateConnectionResponse;
 import com.oracle.bmc.devops.responses.ListProjectsResponse;
 import com.oracle.bmc.devops.responses.ListRepositoriesResponse;
+import com.oracle.bmc.devops.responses.MirrorRepositoryResponse;
 import com.oracle.bmc.dns.DnsClient;
 import com.oracle.bmc.dns.model.ZoneSummary;
 import com.oracle.bmc.dns.requests.ListZonesRequest;
@@ -169,6 +180,10 @@ import com.oracle.bmc.keymanagement.responses.ListKeysResponse;
 import com.oracle.bmc.keymanagement.responses.ListVaultsResponse;
 import com.oracle.bmc.resourcemanager.ResourceManagerClient;
 import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
+import com.oracle.bmc.vault.VaultsClient;
+import com.oracle.bmc.vault.model.SecretSummary;
+import com.oracle.bmc.vault.requests.ListSecretsRequest;
+import com.oracle.bmc.vault.responses.ListSecretsResponse;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
@@ -188,6 +203,8 @@ public class OracleCloudAccount {
   private final VirtualNetworkClientProxy virtualNetworkClientProxy = new VirtualNetworkClientProxy();
   private final ResourceManagerClientProxy resourceManagerClientProxy = new ResourceManagerClientProxy();
   private final DevOpsClientProxy devOpsClientProxy = new DevOpsClientProxy();
+  private final KmsVaultClientProxy kmsVaultClientProxy = new KmsVaultClientProxy();
+  private final VaultClientProxy vaultClientProxy = new VaultClientProxy();
 
   private OracleCloudAccount() {
     // Add the property change listeners in the order they have to be notified.
@@ -249,6 +266,9 @@ public class OracleCloudAccount {
     SafeRunnerUtil.run((r) -> virtualNetworkClientProxy.init(r), region);
     SafeRunnerUtil.run((r) -> resourceManagerClientProxy.init(r), region);
     SafeRunnerUtil.run((r) -> devOpsClientProxy.init(r), region);
+    SafeRunnerUtil.run((r) -> kmsVaultClientProxy.init(r), region);
+    SafeRunnerUtil.run((r) -> vaultClientProxy.init(r), region);
+    
     SystemPreferences.setConfigInfo(configFile, profile.getName(),
             profile.get("region"), identityClientProxy.getRootCompartment());
   }
@@ -269,6 +289,15 @@ public class OracleCloudAccount {
     return databaseClientProxy;
   }
 
+  public KmsVaultClientProxy getKmsVaultClient() {
+    validate();
+    return kmsVaultClientProxy;
+  }
+  
+  public VaultClientProxy getVaultsClient() {
+    validate();
+    return vaultClientProxy;
+  }
 
   public VirtualNetworkClientProxy getVirtualNetworkClientProxy() {
     validate();
@@ -1313,23 +1342,122 @@ public class OracleCloudAccount {
     public List<ProjectSummary> listDevOpsProjects() {
       return listDevOpsProjects(SystemPreferences.getCompartmentId());
     }
+
     public List<ProjectSummary> listDevOpsProjects(String compartmentId) {
-      ListProjectsRequest request = ListProjectsRequest.builder().compartmentId(compartmentId).build();
+      ListProjectsRequest request =
+        ListProjectsRequest.builder().compartmentId(compartmentId).build();
       ListProjectsResponse listProjects = devOpsClient.listProjects(request);
-      List<ProjectSummary> items = listProjects.getProjectCollection().getItems();
+      List<ProjectSummary> items =
+        listProjects.getProjectCollection().getItems();
       return items == null ? Collections.emptyList() : items;
     }
+
     public List<RepositorySummary> listRepositories(ProjectSummary projectSummary) {
-      ListRepositoriesRequest request = ListRepositoriesRequest.builder().projectId(projectSummary.getId()).build();
-      ListRepositoriesResponse listRepositories = devOpsClient.listRepositories(request);
-      List<RepositorySummary> items = listRepositories.getRepositoryCollection().getItems();
+      ListRepositoriesRequest request =
+        ListRepositoriesRequest.builder()
+                               .projectId(projectSummary.getId())
+                               .build();
+      ListRepositoriesResponse listRepositories =
+        devOpsClient.listRepositories(request);
+      List<RepositorySummary> items =
+        listRepositories.getRepositoryCollection().getItems();
       return items == null ? Collections.emptyList() : items;
+    }
+
+    public CreateConnectionResponse createGithubRepositoryConnection(String projectId, String accessTokenVaultId) {
+      CreateConnectionDetails connDetails = 
+        CreateGithubAccessTokenConnectionDetails.builder().projectId(projectId).accessToken(accessTokenVaultId).build();
+      CreateConnectionRequest connRequest = CreateConnectionRequest.builder().createConnectionDetails(connDetails).build();
+      CreateConnectionResponse connReponse = devOpsClient.createConnection(connRequest);
+      return connReponse;
     }
     
-    public void mirrorRepository() {
-      //MirrorRepositoryRequest request = MirrorRepositoryRequest.builder().
+    public MirrorRepositoryResponse mirrorRepository(String projectId, String accessToken) {
+      TriggerSchedule scheduleType =
+        TriggerSchedule.builder().scheduleType(ScheduleType.Default).build();
+      MirrorRepositoryConfig mirrorRepositoryConfig =
+        MirrorRepositoryConfig.builder()
+                              .connectorId("")
+                              .repositoryUrl("")
+                              .triggerSchedule(scheduleType)
+                              .build();
+      CreateRepositoryDetails repoDetails =
+        CreateRepositoryDetails.builder()
+                               .projectId(ROOT_COMPARTMENT_NAME)
+                               .mirrorRepositoryConfig(mirrorRepositoryConfig)
+                               .build();
+      CreateRepositoryRequest req =
+        CreateRepositoryRequest.builder()
+                               .createRepositoryDetails(repoDetails)
+                               .build();
+      MirrorRepositoryRequest request =
+        MirrorRepositoryRequest.builder()
+                               .repositoryId(UUID.randomUUID().toString())
+                               .build();
+      MirrorRepositoryResponse mirrorRepository =
+        devOpsClient.mirrorRepository(request);
+      return mirrorRepository;
+    }
+
+    public List<RepositorySummary> listGitRepositoryConnections(String projectId) {
+      ListRepositoriesRequest req = ListRepositoriesRequest.builder().projectId(projectId).build();
+      ListRepositoriesResponse listRepositories = devOpsClient.listRepositories(req);
+      return listRepositories.getRepositoryCollection().getItems();
     }
   }
 
+  public class KmsVaultClientProxy {
+    private KmsVaultClient kmsVaultClient;
+    
+    // Instance of this should be taken from the outer class factory method only.
+    private KmsVaultClientProxy() {
+    }
+
+     void init(String region) {
+      reset();
+      kmsVaultClient = KmsVaultClient.builder().build(authenticationDetailsProvider);
+      kmsVaultClient.setRegion(region);
+    }
+
+    private void reset() {
+      if (kmsVaultClient != null) {
+        kmsVaultClient.close();
+        kmsVaultClient = null;
+      }
+    }
+    
+    public List<VaultSummary> listVaults(String compartmentId) {
+      ListVaultsRequest listRequest = ListVaultsRequest.builder().compartmentId(compartmentId).build();
+      ListVaultsResponse listVaults = kmsVaultClient.listVaults(listRequest);
+      return listVaults.getItems();
+    } 
+  }
+
+  public class VaultClientProxy {
+    private VaultsClient vaultsClient;
+    
+    // Instance of this should be taken from the outer class factory method only.
+    private VaultClientProxy() {
+    }
+
+     void init(String region) {
+      reset();
+      vaultsClient = VaultsClient.builder().build(authenticationDetailsProvider);
+      vaultsClient.setRegion(region);
+    }
+
+    private void reset() {
+      if (vaultsClient != null) {
+        vaultsClient.close();
+        vaultsClient = null;
+      }
+    }
+    
+    public List<SecretSummary> listSecrets(String compartmentId, String vaultId) {
+      ListSecretsRequest req = ListSecretsRequest.builder().vaultId(vaultId).compartmentId(compartmentId).build();
+      ListSecretsResponse listSecrets = vaultsClient.listSecrets(req);
+      return listSecrets.getItems();
+    }
+  }
 
 }

@@ -1,15 +1,13 @@
 package com.oracle.oci.intellij.devops;
 
 import java.io.IOException;
-import java.util.List;
 
-import com.oracle.bmc.devops.model.ProjectSummary;
+import com.oracle.bmc.devops.responses.CreateConnectionResponse;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.DevOpsClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;
 
-public class ListDevOpsProjectTest {
-
+public class CreateRepoMirrorTest {
   private static final String compartmentId;
   
   static {
@@ -41,11 +39,15 @@ public class ListDevOpsProjectTest {
   }
   
   public static void main(String args[]) throws Exception {
-    final DevOpsClientProxy devOpsClientProxy = 
-      OracleCloudAccount.getInstance().getDevOpsClient();
-
-    List<ProjectSummary> listDevOpsProjects = devOpsClientProxy.listDevOpsProjects(compartmentId);
-    System.out.println(listDevOpsProjects);
+    final DevOpsClientProxy devOpsClientProxy = OracleCloudAccount.getInstance().getDevOpsClient();
+    final String projectId = "ocid1.devopsproject.oc1.phx.amaaaaaadxiv6saadyecvba5jkqkbb2tvsxnc2i3g4xagtlqxqefbaxrgmxa";
+    final String accessToken = "ocid1.vaultsecret.oc1.phx.amaaaaaadxiv6saaxngaorxmh4vekouby5cjx3iry4xv6i4rp6m7n24rzjca";//args[0];
+    CreateConnectionResponse conn = devOpsClientProxy.createGithubRepositoryConnection(projectId, accessToken);
+    System.out.println(conn.getConnection());
+//    MirrorRepositoryResponse mirrorRepository = devOpsClientProxy.mirrorRepository(projectId);
+//    System.out.println(mirrorRepository);
+//    List<ProjectSummary> listDevOpsProjects = devOpsClientProxy.listDevOpsProjects(compartmentId);
+//    System.out.println(listDevOpsProjects);
 //    ListStackCommand listCommand = new ListStackCommand(resourceManagerClientProxy, compartmentId);
 //    ListStackResult result = listCommand.execute();
 //    List<StackSummary> stacks = result.getStacks();
