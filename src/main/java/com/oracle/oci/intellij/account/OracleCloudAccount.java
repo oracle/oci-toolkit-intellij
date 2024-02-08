@@ -35,10 +35,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import com.oracle.bmc.artifacts.ArtifactsClient;
+import com.oracle.bmc.artifacts.model.GenericArtifact;
 import com.oracle.bmc.artifacts.model.GenericArtifactSummary;
 import com.oracle.bmc.artifacts.requests.DeleteGenericArtifactRequest;
+import com.oracle.bmc.artifacts.requests.DeleteRepositoryRequest;
 import com.oracle.bmc.artifacts.requests.ListGenericArtifactsRequest;
 import com.oracle.bmc.artifacts.responses.DeleteGenericArtifactResponse;
+import com.oracle.bmc.artifacts.responses.DeleteRepositoryResponse;
 import com.oracle.bmc.artifacts.responses.ListGenericArtifactsResponse;
 import com.oracle.bmc.certificatesmanagement.CertificatesManagementClient;
 import com.oracle.bmc.certificatesmanagement.model.CertificateSummary;
@@ -1032,14 +1035,16 @@ public class OracleCloudAccount {
       for (AssociatedResourceSummary associatedResourceSummary :associatedResourcesCollection.getItems()){
         if (associatedResourceSummary.getResourceType().equals("oci_artifacts_repository")){
           artifactRepo = associatedResourceSummary;
+          break;
         }
       }
-      String artifactRegistryId = artifactRepo.getResourceId();
-      String compartment_id = artifactRepo.getAttributes().get("compartment_id");
-      String status = deleteArtifact(artifactRegistryId, compartment_id.substring(1,compartment_id.length()-1));
-      System.out.println("Delete Artifact:" + status);
+      if (artifactRepo != null){
+        String artifactRegistryId = artifactRepo.getResourceId();
+        String compartment_id = artifactRepo.getAttributes().get("compartment_id");
+        String status = deleteArtifact(artifactRegistryId, compartment_id.substring(1,compartment_id.length()-1));
+        System.out.println("Delete Artifact:" + status);
+      }
 
-      System.out.println(associatedResourcesCollection);
       // Destroy resources but don't remove stack defn
       CreateJobOperationDetails operationDetails =
         CreateDestroyJobOperationDetails.builder()
@@ -1066,15 +1071,26 @@ public class OracleCloudAccount {
 
       ListGenericArtifactsResponse response = client.listGenericArtifacts(listGenericArtifactsRequest);
       for (GenericArtifactSummary item : response.getGenericArtifactCollection().getItems()) {
+        if (!item.getLifecycleState().equals(GenericArtifact.LifecycleState.Available))
+            continue;
         DeleteGenericArtifactRequest deleteGenericArtifactRequest = DeleteGenericArtifactRequest.builder()
                 .artifactId(item.getId())
                 .opcRequestId(UUID.randomUUID().toString()).build();
+        //todo see if the artifact in the available mode
         DeleteGenericArtifactResponse deleteResponse = client.deleteGenericArtifact(deleteGenericArtifactRequest);
         int statusCode = deleteResponse.get__httpStatusCode__();
         if (statusCode < 200 || statusCode > 300) {
           return "FAILED";
         }
       }
+
+
+      DeleteRepositoryRequest deleteRepositoryRequest = DeleteRepositoryRequest.builder()
+              .repositoryId(artifactRegistryId)
+              .build();
+
+      /* Send request to the Client */
+      client.deleteRepository(deleteRepositoryRequest);
       return "SUCCEDED";
     }
 
@@ -1135,7 +1151,7 @@ public class OracleCloudAccount {
     public CreateStackResponse createStack(String compartmentId, Map<String, String> variables) throws IOException {
       CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
         CreateZipUploadConfigSourceDetails.builder()
-        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/cbateman/Downloads/appstackforjava.zip"))
+        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/aallali/Downloads/appstackforjava.zip"))
         .build();
       String uuid = UUID.randomUUID().toString();
       String displayName = variables.get("appstack_name") == null ? "New App Stack "+uuid:variables.get("appstack_name");

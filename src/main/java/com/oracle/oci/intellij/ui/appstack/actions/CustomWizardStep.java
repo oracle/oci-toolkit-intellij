@@ -504,7 +504,14 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 textField = new JBTextField();
             }
             textField.addFocusListener(new FocusAdapter() {
-                                           @Override
+
+                @Override
+                public void focusGained(FocusEvent e) {
+                    textField.selectAll();
+                    super.focusGained(e);
+                }
+
+                @Override
                                            public void focusLost(FocusEvent e) {
                                                controller.setValue(textField.getText(),varGroup,pd);
                                                focusValidation(textField.getText());

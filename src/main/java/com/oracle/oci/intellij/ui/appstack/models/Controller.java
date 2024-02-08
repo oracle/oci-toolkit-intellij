@@ -351,8 +351,7 @@ public class Controller {
             JComponent inputComponent = varPanel.getInputComponent();
             JLabel errorLabel = varPanel.getErrorLabel();
 
-
-            inputComponent.setBorder(BorderFactory.createLineBorder(JBColor.RED));
+            inputComponent.setBorder(BorderFactory.createLineBorder(JBColor.pink,3,true));
             errorLabel.setText(errorMessage);
             if (pd.getValue("errorMessage") != null && !((String)pd.getValue("errorMessage")).isEmpty())
                 inputComponent.setToolTipText("Field should be : "+pd.getValue("errorMessage"));
