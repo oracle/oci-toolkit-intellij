@@ -3,6 +3,7 @@ package com.oracle.oci.intellij.devops;
 import java.io.IOException;
 
 import com.oracle.bmc.devops.responses.CreateConnectionResponse;
+import com.oracle.bmc.devops.responses.MirrorRepositoryResponse;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.DevOpsClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;
@@ -43,9 +44,12 @@ public class CreateRepoMirrorTest {
     final String projectId = "ocid1.devopsproject.oc1.phx.amaaaaaadxiv6saadyecvba5jkqkbb2tvsxnc2i3g4xagtlqxqefbaxrgmxa";
     final String accessToken = "ocid1.vaultsecret.oc1.phx.amaaaaaadxiv6saaxngaorxmh4vekouby5cjx3iry4xv6i4rp6m7n24rzjca";//args[0];
     CreateConnectionResponse conn = devOpsClientProxy.createGithubRepositoryConnection(projectId, accessToken);
-    System.out.println(conn.getConnection());
-//    MirrorRepositoryResponse mirrorRepository = devOpsClientProxy.mirrorRepository(projectId);
-//    System.out.println(mirrorRepository);
+    System.out.println(conn.getConnection().getDisplayName());
+    
+    
+    final String ghUrl = "https://github.com/CBatemanOracle/oci-react-samples.git";
+    MirrorRepositoryResponse mirrorRepository = devOpsClientProxy.mirrorRepository(projectId, ghUrl, conn.getConnection().getId());
+    System.out.println(mirrorRepository);
 //    List<ProjectSummary> listDevOpsProjects = devOpsClientProxy.listDevOpsProjects(compartmentId);
 //    System.out.println(listDevOpsProjects);
 //    ListStackCommand listCommand = new ListStackCommand(resourceManagerClientProxy, compartmentId);

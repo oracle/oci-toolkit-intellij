@@ -129,6 +129,9 @@ import com.oracle.bmc.database.responses.ListDbVersionsResponse;
 import com.oracle.bmc.devops.DevopsClient;
 import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
+import com.oracle.bmc.devops.model.Connection.ConnectionType;
+import com.oracle.bmc.devops.model.Repository.RepositoryType;
+import com.oracle.bmc.devops.model.ConnectionSummary;
 import com.oracle.bmc.devops.model.CreateConnectionDetails;
 import com.oracle.bmc.devops.model.CreateGithubAccessTokenConnectionDetails;
 import com.oracle.bmc.devops.model.CreateRepositoryDetails;
@@ -139,10 +142,13 @@ import com.oracle.bmc.devops.model.TriggerSchedule;
 import com.oracle.bmc.devops.model.TriggerSchedule.ScheduleType;
 import com.oracle.bmc.devops.requests.CreateConnectionRequest;
 import com.oracle.bmc.devops.requests.CreateRepositoryRequest;
+import com.oracle.bmc.devops.requests.ListConnectionsRequest;
 import com.oracle.bmc.devops.requests.ListProjectsRequest;
 import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
 import com.oracle.bmc.devops.requests.MirrorRepositoryRequest;
 import com.oracle.bmc.devops.responses.CreateConnectionResponse;
+import com.oracle.bmc.devops.responses.CreateRepositoryResponse;
+import com.oracle.bmc.devops.responses.ListConnectionsResponse;
 import com.oracle.bmc.devops.responses.ListProjectsResponse;
 import com.oracle.bmc.devops.responses.ListRepositoriesResponse;
 import com.oracle.bmc.devops.responses.MirrorRepositoryResponse;
@@ -1364,35 +1370,56 @@ public class OracleCloudAccount {
       return items == null ? Collections.emptyList() : items;
     }
 
-    public CreateConnectionResponse createGithubRepositoryConnection(String projectId, String accessTokenVaultId) {
-      CreateConnectionDetails connDetails = 
-        CreateGithubAccessTokenConnectionDetails.builder().projectId(projectId).accessToken(accessTokenVaultId).build();
-      CreateConnectionRequest connRequest = CreateConnectionRequest.builder().createConnectionDetails(connDetails).build();
-      CreateConnectionResponse connReponse = devOpsClient.createConnection(connRequest);
+    public List<ConnectionSummary> listGithubRepositoryConnection(String projectId) {
+      ListConnectionsRequest req =
+        ListConnectionsRequest.builder().projectId(projectId).build();
+      return devOpsClient.listConnections(req)
+                         .getConnectionCollection()
+                         .getItems();
+
+    }
+
+    public CreateConnectionResponse createGithubRepositoryConnection(String projectId,
+                                                                     String accessTokenVaultId) {
+      CreateConnectionDetails connDetails =
+        CreateGithubAccessTokenConnectionDetails.builder()
+                                                .projectId(projectId)
+                                                .accessToken(accessTokenVaultId)
+                                                .build();
+      CreateConnectionRequest connRequest =
+        CreateConnectionRequest.builder()
+                               .createConnectionDetails(connDetails)
+                               .build();
+      CreateConnectionResponse connReponse =
+        devOpsClient.createConnection(connRequest);
       return connReponse;
     }
     
-    public MirrorRepositoryResponse mirrorRepository(String projectId, String accessToken) {
+    public MirrorRepositoryResponse mirrorRepository(String projectId, String repoUrl, String connectorOcid) {
       TriggerSchedule scheduleType =
         TriggerSchedule.builder().scheduleType(ScheduleType.Default).build();
       MirrorRepositoryConfig mirrorRepositoryConfig =
         MirrorRepositoryConfig.builder()
-                              .connectorId("")
-                              .repositoryUrl("")
+                              .connectorId(connectorOcid)
+                              .repositoryUrl(repoUrl)
                               .triggerSchedule(scheduleType)
                               .build();
       CreateRepositoryDetails repoDetails =
         CreateRepositoryDetails.builder()
-                               .projectId(ROOT_COMPARTMENT_NAME)
+                               .projectId(projectId)
+                               .repositoryType(RepositoryType.Mirrored)
+                               .name("Foo_"+System.currentTimeMillis())
                                .mirrorRepositoryConfig(mirrorRepositoryConfig)
                                .build();
       CreateRepositoryRequest req =
         CreateRepositoryRequest.builder()
                                .createRepositoryDetails(repoDetails)
                                .build();
+      CreateRepositoryResponse repo = devOpsClient.createRepository(req);
+      System.out.println(repo);
       MirrorRepositoryRequest request =
         MirrorRepositoryRequest.builder()
-                               .repositoryId(UUID.randomUUID().toString())
+                               .repositoryId(repo.getRepository().getId())
                                .build();
       MirrorRepositoryResponse mirrorRepository =
         devOpsClient.mirrorRepository(request);

@@ -3,6 +3,7 @@ package com.oracle.oci.intellij.devops;
 import java.io.IOException;
 import java.util.List;
 
+import com.oracle.bmc.devops.model.ConnectionSummary;
 import com.oracle.bmc.devops.model.ProjectSummary;
 import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
@@ -45,8 +46,8 @@ public class ListGitRepoConnectionTest {
       OracleCloudAccount.getInstance().getDevOpsClient();
     final String projectId = "ocid1.devopsproject.oc1.phx.amaaaaaadxiv6saadyecvba5jkqkbb2tvsxnc2i3g4xagtlqxqefbaxrgmxa";
 
-    List<RepositorySummary> listRepos = devOpsClientProxy.listGitRepositoryConnections(projectId);
-    System.out.println(listRepos);
+    List<ConnectionSummary> listRepos = devOpsClientProxy.listGithubRepositoryConnection(projectId);
+    listRepos.forEach(l -> System.out.printf("%s\n", l.getDisplayName()));
 
   }
 }
