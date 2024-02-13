@@ -12,5 +12,6 @@
     <orderEntry type="library" name="sdk" level="project" />
     <orderEntry type="library" name="lib1" level="project" />
     <orderEntry type="module" module-name="main" />
+    <orderEntry type="module" module-name="main" />
   </component>
 </module>

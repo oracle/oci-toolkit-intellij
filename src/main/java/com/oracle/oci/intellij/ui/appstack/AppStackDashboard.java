@@ -4,9 +4,10 @@
  */
 package com.oracle.oci.intellij.ui.appstack;
 
-import java.awt.*;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -16,16 +17,30 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-import java.util.List;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButton;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import com.intellij.openapi.application.ApplicationManager;
@@ -38,6 +53,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
@@ -49,7 +65,6 @@ import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Severi
 import com.oracle.oci.intellij.common.command.CommandStack;
 import com.oracle.oci.intellij.common.command.CompositeCommand;
 import com.oracle.oci.intellij.ui.appstack.command.CreateStackCommand;
-import com.oracle.oci.intellij.ui.appstack.command.DeleteStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.DestroyStackCommand;
 import com.oracle.oci.intellij.ui.appstack.command.GetStackJobsCommand;
 import com.oracle.oci.intellij.ui.appstack.command.GetStackJobsCommand.GetStackJobsResult;
@@ -75,7 +90,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   private JButton destroyAppStackButton;
   private List<StackSummary> appStackList;
   private CommandStack commandStack = new CommandStack();
-
+  private static ResourceBundle resBundle;
 
   private static final AppStackDashboard INSTANCE =
           new AppStackDashboard();
@@ -100,12 +115,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     if (deleteAppStackButton != null) {
       deleteAppStackButton.setAction(new DeleteAction(this, "Delete AppStack"));
     }
-    if (destroyAppStackButton != null){
-      destroyAppStackButton.setOpaque(true);
-      destroyAppStackButton.setBackground(Color.RED);
-      destroyAppStackButton.setBorderPainted(false);
-      destroyAppStackButton.setAction(new DestroyAction(this,"Destroy AppStack"));
-    }
+    resBundle = ResourceBundle.getBundle("appStackDashboard", Locale.ROOT);
   }
 
   private void initializeLabels() {
@@ -152,83 +162,6 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
       }
     });
   }
-
-//  private static class StackJobDialog extends DialogWrapper {
-//
-//    private final List<JobSummary> jobs;
-//
-//    protected StackJobDialog(List<JobSummary> jobs) {
-//      super(true);
-//      this.jobs = new ArrayList<>(jobs);
-//      init();
-//      setTitle("Stack Job");
-//      setOKButtonText("Ok");
-//    }
-//
-//    @Override
-//    protected @Nullable JComponent createCenterPanel() {
-//      JPanel centerPanel = new JPanel();
-//      centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-//
-//      DefaultTableModel jobsModel = new DefaultTableModel();
-//      jobsModel.addColumn("Name");
-//      jobsModel.addColumn("Operation");
-//      jobsModel.addColumn("Status");
-//      jobsModel.addColumn("Time Created");
-//      List<Object> row = new ArrayList<>();
-//      this.jobs.forEach(j -> {
-//        row.add(j.getDisplayName());
-//        row.add(j.getOperation());
-//        row.add(j.getLifecycleState());
-//        row.add(j.getTimeCreated());
-//        jobsModel.addRow(row.toArray());
-//        row.clear();
-//      });
-//
-//      JTable jobsTable = new JTable();
-//      jobsTable.setModel(jobsModel);
-//      centerPanel.add(jobsTable);
-//
-//      JTextArea textArea = new JTextArea();
-////      textArea.setText("Hello!");
-//      textArea.setLineWrap(true);
-//      textArea.setEditable(false);
-//      textArea.setVisible(true);
-//
-//      JScrollPane scroll = new JScrollPane (textArea);
-//      scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-//            scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-//
-//      centerPanel.add(scroll);
-//  //    centerPanel.add(textArea);
-//
-//      jobsTable.addMouseListener(new  MouseAdapter() {
-//
-//        @Override
-//        public void mouseClicked(MouseEvent e) {
-//          if (e.getButton() == MouseEvent.BUTTON1) {
-//            if (jobsTable.getSelectedRowCount() == 1) {
-//              int selectedRow = jobsTable.getSelectedRow();
-//              JobSummary jobSummary = jobs.get(selectedRow);
-//              String id = jobSummary.getId();
-//              GetJobLogsResponse jobLogs =
-//                OracleCloudAccount.getInstance().getResourceManagerClientProxy().getJobLogs(id);
-//              List<LogEntry> items = jobLogs.getItems();
-//              textArea.setText(null);
-//              StringBuilder builder = new StringBuilder();
-//              for (LogEntry logEntry : items) {
-//                builder.append(logEntry.getMessage());
-//                builder.append("\n");
-//              }
-//              textArea.setText(builder.toString());
-//            }
-//          }
-//        }
-//      });
-//
-//      return centerPanel;
-//    }
-//  }
 
   private static class LoadStackJobsAction extends AbstractAction {
 
@@ -663,12 +596,18 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     private AppStackDashboard dashboard;
 
     public DeleteAction(AppStackDashboard dashboard, String title) {
-      super("Delete");
+      super("Delete...");
       this.dashboard = dashboard;
     }
     
     private static class DeleteYesNoDialog extends DialogWrapper {
-      JCheckBox myCheckBox ;
+      // TODO: externalize
+      private static final String DESTROY_ONLY_DESCRIPTION_TEXT = resBundle.getString("DESTROY_ONLY_DESCRIPTION_TEXT");
+      private static final String DELETE_ONLY_DESCRIPTION_TEXT = resBundle.getString("DELETE_ONLY_DESCRIPTION_TEXT");
+      private static final String DELETE_ALL_DESCRIPTION_TEXT = resBundle.getString("DELETE_ALL_DESCRIPTION_TEXT");
+      JRadioButton deleteInfraStackRdoBtn;
+      JRadioButton deleteStackRdoBtn;
+      JRadioButton deleteAllRdoBtn;
 
       protected DeleteYesNoDialog() {
         super(true);
@@ -681,59 +620,105 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
       protected @Nullable JComponent createNorthPanel() {
         JPanel northPanel = new JPanel();
         JLabel label = new JLabel();
-        label.setText("Delete Stack.  Are you sure?");
+        label.setText("Warning: This operation cannot be undone. Are you sure?");
         northPanel.add(label);
         return northPanel;
       }
 
+
+      @SuppressWarnings("serial")
       @Override
-      protected @NotNull JPanel createButtonsPanel(@NotNull List<? extends JButton> buttons) {
-        return new JPanel();
+      protected void doOKAction() {
+        Object inputVal = JOptionPane.showInputDialog(this.getContentPane(),
+                                    "This action cannot be undone.  Please type \"confirm\" to confirm your choice",
+                                    "Confirm Deletion",
+                                    JOptionPane.QUESTION_MESSAGE,
+                                    null, null, null);
+        System.out.println(inputVal);
+        super.doOKAction();
       }
 
       @Override
       protected @Nullable JComponent createCenterPanel() {
-        JPanel messagePanel = new JPanel(new BorderLayout());
+        JPanel messagePanel = new JPanel();
+        messagePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        BoxLayout mgr = new BoxLayout(messagePanel, BoxLayout.PAGE_AXIS);
+        messagePanel.setLayout(mgr);
 
-        JPanel yesNoButtonPanel = new JPanel();
-        yesNoButtonPanel.setLayout(new BoxLayout(yesNoButtonPanel, BoxLayout.X_AXIS));
-        JButton yesButton = new JButton();
-        yesButton.setText("Yes");
-        yesButton.addActionListener(new ActionListener() { 
+        JTextArea descriptionText = new JTextArea();
+        descriptionText.setAlignmentX(Component.LEFT_ALIGNMENT);
+        descriptionText.setEditable(false);
+        descriptionText.setLineWrap(true);
+        descriptionText.setWrapStyleWord(true);
+        descriptionText.setColumns(20);
+        descriptionText.setText(DESTROY_ONLY_DESCRIPTION_TEXT);
+
+        JLabel selectOptionLbl = new JLabel("Select the deletion mode:");
+
+        ActionListener selectionListener = new ActionListener() {
+
           @Override
           public void actionPerformed(ActionEvent e) {
-            close(OK_EXIT_CODE);
+            switch(e.getActionCommand()) {
+            case "DESTROY_ONLY":
+              descriptionText.setText(DESTROY_ONLY_DESCRIPTION_TEXT);
+              break;
+            case "DELETE_ONLY":
+              descriptionText.setText(DELETE_ONLY_DESCRIPTION_TEXT);
+              break;
+            case "DELETE_ALL":
+              descriptionText.setText(DELETE_ALL_DESCRIPTION_TEXT);
+            }
           }
-        });
-        yesNoButtonPanel.add(yesButton);
-        JButton noButton = new JButton();
-        noButton.setText("No");
-        noButton.addActionListener(new ActionListener() {
+        };
+        deleteInfraStackRdoBtn = new JRadioButton();
+        initRadioBtn(deleteInfraStackRdoBtn, "DESTROY_ONLY", "Destroy the OCI infrastructure for the selected stack.", selectionListener
+                     );
 
-          @Override
-          public void actionPerformed(ActionEvent e) {
-            close(CANCEL_EXIT_CODE);
-          }
-          
-        });
-        yesNoButtonPanel.add(noButton);
+        deleteStackRdoBtn = new JRadioButton();
+        initRadioBtn(deleteStackRdoBtn, "DELETE_ONLY", "Delete the definition for the stack", selectionListener);
         
-        messagePanel.add(yesNoButtonPanel, BorderLayout.CENTER);
-        myCheckBox = new JCheckBox();
-        myCheckBox.setText("Destroy stack before deleting");
-        myCheckBox.setSelected(true);
-        messagePanel.add(myCheckBox, BorderLayout.SOUTH);
+        deleteAllRdoBtn = new JRadioButton();
+        initRadioBtn(deleteAllRdoBtn, "DELETE_ALL", "Delete everything to do with the selected stack", selectionListener);
 
+        ButtonGroup buttonGroup = new ButtonGroup();
+        buttonGroup.add(deleteInfraStackRdoBtn);
+        buttonGroup.add(deleteStackRdoBtn);
+        buttonGroup.add(deleteAllRdoBtn);
+
+        addHorizontalPadding(messagePanel, 15);
+        messagePanel.add(descriptionText);
+        addHorizontalPadding(messagePanel, 15);
+        messagePanel.add(selectOptionLbl);
+        //addHorizontalPadding(messagePanel, 10);
+        messagePanel.add(deleteInfraStackRdoBtn);
+        //addHorizontalPadding(messagePanel, 5);
+        messagePanel.add(deleteStackRdoBtn);
+        //addHorizontalPadding(messagePanel, 5);
+        messagePanel.add(deleteAllRdoBtn);
        // pack();
+
+       deleteInfraStackRdoBtn.setSelected(true);
 
         return messagePanel;
       }
 
-      boolean shouldDestroy(){
-        return myCheckBox.isSelected();
+      private void initRadioBtn(JRadioButton rdoButton, String actionCommand, String text,
+                                ActionListener actionListener) {
+        rdoButton.setText(text);
+        rdoButton.setActionCommand(actionCommand);
+        rdoButton.addActionListener(actionListener);
+        rdoButton.setAlignmentX(Component.LEFT_ALIGNMENT);
       }
 
+      private void addHorizontalPadding(JPanel messagePanel, int padding) {
+        Dimension minSize = new Dimension(0, padding);
+        Dimension prefSize = new Dimension(0, padding);
+        Dimension maxSize = new Dimension(Short.MAX_VALUE, padding);
+        messagePanel.add(new Box.Filler(minSize, prefSize, maxSize));
+      }
     }
+
     @Override
     public void actionPerformed(ActionEvent e) {
      
@@ -746,15 +731,15 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         boolean yesToDelete = dialog.showAndGet();
         CompositeCommand compositeCommand;
         if (yesToDelete) {
-          if (dialog.shouldDestroy()){
-            DestroyStackCommand destroyCommmand = new DestroyStackCommand(proxy, stackSummary.getId());
-            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId());
-            compositeCommand = new CompositeCommand(destroyCommmand, deleteCommand);
-          }else {
-            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId());
-            compositeCommand = new CompositeCommand(deleteCommand);
-          }
-          invokeLater(this.dashboard,compositeCommand);
+//          if (dialog.shouldDestroy()){
+//            DestroyStackCommand destroyCommmand = new DestroyStackCommand(proxy, stackSummary.getId());
+//            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId());
+//            compositeCommand = new CompositeCommand(destroyCommmand, deleteCommand);
+//          }else {
+//            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId());
+//            compositeCommand = new CompositeCommand(deleteCommand);
+//          }
+//          invokeLater(this.dashboard,compositeCommand);
         }
       }
     }
