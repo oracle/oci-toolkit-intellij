@@ -48,7 +48,6 @@ import org.jetbrains.annotations.Nullable;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
-import com.intellij.openapi.vfs.CharsetToolkit;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
@@ -105,15 +104,10 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     if (createAppStackButton != null) {
       createAppStackButton.setAction(new CreateAction(this, "Create New AppStack"));
     }
-
-    if (destroyAppStackButton != null){
-//      destroyAppStackButton.setOpaque(true);
-//      destroyAppStackButton.setBackground(Color.RED);
-//      destroyAppStackButton.setBorderPainted(false);
-      destroyAppStackButton.setToolTipText(resBundle.getString("DELETE_BUTTON_TOOLTIP"));
-      destroyAppStackButton.setAction(new DestroyAction(this,"Destroy AppStack"));
+    
+    if (deleteAppStackButton != null) {
+      deleteAppStackButton.setAction(new DeleteAction(this, "Delete AppStack"));
     }
-
     resBundle = ResourceBundle.getBundle("appStackDashboard", Locale.ROOT);
   }
 
