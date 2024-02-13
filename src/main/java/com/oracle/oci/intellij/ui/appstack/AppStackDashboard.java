@@ -675,7 +675,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
           }
         };
         deleteInfraStackRdoBtn = new JRadioButton();
-        initRadioBtn(deleteInfraStackRdoBtn, "DESTROY_ONLY", "Destroy the OCI infrastructure for the selected stack.", selectionListener
+        initRadioBtn(deleteInfraStackRdoBtn, "DESTROY_ONLY", "Destroy the OCI resources for the selected stack", selectionListener
                      );
 
         deleteStackRdoBtn = new JRadioButton();
