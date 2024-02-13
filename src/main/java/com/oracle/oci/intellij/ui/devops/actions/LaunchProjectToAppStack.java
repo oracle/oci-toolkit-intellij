@@ -1,4 +1,4 @@
-package com.oracle.oci.intellij.ui.appstack.actions;
+package com.oracle.oci.intellij.ui.devops.actions;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;

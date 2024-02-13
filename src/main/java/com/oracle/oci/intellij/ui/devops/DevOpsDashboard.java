@@ -48,7 +48,6 @@ import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.common.UIUtil.ModelHolder;
 import com.oracle.oci.intellij.ui.explorer.ITabbedExplorerContent;
 import com.oracle.oci.intellij.util.LogHandler;
-import com.oracle.oci.intellij.util.SafeRunnerUtil;
 
 public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExplorerContent {
 

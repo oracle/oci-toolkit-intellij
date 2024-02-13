@@ -54,7 +54,8 @@
         </group>
         <group id="com.oracle.oci.intellij.ui.ActionGroup.ProjectViewContext">
             <group id="com.oracle.oci.intellij.ui.ActionGroup.ProjectViewPopup" text="OCI" popup="true" keep-content="true">
-               <action id="com.oracle.oci.intellij.ui.Action.ProjectViewPopup" class="com.oracle.oci.intellij.ui.appstack.actions.LaunchProjectToAppStack" text="Launch as Java AppStack"/>
+               <action id="com.oracle.oci.intellij.ui.Action.MirrorRepository" class="com.oracle.oci.intellij.ui.devops.actions.MirrorGitHubRepoAction" text="MirrorRepository" />
+               <action id="com.oracle.oci.intellij.ui.Action.LaunchProjectToAppStack" class="com.oracle.oci.intellij.ui.devops.actions.LaunchProjectToAppStack" text="Launch as Java AppStack"/>
             </group>
             <add-to-group group-id="ProjectViewPopupMenu" relative-to-action="WeighingNewGroup" anchor="after"/>
         </group>
