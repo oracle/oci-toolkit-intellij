@@ -816,7 +816,8 @@ variables:
     default: false
     title: Enable cookie-based session persistence
     visible: 
-      not: use_default_lb_configuration
+      not:
+        - use_default_lb_configuration
   session_affinity:
     type: enum
     required: true

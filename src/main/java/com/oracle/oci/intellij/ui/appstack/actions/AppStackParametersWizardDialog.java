@@ -8,6 +8,7 @@ import com.intellij.ui.wizard.WizardModel;
 import com.intellij.ui.wizard.WizardStep;
 import com.intellij.util.ui.JBDimension;
 import com.intellij.util.ui.JBUI;
+import com.intellij.util.ui.UIUtil;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.appstack.models.Controller;
@@ -43,7 +44,8 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         JPanel mainPanel = new JPanel(new BorderLayout());
         JPanel leftPanel = (JPanel) createMenuPanel();
 
-        leftPanel.setBackground(Color.white);
+        if (!UIUtil.isUnderDarcula())
+            leftPanel.setBackground(Color.white);
 
 
         mainPanel.add(leftPanel,BorderLayout.WEST);

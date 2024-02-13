@@ -20,6 +20,7 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ReviewDialog extends DialogWrapper {
     LinkedHashMap<String,String> variables;
@@ -27,7 +28,7 @@ public class ReviewDialog extends DialogWrapper {
     JBScrollPane mainScrollPane;
     Controller controller = Controller.getInstance();
 
-    protected ReviewDialog(LinkedHashMap<String,String> variables,List<VariableGroup> varGroups) {
+    public ReviewDialog(Map<String, String> variables, List<VariableGroup> varGroups) {
         super(false);
         setTitle("Oracle Cloud Infrastructure Configuration");
         setOKButtonText("Apply");
@@ -36,7 +37,7 @@ public class ReviewDialog extends DialogWrapper {
 
         mainScrollPane = new JBScrollPane(mainPanel);
 
-        this.variables = variables ;
+        this.variables = (LinkedHashMap<String, String>) variables;
         mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.Y_AXIS));
         final PropertyDescriptor[][] pds = new PropertyDescriptor[1][1];
         varGroups.forEach(varGroup->{
@@ -69,6 +70,7 @@ public class ReviewDialog extends DialogWrapper {
         init();
 
     }
+
 
 //    private void createVariablePanel() {
 //

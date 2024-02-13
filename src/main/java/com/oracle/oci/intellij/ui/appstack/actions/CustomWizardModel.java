@@ -33,10 +33,10 @@ public class CustomWizardModel extends WizardModel {
     List<VariableGroup> varGroups;
     LinkedHashMap<String, PropertyDescriptor> descriptorsState;
 
-    public CustomWizardModel( List<VariableGroup> varGroups, LinkedHashMap<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
+    public CustomWizardModel( List<VariableGroup> varGroups, Map<String, PropertyDescriptor> descriptorsState) throws IntrospectionException {
         super("App Stack Variable");
         this.varGroups = varGroups;
-        this.descriptorsState = descriptorsState;
+        this.descriptorsState = (LinkedHashMap<String, PropertyDescriptor>) descriptorsState;
 
         // create the wizard steps
         initWizardSteps();

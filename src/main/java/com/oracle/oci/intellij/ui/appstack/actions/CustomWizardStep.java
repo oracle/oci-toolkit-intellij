@@ -252,7 +252,7 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
 
                 if (pd.getValue("type").equals("oci:identity:compartment:id")){
                     JPanel compartmentPanel = new JPanel();
-                    JButton selectCompartmentBtn  = new JButton("select");
+                    JButton selectCompartmentBtn  = new JButton("Select");
                     JTextField compartmentName = new JTextField("");
                     compartmentName.setPreferredSize(new JBDimension(409,30));
                     compartmentName.setEnabled(false);
@@ -512,11 +512,11 @@ public class CustomWizardStep extends WizardStep implements PropertyChangeListen
                 }
 
                 @Override
-                                           public void focusLost(FocusEvent e) {
-                                               controller.setValue(textField.getText(),varGroup,pd);
-                                               focusValidation(textField.getText());
-                                           }
-                                       }
+                public void focusLost(FocusEvent e) {
+                   controller.setValue(textField.getText(),varGroup,pd);
+                   focusValidation(textField.getText());
+                }
+               }
 
             );
 

@@ -245,9 +245,7 @@ public class Controller {
     }
     public boolean doValidate(WizardStep wizardStep){
         CustomWizardStep cWizardStep = (CustomWizardStep)wizardStep;
-        boolean isvalide = true ;
         JComponent errorComponent = null;
-        PropertyDescriptor errorPd = null;
 
         for (CustomWizardStep.VarPanel varPanel:
                 cWizardStep.getVarPanels()) {
@@ -265,11 +263,9 @@ public class Controller {
                 }
 
                 if (!focusValidation(value,pd)){
-                    errorPd = pd;
                     errorComponent = getComponentByName(pd.getName());
                     errorComponent.grabFocus();
                     errorComponent.requestFocusInWindow();
-                    isvalide = false;
                     return false;
                 }
 

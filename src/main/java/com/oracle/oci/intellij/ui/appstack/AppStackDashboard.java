@@ -28,8 +28,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.ui.CommonActionsPanel;
+import com.oracle.bmc.resourcemanager.model.Stack;
+import com.oracle.oci.intellij.ui.appstack.actions.ReviewDialog;
 import com.oracle.oci.intellij.ui.appstack.command.*;
+import com.oracle.oci.intellij.ui.appstack.models.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -259,6 +263,29 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
       }
     }
   }
+
+  private static class ShowStackDetailsAction extends AbstractAction {
+
+    private static final long serialVersionUID = 1463690182909882687L;
+    private StackSummary stack;
+
+    public ShowStackDetailsAction(StackSummary stack) {
+      super("Show Stack Details..");
+      this.stack = stack;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      ResourceManagerClientProxy resourceManagerClientProxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+      Stack stackDetails =  resourceManagerClientProxy.getStackDetails(stack.getId());
+      Map <String,String> variables = stackDetails.getVariables();
+
+      ReviewDialog reviewDialog = new ReviewDialog(variables, Utils.variableGroups);
+
+      reviewDialog.showAndGet();
+      reviewDialog.close(200);
+    }
+  }
   private static class LoadAppUrlAction extends AbstractAction {
 
     public LoadAppUrlAction(StackSummary stack) {
@@ -294,6 +321,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     if (selectedSummary != null) {
       popupMenu.add(new JMenuItem(new LoadStackJobsAction(selectedSummary)));
       popupMenu.add(new JMenuItem(new LoadAppUrlAction(selectedSummary)));
+      popupMenu.add(new JMenuItem(new ShowStackDetailsAction(selectedSummary)));
 
 //      if (selectedSummary.getLifecycleState() == LifecycleState.Available) {
 

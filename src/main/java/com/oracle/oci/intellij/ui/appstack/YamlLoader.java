@@ -24,30 +24,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
+import static com.oracle.oci.intellij.ui.appstack.models.Utils.descriptorsState;
+
 
 public class YamlLoader {
     static List<VariableGroup> varGroups;
     Compartment compartment ;
     CompartmentCache compartmentCache ;
 
-    public  Map load() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
-        // start caching compartments
-        compartmentCache = CompartmentCache.getInstance();
-        compartmentCache.setCaching(true);
-        varGroups = init();
+    public  Map<String, PropertyDescriptor> load1(List<VariableGroup> varGroups) throws IntrospectionException {
         LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
 
-        Map<String, VariableGroup> variableGroups = new LinkedHashMap<>(); ;
-
-        Controller.getInstance().setVariableGroups(variableGroups);
-        for (VariableGroup appVarGroup : varGroups){
-            Controller.getInstance().getVariableGroups().put(appVarGroup.getClass().getSimpleName(),appVarGroup);
-
-            Class<?> appVarGroupClazz = appVarGroup.getClass();
-            BeanInfo beanInfo = Introspector.getBeanInfo(appVarGroupClazz);
-            PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
 
 
+        for (VariableGroup var:varGroups){
+
+            PropertyDescriptor [] propertyDescriptors =  Controller.getInstance().getSortedProertyDescriptorsByVarGroup(var);
 
             for (PropertyDescriptor pd:propertyDescriptors){
 
@@ -58,19 +50,21 @@ public class YamlLoader {
                 }
                 pd.setDisplayName((annotation.title() != null)? annotation.title() : "");
                 pd.setShortDescription((annotation.description() != null) ? annotation.description() :  "" );
-                //                // recheck this default value thing
-                if (annotation.defaultVal() != null  && !annotation.defaultVal().isEmpty()) {
 
-                    Object defaultValue =  getDefaultValue(pd, annotation);
-                    System.out.println(pd.getName());
-                    pd.setValue("default", defaultValue);
-
-                //  pd.setValue("value",defaultValue);
-                    pd.getWriteMethod().invoke(appVarGroup,defaultValue);
-                }
                 if (annotation.dependsOn() != null && !annotation.dependsOn().isEmpty()) {
                     pd.setValue("dependsOn",annotation.dependsOn());
                 }
+
+                if (annotation.defaultVal() != null  && !annotation.defaultVal().isEmpty()) {
+
+//                    Object defaultValue =  getDefaultValue(pd, annotation);
+//                    System.out.println(pd.getName());
+                    pd.setValue("default", annotation.defaultVal());
+
+                    //  pd.setValue("value",defaultValue);
+//                    pd.getWriteMethod().invoke(appVarGroup,defaultValue);
+                }
+
 
                 pd.setValue("required", annotation.required());
 
@@ -97,9 +91,49 @@ public class YamlLoader {
                 descriptorsState.put(pd.getName(),pd);
 
             }
+        }
+        return descriptorsState;
+    }
+
+    public  Map load() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
+        // start caching compartments
+        compartmentCache = CompartmentCache.getInstance();
+        compartmentCache.setCaching(true);
+        varGroups = init();
+
+        Map<String, VariableGroup> variableGroups = new LinkedHashMap<>(); ;
+
+        Controller.getInstance().setVariableGroups(variableGroups);
+        for (VariableGroup appVarGroup : varGroups){
+            Controller.getInstance().getVariableGroups().put(appVarGroup.getClass().getSimpleName(),appVarGroup);
+
+            Class<?> appVarGroupClazz = appVarGroup.getClass();
+            BeanInfo beanInfo = Introspector.getBeanInfo(appVarGroupClazz);
+            PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+
+
+
+            for (PropertyDescriptor pd:propertyDescriptors){
+
+                VariableMetaData annotation = pd.getReadMethod().getAnnotation(VariableMetaData.class);
+
+                if (pd.getName().equals("class") || annotation == null ) {
+                    continue;
+                }
+
+                if (annotation.defaultVal() != null  && !annotation.defaultVal().isEmpty()) {
+
+                    Object defaultValue =  getDefaultValue(pd, annotation);
+                    pd.setValue("default", defaultValue);
+
+                //  pd.setValue("value",defaultValue);
+                    pd.getWriteMethod().invoke(appVarGroup,defaultValue);
+                }
+
+            }
 
         }
-        CustomWizardModel customWizardModel = new CustomWizardModel(varGroups,descriptorsState);
+        CustomWizardModel customWizardModel = new CustomWizardModel(varGroups, descriptorsState);
         AppStackParametersWizardDialog dialog = new AppStackParametersWizardDialog(customWizardModel);
         dialog.show();
         if (dialog.isApply()){
@@ -138,7 +172,7 @@ public class YamlLoader {
         return metaData.defaultVal();
     }
 
-    private static List<VariableGroup> init() {
+    private  List<VariableGroup> init() {
         List<VariableGroup> varGroups = new ArrayList<>();
         varGroups.add(new Stack_Information());
         varGroups.add(new General_Configuration());

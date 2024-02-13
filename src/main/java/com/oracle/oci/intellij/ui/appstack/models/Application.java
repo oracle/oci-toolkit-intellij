@@ -23,7 +23,6 @@ public class Application extends VariableGroup {
 ;
 
     public enum Application_type{
-        not_selected,
         JAR,
         WAR,
     }
@@ -86,8 +85,7 @@ public class Application extends VariableGroup {
         vcp.fireVetoableChange("application_source", oldValue, newValue);
     }
     @PropertyOrder(4)
-    @VariableMetaData(title="Artifact type",description="The stack can deploy either an executable JAR (using Java runtime) or a WAR (through Tomcat).",defaultVal="JAR",type="enum",required=true,enumValues ="not_selected,JAR,WAR",visible="not(eq(application_source,'IMAGE'))")
-
+    @VariableMetaData(title="Artifact type",description="The stack can deploy either an executable JAR (using Java runtime) or a WAR (through Tomcat).",defaultVal="JAR",type="enum",required=true,enumValues ="JAR,WAR",visible="not(eq(application_source,'IMAGE'))")
     public Application_type getApplication_type() {
         return application_type;
     }

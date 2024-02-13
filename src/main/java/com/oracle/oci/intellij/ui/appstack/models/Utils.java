@@ -12,9 +12,12 @@ import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.keymanagement.model.KeySummary;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.ui.appstack.YamlLoader;
 
+import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +26,32 @@ import java.util.regex.Pattern;
 
 public class Utils{
     static LinkedHashMap<String, SuggestConsumor<PropertyDescriptor, LinkedHashMap<String, PropertyDescriptor>, List<? extends ExplicitlySetBmcModel>,VariableGroup>> suggestedValues = new LinkedHashMap<>();
+    public static Map<String,PropertyDescriptor> descriptorsState = new LinkedHashMap<>() ;
+
+    public static List<VariableGroup> variableGroups = new ArrayList<>()
+    {{
+        add(new Stack_Information());
+        add(new General_Configuration());
+        add(new Application());
+        add(new Stack_Authentication());
+        add(new Application_Performance_Monitoring());
+        add(new Database());
+        add(new Other_Parameters());
+        add(new Application_Configuration_SSL_Communication());
+        add(new Application_URL());
+        add(new Network());
+        add(new Container_Instance_Configuration());
+    }
+    };
+
+    static {
+        YamlLoader load = new YamlLoader();
+        try {
+            descriptorsState = load.load1(variableGroups);
+        } catch (IntrospectionException e) {
+            throw new RuntimeException(e);
+        }
+    }
     static {
         suggestedValues.put("oci:identity:compartment:id",(pd,pds,varGroup)->{
             /* there are :

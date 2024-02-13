@@ -171,7 +171,7 @@ public class Network extends VariableGroup {
         return health_checker_return_code;
     }
     @PropertyOrder(20)
-    @VariableMetaData(title="Enable cookie-based session persistence",defaultVal="false",type="boolean",required=true,visible="use_default_lb_configuration")
+    @VariableMetaData(title="Enable cookie-based session persistence",defaultVal="false",type="boolean",required=true,visible="not(use_default_lb_configuration)")
 
     public boolean isEnable_session_affinity() {
         return enable_session_affinity;
