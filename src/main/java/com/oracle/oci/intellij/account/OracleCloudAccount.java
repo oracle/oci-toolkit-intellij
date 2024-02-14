@@ -34,6 +34,9 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.oracle.bmc.resourcemanager.model.*;
+import com.oracle.bmc.resourcemanager.requests.*;
+import com.oracle.bmc.resourcemanager.responses.*;
 import org.apache.commons.io.FileUtils;
 
 import com.oracle.bmc.artifacts.ArtifactsClient;
@@ -43,7 +46,6 @@ import com.oracle.bmc.artifacts.requests.DeleteGenericArtifactRequest;
 import com.oracle.bmc.artifacts.requests.DeleteRepositoryRequest;
 import com.oracle.bmc.artifacts.requests.ListGenericArtifactsRequest;
 import com.oracle.bmc.artifacts.responses.DeleteGenericArtifactResponse;
-import com.oracle.bmc.artifacts.responses.DeleteRepositoryResponse;
 import com.oracle.bmc.artifacts.responses.ListGenericArtifactsResponse;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
 import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
@@ -134,36 +136,6 @@ import com.oracle.bmc.keymanagement.requests.ListVaultsRequest;
 import com.oracle.bmc.keymanagement.responses.ListKeysResponse;
 import com.oracle.bmc.keymanagement.responses.ListVaultsResponse;
 import com.oracle.bmc.resourcemanager.ResourceManagerClient;
-import com.oracle.bmc.resourcemanager.model.AssociatedResourceSummary;
-import com.oracle.bmc.resourcemanager.model.AssociatedResourcesCollection;
-import com.oracle.bmc.resourcemanager.model.CreateDestroyJobOperationDetails;
-import com.oracle.bmc.resourcemanager.model.CreateJobDetails;
-import com.oracle.bmc.resourcemanager.model.CreateJobOperationDetails;
-import com.oracle.bmc.resourcemanager.model.CreateStackDetails;
-import com.oracle.bmc.resourcemanager.model.CreateZipUploadConfigSourceDetails;
-import com.oracle.bmc.resourcemanager.model.DestroyJobOperationDetails;
-import com.oracle.bmc.resourcemanager.model.Stack;
-import com.oracle.bmc.resourcemanager.model.StackSummary;
-import com.oracle.bmc.resourcemanager.requests.CreateJobRequest;
-import com.oracle.bmc.resourcemanager.requests.CreateStackRequest;
-import com.oracle.bmc.resourcemanager.requests.DeleteStackRequest;
-import com.oracle.bmc.resourcemanager.requests.GetJobLogsRequest;
-import com.oracle.bmc.resourcemanager.requests.GetJobTfStateRequest;
-import com.oracle.bmc.resourcemanager.requests.GetStackRequest;
-import com.oracle.bmc.resourcemanager.requests.ListJobOutputsRequest;
-import com.oracle.bmc.resourcemanager.requests.ListJobsRequest;
-import com.oracle.bmc.resourcemanager.requests.ListStackAssociatedResourcesRequest;
-import com.oracle.bmc.resourcemanager.requests.ListStacksRequest;
-import com.oracle.bmc.resourcemanager.responses.CreateJobResponse;
-import com.oracle.bmc.resourcemanager.responses.CreateStackResponse;
-import com.oracle.bmc.resourcemanager.responses.DeleteStackResponse;
-import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
-import com.oracle.bmc.resourcemanager.responses.GetJobTfStateResponse;
-import com.oracle.bmc.resourcemanager.responses.GetStackResponse;
-import com.oracle.bmc.resourcemanager.responses.ListJobOutputsResponse;
-import com.oracle.bmc.resourcemanager.responses.ListJobsResponse;
-import com.oracle.bmc.resourcemanager.responses.ListStackAssociatedResourcesResponse;
-import com.oracle.bmc.resourcemanager.responses.ListStacksResponse;
 import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
@@ -1032,6 +1004,7 @@ public class OracleCloudAccount {
     }
 
     public void deleteStack(String stackId) {
+      // todo before deleting check if there is no job is applying right now
       // Delete Stack
       final DeleteStackRequest deleteStackRequest = DeleteStackRequest.builder().stackId(stackId).build();
       final DeleteStackResponse deleteStackResponse = resourceManagerClient.deleteStack(deleteStackRequest);
@@ -1137,6 +1110,20 @@ public class OracleCloudAccount {
         GetJobLogsRequest.builder().jobId(planJobId).limit(limit).build();
       return resourceManagerClient.getJobLogs(getJobLogsRequest);
       
+    }
+
+    public Job getJobDetails (String jobId){
+
+      /* Create a request and dependent object(s). */
+
+      GetJobRequest getJobRequest = GetJobRequest.builder()
+              .jobId(jobId)
+              .build();
+
+      /* Send request to the Client */
+      GetJobResponse response = resourceManagerClient.getJob(getJobRequest);
+      return response.getJob();
+
     }
     
     public GetJobLogsResponse getJobLogs(String jobId, int limit, String opcNextPage) {

@@ -44,11 +44,14 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.project.impl.ProjectImpl;
 import com.intellij.ui.CommonActionsPanel;
 import com.oracle.bmc.resourcemanager.model.Stack;
 import com.oracle.oci.intellij.ui.appstack.actions.ReviewDialog;
 import com.oracle.oci.intellij.ui.appstack.command.*;
 import com.oracle.oci.intellij.ui.appstack.models.Utils;
+import com.oracle.oci.intellij.ui.common.MyBackgroundTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -100,6 +103,13 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   }
 
   private AppStackDashboard() {
+    // initiate property descriptors ....
+    YamlLoader load = new YamlLoader();
+    try {
+      Utils.descriptorsState = load.load1(Utils.variableGroups);
+    } catch (IntrospectionException e) {
+      throw new RuntimeException(e);
+    }
     //initializeWorkLoadTypeFilter();
     initializeTableStructure();
     initializeLabels();
@@ -228,7 +238,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
     @Override
     public void actionPerformed(ActionEvent event) {
-      Desktop desktop = java.awt.Desktop.getDesktop();
+      Desktop desktop = Desktop.getDesktop();
       try {
         //specify the protocol along with the URL
         URI oURL = new URI(
@@ -326,7 +336,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
   public void populateTableData() {
     ((DefaultTableModel) appStacksTable.getModel()).setRowCount(0);
-    UIUtil.showInfoInStatusBar("Refreshing Autonomous Databases.");
+    UIUtil.showInfoInStatusBar("Refreshing stack list .");
 
     refreshAppStackButton.setEnabled(false);
 
@@ -429,6 +439,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
     @Override
     public void actionPerformed(ActionEvent e) {
+//      MyBackgroundTask myBackgroundTask = new MyBackgroundTask();
       appStackDashBoard.populateTableData();
     }
   }
@@ -474,9 +485,11 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
           command.setVariables(variables.get());
           //          command.setVariables(variables.get());
           this.dashboard.commandStack.execute(command);
+          this.dashboard.populateTableData();
         } catch (Exception e1) {
           throw new RuntimeException(e1);
         }
+
       };
       ApplicationManager.getApplication().invokeLater(runnable);
 
@@ -558,30 +571,30 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     @Override
     public void actionPerformed(ActionEvent e) {
 
-      int selectedRow = this.dashboard.appStacksTable.getSelectedRow();
-      // TODO: should be better way to get select row object
-      if (selectedRow >=0 && selectedRow < this.dashboard.appStackList.size()) {
-        StackSummary stackSummary = this.dashboard.appStackList.get(selectedRow);
-        ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
-        DestroyYesNoDialog dialog = new DestroyYesNoDialog();
-        boolean yesToDelete = dialog.showAndGet();
-        if (yesToDelete) {
-          DestroyStackCommand destroyCommmand = new DestroyStackCommand(proxy, stackSummary.getId());
-          CompositeCommand compositeCommand = new CompositeCommand(destroyCommmand);
-          invokeLater(this.dashboard,compositeCommand);
-        }
-      }
+//      int selectedRow = this.dashboard.appStacksTable.getSelectedRow();
+//      // TODO: should be better way to get select row object
+//      if (selectedRow >=0 && selectedRow < this.dashboard.appStackList.size()) {
+//        StackSummary stackSummary = this.dashboard.appStackList.get(selectedRow);
+//        ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+//        DestroyYesNoDialog dialog = new DestroyYesNoDialog();
+//        boolean yesToDelete = dialog.showAndGet();
+//        if (yesToDelete) {
+//          DestroyStackCommand destroyCommmand = new DestroyStackCommand(proxy, stackSummary.getId());
+//          CompositeCommand compositeCommand = new CompositeCommand(destroyCommmand);
+//          invokeLater(this.dashboard,compositeCommand);
+//        }
+//      }
     }
   }
   private static void invokeLater(AppStackDashboard appStackDashboard,CompositeCommand command){
     Thread t = new Thread(() -> {
       try {
         Result r = appStackDashboard.commandStack.execute(command);
-        if (r.getSeverity() != Severity.ERROR) {
+//        if (r.getSeverity() != Severity.ERROR) {
           SwingUtilities.invokeAndWait(() -> {
             appStackDashboard.populateTableData();
           });
-        }
+//        }
       } catch (CommandFailedException | InvocationTargetException | InterruptedException e1) {
         // TODO:
         e1.printStackTrace();
@@ -686,6 +699,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         buttonGroup.add(deleteStackRdoBtn);
         buttonGroup.add(deleteAllRdoBtn);
 
+
         addHorizontalPadding(messagePanel, 15);
         messagePanel.add(descriptionText);
         addHorizontalPadding(messagePanel, 15);
@@ -729,17 +743,21 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
         DeleteYesNoDialog dialog = new DeleteYesNoDialog();
         boolean yesToDelete = dialog.showAndGet();
-        CompositeCommand compositeCommand;
+        CompositeCommand compositeCommand = null;
         if (yesToDelete) {
-//          if (dialog.shouldDestroy()){
-//            DestroyStackCommand destroyCommmand = new DestroyStackCommand(proxy, stackSummary.getId());
-//            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId());
-//            compositeCommand = new CompositeCommand(destroyCommmand, deleteCommand);
-//          }else {
-//            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId());
-//            compositeCommand = new CompositeCommand(deleteCommand);
-//          }
-//          invokeLater(this.dashboard,compositeCommand);
+          if (dialog.deleteInfraStackRdoBtn.isSelected()){
+            DestroyStackCommand destroyCommand = new DestroyStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
+            compositeCommand = new CompositeCommand(destroyCommand);
+
+          } else if (dialog.deleteAllRdoBtn.isSelected()) {
+            DestroyStackCommand destroyCommand = new DestroyStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
+            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
+            compositeCommand = new CompositeCommand(destroyCommand, deleteCommand);
+          } else if (dialog.deleteStackRdoBtn.isSelected()) {
+            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
+            compositeCommand = new CompositeCommand(deleteCommand);
+          }
+          invokeLater(this.dashboard,compositeCommand);
         }
       }
     }

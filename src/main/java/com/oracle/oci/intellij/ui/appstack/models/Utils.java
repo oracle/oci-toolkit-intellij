@@ -44,14 +44,9 @@ public class Utils{
     }
     };
 
-    static {
-        YamlLoader load = new YamlLoader();
-        try {
-            descriptorsState = load.load1(variableGroups);
-        } catch (IntrospectionException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    static {
+//
+//    }
     static {
         suggestedValues.put("oci:identity:compartment:id",(pd,pds,varGroup)->{
             /* there are :

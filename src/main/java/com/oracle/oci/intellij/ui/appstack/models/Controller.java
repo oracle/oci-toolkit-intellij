@@ -127,7 +127,7 @@ public class Controller {
                 try {
                     suggestedValues = (List<ExplicitlySetBmcModel>) get();
                 } catch (InterruptedException | ExecutionException e) {
-                    System.out.println(e.getMessage()+"ghjgfjhfj");
+                    UIUtil.fireNotification(NotificationType.WARNING, "Resource not found: \n"+e.getMessage(), null);
                     comboBox.removeAllItems();
                     comboBox.setEnabled(true);
                     String errorMessage = "There was an error retrieving options";

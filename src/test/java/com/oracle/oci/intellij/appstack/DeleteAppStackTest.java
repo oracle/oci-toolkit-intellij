@@ -36,7 +36,7 @@ public class DeleteAppStackTest {
       OracleCloudAccount.getInstance().getResourceManagerClientProxy();
     
     DeleteStackCommand deleteCommand = new DeleteStackCommand(resourceManagerClientProxy, 
-                "ocid1.ormstack.oc1.iad.amaaaaaadra4vviarcdv4w73m5b6rtk3wwavcsc4w7h4rm3znysazimlcexa");
+                "ocid1.ormstack.oc1.iad.amaaaaaadra4vviarcdv4w73m5b6rtk3wwavcsc4w7h4rm3znysazimlcexa","display name ");
     Result result = deleteCommand.execute();
     System.out.println(result);
   }

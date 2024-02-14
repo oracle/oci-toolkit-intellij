@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import com.intellij.notification.NotificationType;
+import com.intellij.openapi.project.ProjectManager;
 import com.oracle.bmc.resourcemanager.model.ApplyJobOperationDetails.ExecutionPlanStrategy;
 import com.oracle.bmc.resourcemanager.model.CreateApplyJobOperationDetails;
 import com.oracle.bmc.resourcemanager.model.CreateJobDetails;
@@ -17,13 +19,18 @@ import com.oracle.bmc.resourcemanager.responses.GetJobTfStateResponse;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
 import com.oracle.oci.intellij.common.Utils;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand;
+import com.oracle.oci.intellij.ui.common.MyBackgroundTask;
+import com.oracle.oci.intellij.ui.common.UIUtil;
+import java.util.function.Function;
 
 public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 		private ResourceManagerClientProxy resourceManagerClient;
 		@SuppressWarnings("unused")
-    private String compartmentId;
+        private String compartmentId;
 		@SuppressWarnings("unused")
-    private String zipFileAsString;
+        private String zipFileAsString;
+
+
     private HashMap<String, String> variables;
 
 		public CreateStackCommand(ResourceManagerClientProxy resourceManagerClient, String compartmentId,
@@ -54,12 +61,16 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 
             CreateStackResponse createStackResponse = resourceManagerClient.createStack(this.compartmentId, variables);
             System.out.println("Created Stack : " + createStackResponse.getStack());
+            UIUtil.fireNotification(NotificationType.INFORMATION," Stack instance created successfully.", null);
+
             final String stackId = createStackResponse.getStack().getId();
 
             System.out.println(stackId);
 
             CreateJobResponse createApplyJobResponse = createApplyJob(resourceManagerClient, stackId);
             String applyJobId = createApplyJobResponse.getJob().getId();
+            MyBackgroundTask.startBackgroundTask(ProjectManager.getInstance().getDefaultProject(),"Apply Job","Job Applying ...","Apply Job Failed please check logs","Apply job successfully applied ",applyJobId);
+
             System.out.println(applyJobId);
 
             // Get Job Terraform state GetJobTfStateRequest getJobTfStateRequest =
@@ -97,7 +108,10 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
         .build();
 
     /* Send request to the Client */
-    return resourceManagerClient.submitJob(createJobRequest);
+        CreateJobResponse createJobResponse =  resourceManagerClient.submitJob(createJobRequest);
+        UIUtil.fireNotification(NotificationType.INFORMATION," The Apply Job  submitted successfully.", null);
+
+        return createJobResponse;
 //      CreateJobOperationDetails operationDetails =
 //        CreateApplyJobOperationDetails.builder()
 //                                      .executionPlanStrategy(ApplyJobOperationDetails.ExecutionPlanStrategy.FromPlanJobId)

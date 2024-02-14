@@ -42,7 +42,7 @@ public class DeleteAllAppStackTest {
     ListStackResult listResult = allStacks.execute();
     for (StackSummary summary : listResult.getStacks()) {
       String id = summary.getId();
-      DeleteStackCommand deleteCommand = new DeleteStackCommand(resourceManagerClientProxy, id);
+      DeleteStackCommand deleteCommand = new DeleteStackCommand(resourceManagerClientProxy, id,summary.getDisplayName());
       Result execute = deleteCommand.execute();
       System.out.printf("Removed stack %s, %s\n", id, execute.toString());
     }
