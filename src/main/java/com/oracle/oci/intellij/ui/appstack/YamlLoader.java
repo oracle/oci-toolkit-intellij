@@ -8,7 +8,6 @@ import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.appstack.actions.AppStackParametersWizardDialog;
 import com.oracle.oci.intellij.ui.appstack.actions.CompartmentCache;
 import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardModel;
-import com.oracle.oci.intellij.ui.appstack.actions.CustomWizardStep;
 import com.oracle.oci.intellij.ui.appstack.annotations.VariableMetaData;
 import com.oracle.oci.intellij.ui.appstack.models.*;
 
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
 
 import static com.oracle.oci.intellij.ui.appstack.models.Utils.descriptorsState;
 
@@ -31,6 +29,10 @@ public class YamlLoader {
     static List<VariableGroup> varGroups;
     Compartment compartment ;
     CompartmentCache compartmentCache ;
+
+
+
+    private boolean isApply = false;
 
     public  Map<String, PropertyDescriptor> load1(List<VariableGroup> varGroups) throws IntrospectionException {
         LinkedHashMap<String, PropertyDescriptor> descriptorsState = new LinkedHashMap<>();
@@ -136,7 +138,8 @@ public class YamlLoader {
         CustomWizardModel customWizardModel = new CustomWizardModel(varGroups, descriptorsState);
         AppStackParametersWizardDialog dialog = new AppStackParametersWizardDialog(customWizardModel);
         dialog.show();
-        if (dialog.isApply()){
+        if (dialog.isCreate()){
+            isApply = dialog.isApply();
             return dialog.getUserInput();
         }
         return null;
@@ -186,5 +189,9 @@ public class YamlLoader {
         varGroups.add(new Network());
         varGroups.add(new Container_Instance_Configuration());
         return varGroups;
+    }
+
+    public boolean isApply() {
+        return isApply;
     }
 }

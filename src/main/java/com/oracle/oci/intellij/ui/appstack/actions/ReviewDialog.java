@@ -2,6 +2,8 @@ package com.oracle.oci.intellij.ui.appstack.actions;
 
 
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.ui.components.JBCheckBox;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.JBDimension;
 import com.oracle.oci.intellij.ui.appstack.models.Controller;
@@ -27,6 +29,10 @@ public class ReviewDialog extends DialogWrapper {
     JPanel mainPanel ;
     JBScrollPane mainScrollPane;
     Controller controller = Controller.getInstance();
+    JBCheckBox isApplyCheckBox ;
+
+
+
 
     public ReviewDialog(Map<String, String> variables, List<VariableGroup> varGroups) {
         super(false);
@@ -59,6 +65,7 @@ public class ReviewDialog extends DialogWrapper {
                     varPanel = new ReviewVarPanel(pd,variables.get(pd.getName()));
                     groupPanel.add(varPanel);
                 }
+
                 mainPanel.add(groupPanel);
             } catch (IntrospectionException e) {
                 throw new RuntimeException(e);
@@ -67,10 +74,26 @@ public class ReviewDialog extends DialogWrapper {
 
 
 
+
+
+        // todo create the panel of  the check if user wants to immediately
+        JPanel isApplyPanel = new JPanel();
+        JBLabel isApplyLable = new JBLabel("Run apply on the created stack?\n");
+        isApplyLable.setToolTipText("Immediately provision the resources defined in the Terraform configuration by running the apply action on the new stack.\n" +
+                "\n");
+        isApplyCheckBox = new JBCheckBox("Run Apply");
+        isApplyPanel.add(isApplyLable);
+        isApplyPanel.add(isApplyCheckBox);
+
+
+        mainPanel.add(isApplyPanel);
         init();
 
     }
 
+    public boolean isApply() {
+        return isApplyCheckBox.isSelected();
+    }
 
 //    private void createVariablePanel() {
 //
@@ -180,4 +203,6 @@ public class ReviewDialog extends DialogWrapper {
             add(buttonsPanel,BorderLayout.CENTER);
         }
     }
+
+
 }

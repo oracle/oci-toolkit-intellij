@@ -4,7 +4,6 @@
  */
 package com.oracle.oci.intellij.ui.appstack;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -19,11 +18,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.AbstractAction;
@@ -45,26 +40,23 @@ import javax.swing.table.DefaultTableModel;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.project.impl.ProjectImpl;
-import com.intellij.ui.CommonActionsPanel;
+import com.oracle.bmc.resourcemanager.model.*;
 import com.oracle.bmc.resourcemanager.model.Stack;
+import com.oracle.bmc.resourcemanager.responses.CreateJobResponse;
+import com.oracle.bmc.resourcemanager.responses.GetJobTfStateResponse;
 import com.oracle.oci.intellij.ui.appstack.actions.ReviewDialog;
 import com.oracle.oci.intellij.ui.appstack.command.*;
 import com.oracle.oci.intellij.ui.appstack.models.Utils;
 import com.oracle.oci.intellij.ui.common.MyBackgroundTask;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.DialogWrapper;
-import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.CommandFailedException;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result;
-import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result.Severity;
 import com.oracle.oci.intellij.common.command.CommandStack;
 import com.oracle.oci.intellij.common.command.CompositeCommand;
 import com.oracle.oci.intellij.ui.appstack.command.CreateStackCommand;
@@ -86,6 +78,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   private JButton refreshAppStackButton;
   private JButton deleteAppStackButton;
   private JButton createAppStackButton;
+  private JButton applyAppStackButton;
   private JTable appStacksTable;
   private JLabel profileValueLabel;
   private JLabel compartmentValueLabel;
@@ -124,6 +117,9 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     
     if (deleteAppStackButton != null) {
       deleteAppStackButton.setAction(new DeleteAction(this, "Delete AppStack"));
+    }
+    if (applyAppStackButton != null) {
+      applyAppStackButton.setAction(new ApplyAction(this, "Apply AppStack"));
     }
     resBundle = ResourceBundle.getBundle("appStackDashboard", Locale.ROOT);
   }
@@ -230,19 +226,31 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     }
   }
   private static class LoadAppUrlAction extends AbstractAction {
-
+    StackSummary stack ;
     public LoadAppUrlAction(StackSummary stack) {
       super("Launch App Url..");
-     // this.stack = stack;
+      this.stack = stack;
     }
 
     @Override
     public void actionPerformed(ActionEvent event) {
       Desktop desktop = Desktop.getDesktop();
-      try {
+      //todo list all the jobs of the stack and get last apply one
+      JobSummary lastApplyJob = getLastApplyJob();
+      String applicationUrl = null ;
+        try {
+            applicationUrl =  getUrlOutput(lastApplyJob);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        if (applicationUrl.isEmpty()){
+          return;
+        }
+        try {
         //specify the protocol along with the URL
         URI oURL = new URI(
-            "http://129.153.104.43");
+            applicationUrl);
         desktop.browse(oURL);
       } catch (URISyntaxException e) {
         // TODO Auto-generated catch block
@@ -251,6 +259,39 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
+    }
+
+    private String getUrlOutput(JobSummary lastApplyJob) throws Exception {
+      ResourceManagerClientProxy resourceManagerClientProxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+
+      String jobId = lastApplyJob.getId();
+      ListJobOutputCommand cmd = new ListJobOutputCommand(resourceManagerClientProxy, null, jobId);
+      ListJobOutputCommand.ListJobOutputResult result = cmd.execute();
+      List<JobOutputSummary> outputSummaries = result.getOutputSummaries();
+      Optional<JobOutputSummary> jos = outputSummaries.stream().filter(p -> "app_url".equals(p.getOutputName())).findFirst();
+      return jos.get().getOutputValue();
+    }
+
+    private JobSummary getLastApplyJob() {
+      ResourceManagerClientProxy resourceManagerClientProxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
+      GetStackJobsCommand command = new GetStackJobsCommand(resourceManagerClientProxy,
+              stack.getCompartmentId(), stack.getId());
+      try {
+        GetStackJobsResult execute = command.execute();
+        if (execute.isOk()) {
+
+          execute.getJobs().forEach(job -> System.out.println(job));
+          Optional<JobSummary> lastApplyJob = execute.getJobs().stream().filter((job)->job.getOperation().equals(Job.Operation.Apply)).findFirst();
+          //todo check if that job is applied successfully
+          return  lastApplyJob.get();
+        }
+        else if (execute.getException() != null) {
+          throw execute.getException();
+        }
+      } catch (Throwable e1) {
+        throw new RuntimeException(e1);
+      }
+      return null;
     }
 
   }
@@ -473,13 +514,15 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         }
         if (variables.get() == null)
           return;
+
+
         try {
           ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
-          //todo get the compartment from the form , that i will add in the stack infos
+
           String compartmentId = variables.get().get("appstack_compartment");
           ClassLoader cl = AppStackDashboard.class.getClassLoader();
           CreateStackCommand command =
-                  new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
+                  new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip",loader.isApply());
           //          Map<String,String> variables = new ModelLoader().loadTestVariables();
           //          variables.put("shape","CI.Standard.E3.Flex");
           command.setVariables(variables.get());
@@ -496,104 +539,51 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     }
   }
 
-  public static class DestroyAction extends AbstractAction {
+  public static class ApplyAction extends AbstractAction {
 
     private static final long serialVersionUID = 7216149349340773007L;
     private final AppStackDashboard dashboard;
-    public DestroyAction(AppStackDashboard dashboard, String title) {
-      super("Destroy");
+    public ApplyAction(AppStackDashboard dashboard, String title) {
+      super("Apply");
       this.dashboard = dashboard;
     }
 
-    private static class DestroyYesNoDialog extends DialogWrapper {
 
-      protected DestroyYesNoDialog() {
-        super(true);
-        init();
-        setTitle("Confirm Destroy");
-        setOKButtonText("Ok");
-      }
-
-      @Override
-      protected @Nullable JComponent createNorthPanel() {
-        JPanel northPanel = new JPanel();
-        JLabel label = new JLabel();
-        label.setText("Destroy Stack.  Are you sure?");
-        northPanel.add(label);
-        return northPanel;
-      }
-
-//      @Override
-//      protected @NotNull JPanel createButtonsPanel(@NotNull List<? extends JButton> buttons) {
-//        return new JPanel();
-//      }
-
-      @Override
-      protected @Nullable JComponent createCenterPanel() {
-        JPanel messagePanel = new JPanel(new BorderLayout());
-
-//        JPanel yesNoButtonPanel = new JPanel();
-//        yesNoButtonPanel.setLayout(new BoxLayout(yesNoButtonPanel, BoxLayout.X_AXIS));
-//        JButton yesButton = new JButton();
-//        yesButton.setText("Yes");
-//        yesButton.addActionListener(new ActionListener() {
-//          @Override
-//          public void actionPerformed(ActionEvent e) {
-//            close(OK_EXIT_CODE);
-//          }
-//        });
-//        yesNoButtonPanel.add(yesButton);
-//        JButton noButton = new JButton();
-//        noButton.setText("No");
-//        noButton.addActionListener(new ActionListener() {
-//
-//          @Override
-//          public void actionPerformed(ActionEvent e) {
-//            close(CANCEL_EXIT_CODE);
-//          }
-//
-//        });
-//        yesNoButtonPanel.add(noButton);
-//
-//        messagePanel.add(yesNoButtonPanel, BorderLayout.CENTER);
-//
-//        JCheckBox myCheckBox = new JCheckBox();
-//        myCheckBox.setText("Destroy stack before deleting");
-//        myCheckBox.setSelected(true);
-//        messagePanel.add(myCheckBox, BorderLayout.SOUTH);
-//
-//        // pack();
-//
-        return messagePanel;
-      }
-
-    }
     @Override
     public void actionPerformed(ActionEvent e) {
+      this.dashboard.applyAppStackButton.setEnabled(false);
+      int selectedRow = this.dashboard.appStacksTable.getSelectedRow();
+      // TODO: should be better way to get select row object
+      if (selectedRow >=0 && selectedRow < this.dashboard.appStackList.size()) {
+        StackSummary stackSummary = this.dashboard.appStackList.get(selectedRow);
+        ResourceManagerClientProxy resourceManagerClient = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
 
-//      int selectedRow = this.dashboard.appStacksTable.getSelectedRow();
-//      // TODO: should be better way to get select row object
-//      if (selectedRow >=0 && selectedRow < this.dashboard.appStackList.size()) {
-//        StackSummary stackSummary = this.dashboard.appStackList.get(selectedRow);
-//        ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
-//        DestroyYesNoDialog dialog = new DestroyYesNoDialog();
-//        boolean yesToDelete = dialog.showAndGet();
-//        if (yesToDelete) {
-//          DestroyStackCommand destroyCommmand = new DestroyStackCommand(proxy, stackSummary.getId());
-//          CompositeCommand compositeCommand = new CompositeCommand(destroyCommmand);
-//          invokeLater(this.dashboard,compositeCommand);
-//        }
-//      }
+        //todo: check if the already has resources and destroy them before applying
+        CreateJobResponse createApplyJobResponse = CreateStackCommand.createApplyJob(resourceManagerClient, stackSummary.getId());
+        String applyJobId = createApplyJobResponse.getJob().getId();
+        MyBackgroundTask.startBackgroundTask(ProjectManager.getInstance().getDefaultProject(),"Apply Job","Job Applying ...","Apply Job Failed please check logs","Apply job successfully applied ",applyJobId);
+
+        System.out.println(applyJobId);
+
+        // Get Job Terraform state GetJobTfStateRequest getJobTfStateRequest =
+        GetJobTfStateResponse jobTfState = resourceManagerClient.getJobTfState(applyJobId);
+        System.out.println(jobTfState.toString());
+      }
+      this.dashboard.applyAppStackButton.setEnabled(true);
+
+
     }
   }
-  private static void invokeLater(AppStackDashboard appStackDashboard,CompositeCommand command){
+  private static void invokeLater(AppStackDashboard appStackDashboard,CompositeCommand command,JButton button){
     Thread t = new Thread(() -> {
       try {
         Result r = appStackDashboard.commandStack.execute(command);
 //        if (r.getSeverity() != Severity.ERROR) {
-          SwingUtilities.invokeAndWait(() -> {
+          SwingUtilities.invokeAndWait(()->{
             appStackDashboard.populateTableData();
+            button.setEnabled(true);
           });
+
 //        }
       } catch (CommandFailedException | InvocationTargetException | InterruptedException e1) {
         // TODO:
@@ -742,6 +732,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         StackSummary stackSummary = this.dashboard.appStackList.get(selectedRow);
         ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
         DeleteYesNoDialog dialog = new DeleteYesNoDialog();
+        dashboard.deleteAppStackButton.setEnabled(false);
         boolean yesToDelete = dialog.showAndGet();
         CompositeCommand compositeCommand = null;
         if (yesToDelete) {
@@ -757,7 +748,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
             DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
             compositeCommand = new CompositeCommand(deleteCommand);
           }
-          invokeLater(this.dashboard,compositeCommand);
+          invokeLater(this.dashboard,compositeCommand,dashboard.deleteAppStackButton);
         }
       }
     }

@@ -1,6 +1,5 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
-import com.intellij.ui.OnePixelSplitter;
 import com.intellij.ui.SeparatorComponent;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.wizard.WizardDialog;
@@ -26,7 +25,8 @@ public class AppStackParametersWizardDialog extends WizardDialog {
     public static  boolean isProgramaticChange = false;
     JBList menuList;
     private LinkedHashMap<String,String> userInput;
-    private boolean apply=false;
+    private boolean isCreate =false;
+    private boolean isApply = false;
 
 
     public AppStackParametersWizardDialog(WizardModel wizardModel){
@@ -224,7 +224,8 @@ public class AppStackParametersWizardDialog extends WizardDialog {
 
         ReviewDialog reviewDialog = new ReviewDialog(variables,appStackModel.getVarGroups());
         if (reviewDialog.showAndGet()){
-            apply = true;
+            isApply = reviewDialog.isApply();
+            isCreate = true;
             userInput = variables;
 //            createAppStack();
             freeCache();
@@ -273,8 +274,11 @@ public class AppStackParametersWizardDialog extends WizardDialog {
     }
 
 
+    public boolean isCreate() {
+        return isCreate;
+    }
     public boolean isApply() {
-        return apply;
+        return isApply;
     }
 }
 

@@ -24,28 +24,28 @@ import com.oracle.oci.intellij.ui.common.UIUtil;
 import java.util.function.Function;
 
 public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
-		private ResourceManagerClientProxy resourceManagerClient;
-		@SuppressWarnings("unused")
-        private String compartmentId;
-		@SuppressWarnings("unused")
-        private String zipFileAsString;
-
-
+    private ResourceManagerClientProxy resourceManagerClient;
+    @SuppressWarnings("unused")
+    private String compartmentId;
+    @SuppressWarnings("unused")
+    private String zipFileAsString;
+    private boolean apply ;
     private HashMap<String, String> variables;
 
-		public CreateStackCommand(ResourceManagerClientProxy resourceManagerClient, String compartmentId,
-				String zipFilePath) throws IOException {
-			this.resourceManagerClient = resourceManagerClient;
-			this.compartmentId = compartmentId;
-			this.zipFileAsString = Utils.GetBase64EncodingForAFile(zipFilePath);
-		}
+    public CreateStackCommand(ResourceManagerClientProxy resourceManagerClient, String compartmentId,
+            String zipFilePath) throws IOException {
+        this.resourceManagerClient = resourceManagerClient;
+        this.compartmentId = compartmentId;
+        this.zipFileAsString = Utils.GetBase64EncodingForAFile(zipFilePath);
+    }
 
     public CreateStackCommand(ResourceManagerClientProxy resourceManagerClient,
                               String compartmentId, ClassLoader classLoader,
-                              String zipFilePath) throws IOException {
+                              String zipFilePath,boolean apply) throws IOException {
       this.resourceManagerClient = resourceManagerClient;
       this.compartmentId = compartmentId;
       this.zipFileAsString = Utils.GetBased64EncodingForAFile(classLoader, zipFilePath);
+      this.apply = apply;
     }
 
     public void setVariables(Map<String, String> variables) {
@@ -54,19 +54,19 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
     public Map<String, String> getVariables() {
       return Collections.unmodifiableMap(this.variables);
     }
-		@Override
-		protected CreateResult doExecute() throws Exception {
+    @Override
+    protected CreateResult doExecute() throws Exception {
 //			CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails = CreateZipUploadConfigSourceDetails
 //      		.builder().zipFileBase64Encoded(zipFileAsString).build();
 
-            CreateStackResponse createStackResponse = resourceManagerClient.createStack(this.compartmentId, variables);
-            System.out.println("Created Stack : " + createStackResponse.getStack());
-            UIUtil.fireNotification(NotificationType.INFORMATION," Stack instance created successfully.", null);
+        CreateStackResponse createStackResponse = resourceManagerClient.createStack(this.compartmentId, variables);
+        System.out.println("Created Stack : " + createStackResponse.getStack());
+        UIUtil.fireNotification(NotificationType.INFORMATION," Stack instance created successfully.", null);
 
-            final String stackId = createStackResponse.getStack().getId();
+        final String stackId = createStackResponse.getStack().getId();
 
-            System.out.println(stackId);
-
+        System.out.println(stackId);
+        if (apply){
             CreateJobResponse createApplyJobResponse = createApplyJob(resourceManagerClient, stackId);
             String applyJobId = createApplyJobResponse.getJob().getId();
             MyBackgroundTask.startBackgroundTask(ProjectManager.getInstance().getDefaultProject(),"Apply Job","Job Applying ...","Apply Job Failed please check logs","Apply job successfully applied ",applyJobId);
@@ -76,9 +76,10 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
             // Get Job Terraform state GetJobTfStateRequest getJobTfStateRequest =
             GetJobTfStateResponse jobTfState = resourceManagerClient.getJobTfState(applyJobId);
             System.out.println(jobTfState.toString());
+        }
 
-            return CreateResult.create().stackId(stackId).build();
-		}
+        return CreateResult.create().stackId(stackId).build();
+    }
 			  
 //	  private static CreateJobResponse createPlanJob(ResourceManagerClientProxy resourceManagerClient, String stackId) {
 //	    CreateJobOperationDetails operationDetails = CreatePlanJobOperationDetails.builder().build();
@@ -88,7 +89,7 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 //	    return resourceManagerClient.submitJob(jobPlanRequest);
 //	  }
 
-    private static CreateJobResponse createApplyJob(ResourceManagerClientProxy resourceManagerClient,
+    public static CreateJobResponse createApplyJob(ResourceManagerClientProxy resourceManagerClient,
                                                     String stackId) {
       
       CreateJobDetails createJobDetails = CreateJobDetails.builder()

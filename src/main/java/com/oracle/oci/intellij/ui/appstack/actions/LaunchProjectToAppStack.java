@@ -43,7 +43,7 @@ public class LaunchProjectToAppStack extends AnAction {
         String compartmentId = SystemPreferences.getCompartmentId();
         ClassLoader cl = AppStackDashboard.class.getClassLoader();
         CreateStackCommand command =
-                new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip");
+                new CreateStackCommand(proxy, compartmentId, cl, "appstackforjava.zip",loader.isApply());
 //        Map<String,String> variables = new ModelLoader().loadTestVariables();
 //        variables.put("shape","CI.Standard.E3.Flex");
         command.setVariables(variables.get());

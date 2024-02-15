@@ -1097,7 +1097,10 @@ public class OracleCloudAccount {
     }
     
     public ListJobsResponse listJobs(String compartmentId, String stackId) {
-      ListJobsRequest request = ListJobsRequest.builder().compartmentId(compartmentId).stackId(stackId).build();
+      ListJobsRequest request = ListJobsRequest.builder().compartmentId(compartmentId)
+              .sortBy(ListJobsRequest.SortBy.Timecreated)
+              .sortOrder(ListJobsRequest.SortOrder.Desc)
+              .stackId(stackId).build();
       return resourceManagerClient.listJobs(request);
     }
 

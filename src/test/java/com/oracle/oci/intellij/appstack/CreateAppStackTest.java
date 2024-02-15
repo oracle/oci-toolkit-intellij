@@ -48,7 +48,7 @@ public class CreateAppStackTest {
 
     CreateStackCommand createCommand =
       new CreateStackCommand(resourceManagerClientProxy, compartmentId,
-        CreateAppStackTest.class.getClassLoader(), "com/oracle/oci/intellij/appstack/appstackforjava.zip");
+        CreateAppStackTest.class.getClassLoader(), "com/oracle/oci/intellij/appstack/appstackforjava.zip",true);
     Map<String,String> variables = new ModelLoader().loadTestVariables();
     System.out.println("Validating (could take a while....");
     validate(variables, compartmentId, OracleCloudAccount.getInstance());
