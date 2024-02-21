@@ -56,7 +56,7 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
   private JButton refreshAppStackButton;
   private JButton deleteAppStackButton;
   private JButton createAppStackButton;
-  private JTable appStacksTable;
+  private JTable devOpsTable;
   private JLabel profileValueLabel;
   private JLabel compartmentValueLabel;
   private JLabel regionValueLabel;
@@ -65,7 +65,6 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
   private List<ProjectSummary> listDevOpsProjects;
   private List<RepositorySummary> listRepositories;
   private AtomicReference<ProjectSummary> currentProject = new AtomicReference<>();
-
 
   private static final DevOpsDashboard INSTANCE =
           new DevOpsDashboard();
@@ -116,7 +115,7 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
         };
         
         final Runnable updateUI = () -> {
-          final DefaultTableModel model = ((DefaultTableModel) appStacksTable.getModel());
+          final DefaultTableModel model = ((DefaultTableModel) devOpsTable.getModel());
           model.setRowCount(0);
            final Object[] rowData = new Object[AppStackTableModel.APPSTACK_COLUMN_NAMES.length];
 //          final boolean isFreeTier =
@@ -147,7 +146,7 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
   }
 
   private void initializeTableStructure() {
-    appStacksTable.setModel(new AppStackTableModel(0));
+    devOpsTable.setModel(new AppStackTableModel(0));
 
 //    appStacksTable.getColumn("State").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
 //      if (column == 2) {
@@ -428,7 +427,7 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
   @Override
   public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
     LogHandler.info("AutonomousDatabasesDashboard: Handling the Event Update : " + propertyChangeEvent.toString());
-    ((DefaultTableModel) appStacksTable.getModel()).setRowCount(0);
+    ((DefaultTableModel) devOpsTable.getModel()).setRowCount(0);
 
     switch (propertyChangeEvent.getPropertyName()) {
       case SystemPreferences.EVENT_COMPARTMENT_UPDATE:

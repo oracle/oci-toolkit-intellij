@@ -8,11 +8,11 @@ import java.util.regex.Pattern;
 
 import com.oracle.oci.intellij.util.StrippingLineNumberReader;
 
-class GitParser {
+public class GitParser {
   private static final Pattern strippedLinePattern =
     Pattern.compile("\\[(.*)\\]");
 
-  public GitConfig parse(Reader reader) {
+  public GitConfig parse(Reader reader) throws GitParserException {
     StrippingLineNumberReader bufReader =
       new StrippingLineNumberReader(reader);
     GitConfig config = new GitConfig();
@@ -51,9 +51,8 @@ class GitParser {
       }
       config.updateMappings();
       return config;
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-      return null;
+    } catch (IOException e) {
+      throw new GitParserException(e);
     }
   }
 
@@ -92,5 +91,23 @@ class GitParser {
 
   private void handleOther(StringTokenizer tokenizer) {
 
+  }
+  
+  public static class GitParserException extends Exception {
+
+    private static final long serialVersionUID = 1L;
+
+    public GitParserException(String message, Throwable cause) {
+      super(message, cause);
+    }
+
+    public GitParserException(String message) {
+      super(message);
+    }
+
+    public GitParserException(Throwable cause) {
+      super(cause);
+    }
+    
   }
 }

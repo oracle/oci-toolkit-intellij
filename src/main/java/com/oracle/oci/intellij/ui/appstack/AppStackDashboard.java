@@ -140,6 +140,9 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   }
 
   private void initializeTableStructure() {
+    if (appStacksTable == null) {
+      return;
+    }
     appStacksTable.setModel(new AppStackTableModel(0));
 
     appStacksTable.getColumn("Last Job State").setCellRenderer(new DefaultTableCellRenderer() {

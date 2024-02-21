@@ -1,7 +1,10 @@
 package com.oracle.oci.intellij.ui.git.config;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.WeakHashMap;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.intellij.openapi.project.Project;
@@ -14,7 +17,8 @@ public class GitConfig {
   private GitConfigCore core;
   private LinkedHashMap<String, GitConfigRemote> remotes = new LinkedHashMap<>();
   private LinkedHashMap<String, GitConfigBranch> branches = new LinkedHashMap<>();
-  private WeakHashMap<GitConfigBranch, GitConfigRemote>  branchToRemote = new WeakHashMap<>();
+  private Map<GitConfigBranch, GitConfigRemote>  branchToRemote = new HashMap<>();
+  private Map<String, GitConfigRemote> remoteUrls = new HashMap<>();
   
   public void setCore(GitConfigCore core) {
     this.core = core;
@@ -38,6 +42,11 @@ public class GitConfig {
       v.setRemoteObj(gitConfigRemote);
       branchToRemote.put(v, gitConfigRemote);
     });
+    
+    remoteUrls.clear();
+    this.remotes.forEach((k,v) -> {
+      remoteUrls.put(v.getUrl(), v);
+    });
   }
   
   public String toString() {
@@ -48,8 +57,21 @@ public class GitConfig {
     return builder.toString();
   }
 
+  public Set<String> getUrls() {
+    return Collections.unmodifiableSet(this.remoteUrls.keySet());
+  }
   public boolean checkStale() {
     // TODO Auto-generated method stub
     return false;
+  }
+
+  public void dispose() {
+    branches.clear();
+    remotes.clear();
+    core = null;
+    projectOptional = null;
+    remoteUrls.clear();
+    branchToRemote.clear();
+    age = null;
   }
 }

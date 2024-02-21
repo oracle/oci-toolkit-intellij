@@ -159,7 +159,7 @@
             <properties/>
             <border type="none"/>
             <children>
-              <component id="75d30" class="javax.swing.JTable" binding="appStacksTable">
+              <component id="75d30" class="javax.swing.JTable" binding="devOpsTable">
                 <constraints/>
                 <properties>
                   <fillsViewportHeight value="true"/>

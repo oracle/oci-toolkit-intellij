@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.intellij.util.containers.hash.LinkedHashMap;
+import com.oracle.oci.intellij.ui.git.config.GitParser.GitParserException;
 import com.oracle.oci.intellij.util.StrippingLineNumberReader;
 
 public abstract class ConsumingGitConfigObject {
@@ -14,21 +15,20 @@ public abstract class ConsumingGitConfigObject {
     return this.values.get(key);
   }
 
-  public void consume(StrippingLineNumberReader reader) {
+  public void consume(StrippingLineNumberReader reader) throws GitParserException {
     boolean consumedLastLine = true;
     try {
       startLine(reader);
       while (consumeLine(reader)) {
       }
     } catch (IOException ioe) {
-      ioe.printStackTrace();
+      throw new GitParserException(ioe);
     } finally {
       if (!consumedLastLine) {
         try {
           endLine(reader);
         } catch (IOException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
+          throw new GitParserException(e);
         }
       }
     }
@@ -58,7 +58,7 @@ public abstract class ConsumingGitConfigObject {
       String key = strippedLine.substring(0, lineSplit);
       String value = strippedLine.substring(lineSplit + 1);
       value = value.strip();
-      consumeKeyValue(key, value);
+      consumeKeyValue(key.strip(), value);
       return true;
     }
     return strippedLine.length() == 0 || strippedLine.charAt(0) != '[';

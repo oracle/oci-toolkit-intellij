@@ -3,11 +3,9 @@ package com.oracle.oci.intellij.devops;
 import java.io.IOException;
 import java.util.List;
 
-import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.bmc.vault.model.SecretSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.account.OracleCloudAccount.DevOpsClientProxy;
 import com.oracle.oci.intellij.account.OracleCloudAccount.KmsVaultClientProxy;
 import com.oracle.oci.intellij.account.OracleCloudAccount.VaultClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;

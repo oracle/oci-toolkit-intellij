@@ -55,31 +55,6 @@ import com.oracle.bmc.certificatesmanagement.CertificatesManagementClient;
 import com.oracle.bmc.certificatesmanagement.model.CertificateSummary;
 import com.oracle.bmc.certificatesmanagement.requests.ListCertificatesRequest;
 import com.oracle.bmc.certificatesmanagement.responses.ListCertificatesResponse;
-import com.oracle.bmc.devops.DevopsClient;
-import com.oracle.bmc.devops.model.Repository;
-import com.oracle.bmc.devops.model.RepositorySummary;
-import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
-import com.oracle.bmc.devops.responses.ListRepositoriesResponse;
-import com.oracle.bmc.dns.DnsClient;
-import com.oracle.bmc.dns.model.Scope;
-import com.oracle.bmc.dns.model.ZoneSummary;
-import com.oracle.bmc.dns.requests.ListZonesRequest;
-import com.oracle.bmc.dns.responses.ListZonesResponse;
-import com.oracle.bmc.identity.model.*;
-import com.oracle.bmc.identity.requests.*;
-import com.oracle.bmc.identity.responses.*;
-import com.oracle.bmc.resourcemanager.model.*;
-import com.oracle.bmc.resourcemanager.requests.*;
-import com.oracle.bmc.resourcemanager.responses.*;
-import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
-import org.apache.commons.io.FileUtils;
-
-import com.oracle.bmc.auth.AuthenticationDetailsProvider;
-import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
-import com.oracle.bmc.certificatesmanagement.CertificatesManagementClient;
-import com.oracle.bmc.certificatesmanagement.model.CertificateSummary;
-import com.oracle.bmc.certificatesmanagement.requests.ListCertificatesRequest;
-import com.oracle.bmc.certificatesmanagement.responses.ListCertificatesResponse;
 import com.oracle.bmc.core.VirtualNetworkClient;
 import com.oracle.bmc.core.model.NetworkSecurityGroup;
 import com.oracle.bmc.core.model.Subnet;
@@ -127,16 +102,13 @@ import com.oracle.bmc.database.responses.ListAutonomousDatabaseBackupsResponse;
 import com.oracle.bmc.database.responses.ListAutonomousDatabasesResponse;
 import com.oracle.bmc.database.responses.ListDbVersionsResponse;
 import com.oracle.bmc.devops.DevopsClient;
-import com.oracle.bmc.devops.model.RepositorySummary;
-import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
-import com.oracle.bmc.devops.model.Connection.ConnectionType;
-import com.oracle.bmc.devops.model.Repository.RepositoryType;
 import com.oracle.bmc.devops.model.ConnectionSummary;
 import com.oracle.bmc.devops.model.CreateConnectionDetails;
 import com.oracle.bmc.devops.model.CreateGithubAccessTokenConnectionDetails;
 import com.oracle.bmc.devops.model.CreateRepositoryDetails;
 import com.oracle.bmc.devops.model.MirrorRepositoryConfig;
 import com.oracle.bmc.devops.model.ProjectSummary;
+import com.oracle.bmc.devops.model.Repository.RepositoryType;
 import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.bmc.devops.model.TriggerSchedule;
 import com.oracle.bmc.devops.model.TriggerSchedule.ScheduleType;
@@ -148,7 +120,6 @@ import com.oracle.bmc.devops.requests.ListRepositoriesRequest;
 import com.oracle.bmc.devops.requests.MirrorRepositoryRequest;
 import com.oracle.bmc.devops.responses.CreateConnectionResponse;
 import com.oracle.bmc.devops.responses.CreateRepositoryResponse;
-import com.oracle.bmc.devops.responses.ListConnectionsResponse;
 import com.oracle.bmc.devops.responses.ListProjectsResponse;
 import com.oracle.bmc.devops.responses.ListRepositoriesResponse;
 import com.oracle.bmc.devops.responses.MirrorRepositoryResponse;
@@ -186,10 +157,41 @@ import com.oracle.bmc.keymanagement.responses.ListKeysResponse;
 import com.oracle.bmc.keymanagement.responses.ListVaultsResponse;
 import com.oracle.bmc.resourcemanager.ResourceManagerClient;
 import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
+import com.oracle.bmc.resourcemanager.model.AssociatedResourceSummary;
+import com.oracle.bmc.resourcemanager.model.AssociatedResourcesCollection;
+import com.oracle.bmc.resourcemanager.model.CreateDestroyJobOperationDetails;
+import com.oracle.bmc.resourcemanager.model.CreateJobDetails;
+import com.oracle.bmc.resourcemanager.model.CreateJobOperationDetails;
+import com.oracle.bmc.resourcemanager.model.CreateStackDetails;
+import com.oracle.bmc.resourcemanager.model.CreateZipUploadConfigSourceDetails;
+import com.oracle.bmc.resourcemanager.model.DestroyJobOperationDetails;
+import com.oracle.bmc.resourcemanager.model.Stack;
+import com.oracle.bmc.resourcemanager.model.StackSummary;
+import com.oracle.bmc.resourcemanager.requests.CreateJobRequest;
+import com.oracle.bmc.resourcemanager.requests.CreateStackRequest;
+import com.oracle.bmc.resourcemanager.requests.DeleteStackRequest;
+import com.oracle.bmc.resourcemanager.requests.GetJobLogsRequest;
+import com.oracle.bmc.resourcemanager.requests.GetJobTfStateRequest;
+import com.oracle.bmc.resourcemanager.requests.GetStackRequest;
+import com.oracle.bmc.resourcemanager.requests.ListJobOutputsRequest;
+import com.oracle.bmc.resourcemanager.requests.ListJobsRequest;
+import com.oracle.bmc.resourcemanager.requests.ListStackAssociatedResourcesRequest;
+import com.oracle.bmc.resourcemanager.requests.ListStacksRequest;
+import com.oracle.bmc.resourcemanager.responses.CreateJobResponse;
+import com.oracle.bmc.resourcemanager.responses.CreateStackResponse;
+import com.oracle.bmc.resourcemanager.responses.DeleteStackResponse;
+import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
+import com.oracle.bmc.resourcemanager.responses.GetJobTfStateResponse;
+import com.oracle.bmc.resourcemanager.responses.GetStackResponse;
+import com.oracle.bmc.resourcemanager.responses.ListJobOutputsResponse;
+import com.oracle.bmc.resourcemanager.responses.ListJobsResponse;
+import com.oracle.bmc.resourcemanager.responses.ListStackAssociatedResourcesResponse;
+import com.oracle.bmc.resourcemanager.responses.ListStacksResponse;
 import com.oracle.bmc.vault.VaultsClient;
 import com.oracle.bmc.vault.model.SecretSummary;
 import com.oracle.bmc.vault.requests.ListSecretsRequest;
 import com.oracle.bmc.vault.responses.ListSecretsResponse;
+import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
@@ -1344,7 +1346,19 @@ public class OracleCloudAccount {
         devOpsClient = null;
       }
     }
-    
+
+    public ProjectSummary getDevOpsProject(String compartmentId,
+                                           final String projectId) {
+      // use list and filter because GetProjectRequest gets a "Project" and not
+      // a "ProjectSummary"
+      List<ProjectSummary> listDevOpsProjects =
+        listDevOpsProjects(compartmentId);
+      return listDevOpsProjects.stream()
+                               .filter(proj -> proj.getId().equals(projectId))
+                               .findFirst()
+                               .orElse(null);
+    }
+
     public List<ProjectSummary> listDevOpsProjects() {
       return listDevOpsProjects(SystemPreferences.getCompartmentId());
     }

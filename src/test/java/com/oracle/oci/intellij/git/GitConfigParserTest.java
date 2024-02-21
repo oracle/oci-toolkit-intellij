@@ -9,10 +9,11 @@ import java.util.Optional;
 
 import com.oracle.oci.intellij.ui.git.config.GitConfig;
 import com.oracle.oci.intellij.ui.git.config.GitParser;
+import com.oracle.oci.intellij.ui.git.config.GitParser.GitParserException;
 
 public class GitConfigParserTest {
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, GitParserException {
     try (InputStream resourceAsStream =
       GitConfigParserTest.class.getClassLoader().getResourceAsStream("config");
          BufferedInputStream bis = new BufferedInputStream(resourceAsStream);

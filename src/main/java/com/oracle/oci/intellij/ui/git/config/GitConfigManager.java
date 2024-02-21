@@ -1,16 +1,16 @@
 package com.oracle.oci.intellij.ui.git.config;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.oracle.oci.intellij.util.StrippingLineNumberReader;
 
 public class GitConfigManager {
 
@@ -33,41 +32,44 @@ public class GitConfigManager {
     return INSTANCE;
   }
 
-  public Future<GitConfig> getConfig(final Project project, Callable<GitConfig> onComplete) {
+  public Future<GitConfig> getConfig(final Project project, Function<GitConfig, GitConfig> onComplete) {
     GitConfig gitConfig = cachedConfigs.get(project.getProjectFilePath());
     boolean reload = false;
     if (gitConfig != null) {
       reload = gitConfig.checkStale();
     }
-    if (reload) {
-      Future<GitConfig> submit = execService.submit(new Callable<GitConfig>() {
-
-        @Override
-        public GitConfig call() throws Exception {
-          VirtualFile guessProjectDir = ProjectUtil.guessProjectDir(project);
-          if (guessProjectDir != null && guessProjectDir.exists() && guessProjectDir.isDirectory()) {
-            @Nullable
-            VirtualFile gitConfigFile = guessProjectDir.findFileByRelativePath(".git/config");
-            try {
-              if (gitConfigFile != null && gitConfigFile.exists()) {
-                @NotNull
-                InputStream inputStream = gitConfigFile.getInputStream();
-                Reader reader = new InputStreamReader(inputStream);
-                GitParser parser = new GitParser();
-                GitConfig gitConfig = parser.parse(reader);
-                cachedConfigs.put(project.getProjectFilePath(), gitConfig);
-                return gitConfig;
-              }
-            }
-            catch (IOException ioe) {
-              ioe.printStackTrace();
-            }
-          }
-          return null;
-        }
-        
-      });
+    else {
+      reload = true;
     }
-    return CompletableFuture.completedFuture(gitConfig);
+    if (reload) {
+      Future<GitConfig> submit = execService.submit(() -> createReloadCallable(project, onComplete));
+      return submit;
+    }
+    GitConfig result = onComplete.apply(gitConfig);
+    return CompletableFuture.completedFuture(result);
+  }
+
+  private GitConfig createReloadCallable(final Project project, Function<GitConfig, GitConfig> onComplete) {
+    VirtualFile guessProjectDir = ProjectUtil.guessProjectDir(project);
+    if (guessProjectDir != null && guessProjectDir.exists() && guessProjectDir.isDirectory()) {
+      @Nullable
+      VirtualFile gitConfigFile = guessProjectDir.findFileByRelativePath(".git/config");
+      try {
+        if (gitConfigFile != null && gitConfigFile.exists()) {
+          @NotNull
+          InputStream inputStream = gitConfigFile.getInputStream();
+          Reader reader = new InputStreamReader(inputStream);
+          GitParser parser = new GitParser();
+          GitConfig gitConfig = parser.parse(reader);
+          GitConfig prevConfig = cachedConfigs.put(project.getProjectFilePath(), gitConfig);
+          Optional.ofNullable(prevConfig).ifPresent(p -> p.dispose());
+          return onComplete.apply(gitConfig);
+        }
+      }
+      catch (Exception ioe) {
+        ioe.printStackTrace();
+      }
+    }
+    return null;
   }
 }
