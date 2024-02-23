@@ -138,8 +138,8 @@ public class YamlLoader {
         CustomWizardModel customWizardModel = new CustomWizardModel(varGroups, descriptorsState);
         AppStackParametersWizardDialog dialog = new AppStackParametersWizardDialog(customWizardModel);
         dialog.show();
-        if (dialog.isCreate()){
-            isApply = dialog.isApply();
+        if (dialog.isCreateStack()){
+            isApply = dialog.isApplyJob();
             return dialog.getUserInput();
         }
         return null;

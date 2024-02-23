@@ -5,6 +5,7 @@ import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount.ResourceManagerClientProxy;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand.Result;
+import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import com.oracle.oci.intellij.ui.appstack.models.Utils;
 import com.oracle.oci.intellij.ui.common.MyBackgroundTask;
 import com.oracle.oci.intellij.ui.common.UIUtil;
@@ -27,6 +28,9 @@ public class DeleteStackCommand extends AbstractBasicCommand<Result> {
   protected Result doExecute() throws Exception {
     resManagerClientProxy.deleteStack(this.stackId);
     UIUtil.fireNotification(NotificationType.INFORMATION, SUCCESSFUL_MESSAGE+" : \""+stackName+"\" (stack)", null);
+    UIUtil.invokeLater(()->{
+      AppStackDashboard.getInstance().populateTableData();
+    });
     return Result.OK_RESULT;
   }
 }

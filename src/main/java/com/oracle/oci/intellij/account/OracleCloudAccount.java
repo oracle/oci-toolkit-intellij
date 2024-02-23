@@ -34,9 +34,11 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.oracle.bmc.model.BmcException;
 import com.oracle.bmc.resourcemanager.model.*;
 import com.oracle.bmc.resourcemanager.requests.*;
 import com.oracle.bmc.resourcemanager.responses.*;
+import com.oracle.oci.intellij.ui.appstack.exceptions.JobRunningException;
 import org.apache.commons.io.FileUtils;
 
 import com.oracle.bmc.artifacts.ArtifactsClient;
@@ -1003,7 +1005,7 @@ public class OracleCloudAccount {
       resourceManagerClient.setRegion(region);
     }
 
-    public void deleteStack(String stackId) {
+    public void deleteStack(String stackId) throws Exception{
       // todo before deleting check if there is no job is applying right now
       // Delete Stack
       final DeleteStackRequest deleteStackRequest = DeleteStackRequest.builder().stackId(stackId).build();
@@ -1055,8 +1057,19 @@ public class OracleCloudAccount {
               .compartmentId(compartmentId)
               .repositoryId(artifactRegistryId)
               .build();
+      ListGenericArtifactsResponse response = null;
+      try {
+        response = client.listGenericArtifacts(listGenericArtifactsRequest);
+      } catch (BmcException e) {
+        if (e.getStatusCode() == 404 && e.getServiceCode().equals("REPOSITORY_NOT_FOUND")) {
+          return "FAILED";
+        } else {
+          System.out.println("hi");
+        }
+      } catch (Exception e) {
+        System.out.println("hi");
+      }
 
-      ListGenericArtifactsResponse response = client.listGenericArtifacts(listGenericArtifactsRequest);
       for (GenericArtifactSummary item : response.getGenericArtifactCollection().getItems()) {
         if (!item.getLifecycleState().equals(GenericArtifact.LifecycleState.Available))
             continue;
@@ -1102,6 +1115,23 @@ public class OracleCloudAccount {
               .sortOrder(ListJobsRequest.SortOrder.Desc)
               .stackId(stackId).build();
       return resourceManagerClient.listJobs(request);
+    }
+
+    public List<JobSummary> listRunningJobs(String stackId) {
+      ListJobsRequest request = ListJobsRequest.builder()
+              .stackId(stackId).build();
+
+      ListJobsResponse listJobsResponse =  resourceManagerClient.listJobs(request);
+      List<JobSummary> runningJobs = new ArrayList<>();
+      for (JobSummary job:listJobsResponse.getItems()){
+        if (job.getLifecycleState().equals(Job.LifecycleState.Accepted) ||
+            job.getLifecycleState().equals(Job.LifecycleState.Canceling) ||
+            job.getLifecycleState().equals(Job.LifecycleState.InProgress)) {
+
+          runningJobs.add(job);
+        }
+      }
+      return runningJobs;
     }
 
     public GetJobLogsResponse getJobLogs(String planJobId) {
@@ -1190,7 +1220,12 @@ public class OracleCloudAccount {
     }
 
     public CreateJobResponse submitJob(CreateJobRequest createPlanJobRequest) {
+      String stackId =  createPlanJobRequest.getCreateJobDetails().getStackId();
+      if (!listRunningJobs(stackId).isEmpty()){
+        throw new JobRunningException(stackId);
+      }
       return resourceManagerClient.createJob(createPlanJobRequest);
+
     }
 
     private void reset() {

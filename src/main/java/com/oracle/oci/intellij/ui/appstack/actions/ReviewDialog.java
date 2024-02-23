@@ -82,6 +82,7 @@ public class ReviewDialog extends DialogWrapper {
         isApplyLable.setToolTipText("Immediately provision the resources defined in the Terraform configuration by running the apply action on the new stack.\n" +
                 "\n");
         isApplyCheckBox = new JBCheckBox("Run Apply");
+        isApplyCheckBox.setSelected(true);
         isApplyPanel.add(isApplyLable);
         isApplyPanel.add(isApplyCheckBox);
 
@@ -95,17 +96,10 @@ public class ReviewDialog extends DialogWrapper {
         return isApplyCheckBox.isSelected();
     }
 
-//    private void createVariablePanel() {
-//
-//    }
 
-//    private ReviewVarPanel createVarPanel(String key , String value ) {
-////        return new ReviewVarPanel(key, value);
-//    }
 
     @Override
     protected @Nullable JComponent createCenterPanel() {
-
         return mainScrollPane;
     }
 

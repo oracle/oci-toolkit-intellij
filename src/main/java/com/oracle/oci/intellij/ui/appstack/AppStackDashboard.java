@@ -35,19 +35,18 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.project.ProjectManager;
+import com.oracle.bmc.model.BmcException;
 import com.oracle.bmc.resourcemanager.model.*;
 import com.oracle.bmc.resourcemanager.model.Stack;
 import com.oracle.bmc.resourcemanager.responses.CreateJobResponse;
-import com.oracle.bmc.resourcemanager.responses.GetJobTfStateResponse;
+import com.oracle.oci.intellij.common.command.AbstractBasicCommand;
 import com.oracle.oci.intellij.ui.appstack.actions.ReviewDialog;
 import com.oracle.oci.intellij.ui.appstack.command.*;
+import com.oracle.oci.intellij.ui.appstack.exceptions.JobRunningException;
 import com.oracle.oci.intellij.ui.appstack.models.Utils;
-import com.oracle.oci.intellij.ui.common.MyBackgroundTask;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.notification.NotificationType;
@@ -551,44 +550,52 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
     @Override
     public void actionPerformed(ActionEvent e) {
-      this.dashboard.applyAppStackButton.setEnabled(false);
       int selectedRow = this.dashboard.appStacksTable.getSelectedRow();
       // TODO: should be better way to get select row object
       if (selectedRow >=0 && selectedRow < this.dashboard.appStackList.size()) {
+        this.dashboard.applyAppStackButton.setEnabled(false);
         StackSummary stackSummary = this.dashboard.appStackList.get(selectedRow);
         ResourceManagerClientProxy resourceManagerClient = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
 
-        //todo: check if the already has resources and destroy them before applying
-        CreateJobResponse createApplyJobResponse = CreateStackCommand.createApplyJob(resourceManagerClient, stackSummary.getId());
-        String applyJobId = createApplyJobResponse.getJob().getId();
-        MyBackgroundTask.startBackgroundTask(ProjectManager.getInstance().getDefaultProject(),"Apply Job","Job Applying ...","Apply Job Failed please check logs","Apply job successfully applied ",applyJobId);
+        //todo: check if the stack is  already have resources and destroy them before applying
 
-        System.out.println(applyJobId);
+          UIUtil.schedule(()->{
+            try {
+              CreateJobResponse createApplyJobResponse = CreateStackCommand.createApplyJob(resourceManagerClient, stackSummary.getId(), stackSummary.getDisplayName());
+            }catch (JobRunningException | BmcException e1){
+              UIUtil.fireNotification(NotificationType.ERROR,e1.getMessage(),null);
+            }finally {
+              com.intellij.util.ui.UIUtil.invokeAndWaitIfNeeded((Runnable) ()->{
+                dashboard.applyAppStackButton.setEnabled(true);
+              });
+            }
+          });
 
-        // Get Job Terraform state GetJobTfStateRequest getJobTfStateRequest =
-        GetJobTfStateResponse jobTfState = resourceManagerClient.getJobTfState(applyJobId);
-        System.out.println(jobTfState.toString());
+
+
+//        String applyJobId = createApplyJobResponse.getJob().getId();
+
+//        System.out.println(applyJobId);
+//
+//        // Get Job Terraform state GetJobTfStateRequest getJobTfStateRequest =
+//        GetJobTfStateResponse jobTfState = resourceManagerClient.getJobTfState(applyJobId);
+//        System.out.println(jobTfState.toString());
       }
-      this.dashboard.applyAppStackButton.setEnabled(true);
 
 
     }
   }
-  private static void invokeLater(AppStackDashboard appStackDashboard,CompositeCommand command,JButton button){
+  private static void invokeLater(AppStackDashboard appStackDashboard, AbstractBasicCommand command, JButton button){
     Thread t = new Thread(() -> {
       try {
         Result r = appStackDashboard.commandStack.execute(command);
-//        if (r.getSeverity() != Severity.ERROR) {
-          SwingUtilities.invokeAndWait(()->{
-            appStackDashboard.populateTableData();
-            button.setEnabled(true);
-          });
 
-//        }
-      } catch (CommandFailedException | InvocationTargetException | InterruptedException e1) {
-        // TODO:
-        e1.printStackTrace();
-      }
+      } catch (CommandFailedException e1) {
+        UIUtil.fireNotification(NotificationType.ERROR,e1.getMessage(),null);
+      }finally {
+        com.intellij.util.ui.UIUtil.invokeAndWaitIfNeeded((Runnable) ()->{
+          button.setEnabled(true);
+        });      }
     });
     t.start();
   }
@@ -732,6 +739,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         StackSummary stackSummary = this.dashboard.appStackList.get(selectedRow);
         ResourceManagerClientProxy proxy = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
         DeleteYesNoDialog dialog = new DeleteYesNoDialog();
+        //disable delete button
         dashboard.deleteAppStackButton.setEnabled(false);
         boolean yesToDelete = dialog.showAndGet();
         CompositeCommand compositeCommand = null;
@@ -741,14 +749,17 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
             compositeCommand = new CompositeCommand(destroyCommand);
 
           } else if (dialog.deleteAllRdoBtn.isSelected()) {
-            DestroyStackCommand destroyCommand = new DestroyStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
-            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
-            compositeCommand = new CompositeCommand(destroyCommand, deleteCommand);
+            DeleteAndDestroyCommand destroyCommand = new DeleteAndDestroyCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
+//            DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
+            compositeCommand = new CompositeCommand(destroyCommand);
           } else if (dialog.deleteStackRdoBtn.isSelected()) {
             DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
             compositeCommand = new CompositeCommand(deleteCommand);
           }
           invokeLater(this.dashboard,compositeCommand,dashboard.deleteAppStackButton);
+        }else {
+          //enable  delete button in cancel case
+          dashboard.deleteAppStackButton.setEnabled(true);
         }
       }
     }

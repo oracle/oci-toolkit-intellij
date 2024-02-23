@@ -6,7 +6,9 @@ package com.oracle.oci.intellij.ui.common;
 
 import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.impl.ApplicationImpl;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.openapi.wm.WindowManager;
@@ -61,6 +63,12 @@ public class UIUtil {
 
   public static void invokeLater(Runnable runnable) {
     ApplicationManager.getApplication().invokeLater(runnable);
+  }
+  public static void schedule(Runnable runnable){
+    Thread t = new Thread(() -> {
+          runnable.run();
+    });
+    t.start();
   }
 
   public static void createWebLink(JComponent component, String uri) {

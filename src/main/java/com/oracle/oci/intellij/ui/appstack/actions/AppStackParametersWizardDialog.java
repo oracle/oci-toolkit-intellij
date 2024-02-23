@@ -25,8 +25,8 @@ public class AppStackParametersWizardDialog extends WizardDialog {
     public static  boolean isProgramaticChange = false;
     JBList menuList;
     private LinkedHashMap<String,String> userInput;
-    private boolean isCreate =false;
-    private boolean isApply = false;
+    private boolean isCreateStack =false;
+    private boolean isApplyJob = false;
 
 
     public AppStackParametersWizardDialog(WizardModel wizardModel){
@@ -224,8 +224,8 @@ public class AppStackParametersWizardDialog extends WizardDialog {
 
         ReviewDialog reviewDialog = new ReviewDialog(variables,appStackModel.getVarGroups());
         if (reviewDialog.showAndGet()){
-            isApply = reviewDialog.isApply();
-            isCreate = true;
+            isApplyJob = reviewDialog.isApply();
+            isCreateStack = true;
             userInput = variables;
 //            createAppStack();
             freeCache();
@@ -274,11 +274,11 @@ public class AppStackParametersWizardDialog extends WizardDialog {
     }
 
 
-    public boolean isCreate() {
-        return isCreate;
+    public boolean isCreateStack() {
+        return isCreateStack;
     }
-    public boolean isApply() {
-        return isApply;
+    public boolean isApplyJob() {
+        return isApplyJob;
     }
 }
 
