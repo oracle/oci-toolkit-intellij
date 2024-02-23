@@ -218,7 +218,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
       Stack stackDetails =  resourceManagerClientProxy.getStackDetails(stack.getId());
       Map <String,String> variables = stackDetails.getVariables();
 
-      ReviewDialog reviewDialog = new ReviewDialog(variables, Utils.variableGroups);
+      ReviewDialog reviewDialog = new ReviewDialog(variables, Utils.variableGroups,true);
 
       reviewDialog.showAndGet();
       reviewDialog.close(200);

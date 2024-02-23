@@ -222,7 +222,7 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         addNeededParameters(variables);
 
 
-        ReviewDialog reviewDialog = new ReviewDialog(variables,appStackModel.getVarGroups());
+        ReviewDialog reviewDialog = new ReviewDialog(variables,appStackModel.getVarGroups(),false);
         if (reviewDialog.showAndGet()){
             isApplyJob = reviewDialog.isApply();
             isCreateStack = true;

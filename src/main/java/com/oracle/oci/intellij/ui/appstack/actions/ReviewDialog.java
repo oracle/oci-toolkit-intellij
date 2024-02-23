@@ -9,6 +9,7 @@ import com.intellij.util.ui.JBDimension;
 import com.oracle.oci.intellij.ui.appstack.models.Controller;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 import com.oracle.oci.intellij.ui.common.Icons;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -30,14 +31,16 @@ public class ReviewDialog extends DialogWrapper {
     JBScrollPane mainScrollPane;
     Controller controller = Controller.getInstance();
     JBCheckBox isApplyCheckBox ;
+    private boolean isShowStackVariables ;
 
 
 
 
-    public ReviewDialog(Map<String, String> variables, List<VariableGroup> varGroups) {
+    public ReviewDialog(Map<String, String> variables, List<VariableGroup> varGroups,boolean isShowStackVariables ) {
         super(false);
+        this.isShowStackVariables = isShowStackVariables;
         setTitle("Oracle Cloud Infrastructure Configuration");
-        setOKButtonText("Apply");
+        setOKButtonText("Create");
         mainPanel = new JPanel();
 //        mainPanel.setPreferredSize(new JBDimension(800,800));
 
@@ -77,26 +80,39 @@ public class ReviewDialog extends DialogWrapper {
 
 
         // todo create the panel of  the check if user wants to immediately
-        JPanel isApplyPanel = new JPanel();
+        if (!isShowStackVariables){
+            addRunApplyCheckbox();
+        }
+        init();
+
+    }
+
+    private void addRunApplyCheckbox() {
+        JPanel isApplyPanel = new JPanel(new BorderLayout());
         JBLabel isApplyLable = new JBLabel("Run apply on the created stack?\n");
         isApplyLable.setToolTipText("Immediately provision the resources defined in the Terraform configuration by running the apply action on the new stack.\n" +
                 "\n");
         isApplyCheckBox = new JBCheckBox("Run Apply");
         isApplyCheckBox.setSelected(true);
-        isApplyPanel.add(isApplyLable);
-        isApplyPanel.add(isApplyCheckBox);
+        isApplyPanel.add(isApplyLable,BorderLayout.WEST);
+        isApplyPanel.add(isApplyCheckBox,BorderLayout.CENTER);
 
 
         mainPanel.add(isApplyPanel);
-        init();
-
     }
 
     public boolean isApply() {
         return isApplyCheckBox.isSelected();
     }
 
-
+    @Override
+    protected Action @NotNull [] createActions() {
+        if (isShowStackVariables){
+            getCancelAction().putValue("Name","Close");
+            return new Action[]{getCancelAction()};
+        }
+        return super.createActions();
+    }
 
     @Override
     protected @Nullable JComponent createCenterPanel() {
