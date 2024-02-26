@@ -1006,7 +1006,9 @@ public class OracleCloudAccount {
     }
 
     public void deleteStack(String stackId) throws Exception{
-      // todo before deleting check if there is no job is applying right now
+      if (isJobAlreadyRunning(stackId)){
+        throw new JobRunningException(stackId);
+      }
       // Delete Stack
       final DeleteStackRequest deleteStackRequest = DeleteStackRequest.builder().stackId(stackId).build();
       final DeleteStackResponse deleteStackResponse = resourceManagerClient.deleteStack(deleteStackRequest);
@@ -1014,6 +1016,10 @@ public class OracleCloudAccount {
     }
 
     public CreateJobResponse destroyStack(String stackId) {
+      // check if there is a running job for this stack
+      if (isJobAlreadyRunning(stackId)){
+        throw new JobRunningException(stackId);
+      }
       //    remove the artifact before destroying resources ....
       ListStackAssociatedResourcesRequest resourcesRequest = ListStackAssociatedResourcesRequest.builder()
                       .stackId(stackId)
@@ -1221,11 +1227,15 @@ public class OracleCloudAccount {
 
     public CreateJobResponse submitJob(CreateJobRequest createPlanJobRequest) {
       String stackId =  createPlanJobRequest.getCreateJobDetails().getStackId();
-      if (!listRunningJobs(stackId).isEmpty()){
+      if (isJobAlreadyRunning(stackId)){
         throw new JobRunningException(stackId);
       }
       return resourceManagerClient.createJob(createPlanJobRequest);
 
+    }
+
+    private boolean isJobAlreadyRunning(String stackId) {
+      return !listRunningJobs(stackId).isEmpty();
     }
 
     private void reset() {

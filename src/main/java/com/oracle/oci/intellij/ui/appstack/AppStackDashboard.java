@@ -557,8 +557,6 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         StackSummary stackSummary = this.dashboard.appStackList.get(selectedRow);
         ResourceManagerClientProxy resourceManagerClient = OracleCloudAccount.getInstance().getResourceManagerClientProxy();
 
-        //todo: check if the stack is  already have resources and destroy them before applying
-
           UIUtil.schedule(()->{
             try {
               CreateJobResponse createApplyJobResponse = CreateStackCommand.createApplyJob(resourceManagerClient, stackSummary.getId(), stackSummary.getDisplayName());
@@ -742,7 +740,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         //disable delete button
         dashboard.deleteAppStackButton.setEnabled(false);
         boolean yesToDelete = dialog.showAndGet();
-        CompositeCommand compositeCommand = null;
+        CompositeCommand compositeCommand;
         if (yesToDelete) {
           if (dialog.deleteInfraStackRdoBtn.isSelected()){
             DestroyStackCommand destroyCommand = new DestroyStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
@@ -755,10 +753,26 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
           } else if (dialog.deleteStackRdoBtn.isSelected()) {
             DeleteStackCommand deleteCommand = new DeleteStackCommand(proxy, stackSummary.getId(),stackSummary.getDisplayName());
             compositeCommand = new CompositeCommand(deleteCommand);
+          } else {
+              compositeCommand = null;
           }
-          invokeLater(this.dashboard,compositeCommand,dashboard.deleteAppStackButton);
+
+            UIUtil.schedule(()->{
+                try {
+                  Result r = this.dashboard.commandStack.execute(compositeCommand);
+
+                } catch (CommandFailedException e1) {
+                  UIUtil.fireNotification(NotificationType.ERROR,e1.getMessage(),null);
+                }finally {
+                  com.intellij.util.ui.UIUtil.invokeAndWaitIfNeeded((Runnable) ()->{
+                    dashboard.deleteAppStackButton.setEnabled(true);
+                  });
+                }
+          });
+//          invokeLater(this.dashboard,compositeCommand,dashboard.deleteAppStackButton);
         }else {
-          //enable  delete button in cancel case
+            compositeCommand = null;
+            //enable  delete button in cancel case
           dashboard.deleteAppStackButton.setEnabled(true);
         }
       }

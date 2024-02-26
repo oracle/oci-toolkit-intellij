@@ -109,7 +109,6 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
         .build();
 
     /* Send request to the Client */
-        //todo verify if there is any apply job is on progress now ..????
         CreateJobResponse createJobResponse =  resourceManagerClient.submitJob(createJobRequest);
         UIUtil.fireNotification(NotificationType.INFORMATION," The Apply Job  submitted successfully.", null);
         MyBackgroundTask.startBackgroundTask(ProjectManager.getInstance().getDefaultProject(),"Creating Resources of \""+stackName+"\" (stack)","Creating Resources... ","Apply Job Failed please check logs","Apply job successfully applied ",createJobResponse.getJob().getId());
