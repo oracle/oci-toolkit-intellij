@@ -21,23 +21,13 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.swing.AbstractAction;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButton;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.util.IconLoader;
+import com.intellij.ui.table.JBTable;
 import com.oracle.bmc.model.BmcException;
 import com.oracle.bmc.resourcemanager.model.*;
 import com.oracle.bmc.resourcemanager.model.Stack;
@@ -47,6 +37,7 @@ import com.oracle.oci.intellij.ui.appstack.actions.ReviewDialog;
 import com.oracle.oci.intellij.ui.appstack.command.*;
 import com.oracle.oci.intellij.ui.appstack.exceptions.JobRunningException;
 import com.oracle.oci.intellij.ui.appstack.models.Utils;
+import com.oracle.oci.intellij.ui.common.Icons;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.notification.NotificationType;
@@ -78,7 +69,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   private JButton deleteAppStackButton;
   private JButton createAppStackButton;
   private JButton applyAppStackButton;
-  private JTable appStacksTable;
+  private JBTable appStacksTable;
   private JLabel profileValueLabel;
   private JLabel compartmentValueLabel;
   private JLabel regionValueLabel;
@@ -95,7 +86,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   }
 
   private AppStackDashboard() {
-    // initiate property descriptors ....
+    // initiate property descriptors .... so we can build the form for the show appStack details .....
     YamlLoader load = new YamlLoader();
     try {
       Utils.descriptorsState = load.load1(Utils.variableGroups);
@@ -136,16 +127,29 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
   private void initializeTableStructure() {
     appStacksTable.setModel(new AppStackTableModel(0));
 
-//    appStacksTable.getColumn("State").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
-//      if (column == 2) {
-//        final AutonomousDatabaseSummary s = (AutonomousDatabaseSummary) value;
-//        final JLabel statusLbl = new JLabel(
-//                s.getLifecycleState().getValue());
-//        statusLbl.setIcon(getStatusImage(s.getLifecycleState()));
-//        return statusLbl;
-//      }
-//      return (Component) value;
-//    });
+    appStacksTable.getColumn("Last Job State").setCellRenderer(new DefaultTableCellRenderer() {
+      @Override
+      public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+        if (column == 5) {
+          super.getTableCellRendererComponent(table,value,isSelected,hasFocus,row,column);
+          final JobSummary job = (JobSummary) value;
+
+          StringBuilder columnText = new StringBuilder();
+          columnText.append(job.getOperation());
+          columnText.append(" Job  ->  ");
+          columnText.append(job.getLifecycleState());
+
+//          final JBLabel statusLbl = new JBLabel(
+//                  columnText.toString());
+//          statusLbl.setIcon((getImageStatus(job.getLifecycleState())));
+          this.setText(columnText.toString());
+          this.setIcon(getImageStatus(job.getLifecycleState()));
+          return this;
+        }
+        return (Component) value;
+      }
+    });
+
 
     appStacksTable.addMouseListener(new MouseAdapter() {
       @Override
@@ -166,6 +170,29 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
         }
       }
     });
+  }
+  private JobSummary getLastJobStatus(String stackId,String compartmentId) {
+    JobSummary lastAppliedJob = (JobSummary) OracleCloudAccount.getInstance().getResourceManagerClientProxy().getLastJob(stackId,compartmentId);
+    return lastAppliedJob;
+  }
+  private Icon getImageStatus(Job.LifecycleState state){
+
+    switch (state) {
+      case Accepted:
+        return IconLoader.getIcon(Icons.ACCEPTED.getPath());
+      case Canceled:
+        return IconLoader.getIcon(Icons.CANCELED.getPath());
+      case Canceling:
+        return IconLoader.getIcon(Icons.CANCELING.getPath());
+      case Failed:
+        return IconLoader.getIcon(Icons.FAILED.getPath());
+      case InProgress:
+        return IconLoader.getIcon(Icons.IN_PROGRESS.getPath());
+      case Succeeded:
+        return IconLoader.getIcon(Icons.SUCCEEDED.getPath());
+      default:
+        return null; // Or a default icon
+    }
   }
 
   private static class LoadStackJobsAction extends AbstractAction {
@@ -402,7 +429,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
     final Runnable updateUI = () -> {
       if (appStackList != null) {
-        UIUtil.showInfoInStatusBar((appStackList.size()) + " Autonomous Databases found.");
+        UIUtil.showInfoInStatusBar((appStackList.size()) + " AppStack found.");
         final DefaultTableModel model = ((DefaultTableModel) appStacksTable.getModel());
         model.setRowCount(0);
 
@@ -415,6 +442,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
           rowData[2] = s.getTerraformVersion();
           rowData[3] = s.getLifecycleState();
           rowData[4] = s.getTimeCreated();
+          rowData[5] = getLastJobStatus(s.getId(),s.getCompartmentId());
           model.addRow(rowData);
         }
       }
@@ -423,6 +451,51 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
     
     UIUtil.executeAndUpdateUIAsync(fetchData, updateUI);
   }
+
+//todo continue this
+  public void updateJobState(String stack ) {
+//    ((DefaultTableModel) appStacksTable.getModel()).setRowCount(0);
+//    UIUtil.showInfoInStatusBar("Refreshing stack list .");
+
+//    refreshAppStackButton.setEnabled(false);
+
+    final Runnable fetchData = () -> {
+      try {
+        String compartmentId = SystemPreferences.getCompartmentId();
+//        OracleCloudAccount.getInstance().getResourceManagerClientProxy().getLastJob();
+
+      } catch (Exception exception) {
+        appStackList = null;
+        UIUtil.fireNotification(NotificationType.ERROR, exception.getMessage(), null);
+        LogHandler.error(exception.getMessage(), exception);
+      }
+    };
+
+    final Runnable updateUI = () -> {
+      if (appStackList != null) {
+        UIUtil.showInfoInStatusBar((appStackList.size()) + " AppStack found.");
+        final DefaultTableModel model = ((DefaultTableModel) appStacksTable.getModel());
+        model.setRowCount(0);
+
+        for (StackSummary s : appStackList) {
+          final Object[] rowData = new Object[AppStackTableModel.APPSTACK_COLUMN_NAMES.length];
+//          final boolean isFreeTier =
+//                  s.getIsFreeTier() != null && s.getIsFreeTier();
+          rowData[0] = s.getDisplayName();
+          rowData[1] = s.getDescription();
+          rowData[2] = s.getTerraformVersion();
+          rowData[3] = s.getLifecycleState();
+          rowData[4] = s.getTimeCreated();
+          rowData[5] = getLastJobStatus(s.getId(),s.getCompartmentId());
+          model.addRow(rowData);
+        }
+      }
+      refreshAppStackButton.setEnabled(true);
+    };
+
+    UIUtil.executeAndUpdateUIAsync(fetchData, updateUI);
+  }
+
 
 //  private ImageIcon getStatusImage(LifecycleState state) {
 //    if (state.equals(LifecycleState.Available) || state
@@ -442,7 +515,7 @@ public final class AppStackDashboard implements PropertyChangeListener, ITabbedE
 
   @Override
   public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-    LogHandler.info("AutonomousDatabasesDashboard: Handling the Event Update : " + propertyChangeEvent.toString());
+    LogHandler.info("AppStackDashboard: Handling the Event Update : " + propertyChangeEvent.toString());
     ((DefaultTableModel) appStacksTable.getModel()).setRowCount(0);
 
     switch (propertyChangeEvent.getPropertyName()) {

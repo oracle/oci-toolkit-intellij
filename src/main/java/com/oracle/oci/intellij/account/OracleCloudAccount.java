@@ -1245,5 +1245,8 @@ public class OracleCloudAccount {
       }
     }
 
+    public Object getLastJob(String stackId, String compartmentId) {
+      return listJobs(compartmentId,stackId).getItems().get(0);
+    }
   }
 }

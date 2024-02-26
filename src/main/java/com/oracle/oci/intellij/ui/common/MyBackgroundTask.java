@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.oracle.bmc.model.BmcException;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.common.command.BasicCommand;
+import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
@@ -23,6 +24,7 @@ public class MyBackgroundTask {
                 } else if ("FAILED".equals(status)) {
                     return false;
                 }
+                AppStackDashboard.getInstance().populateTableData();
 
                 // Wait a bit before checking again
                 Thread.sleep(5000); // Sleep for 5 seconds
@@ -69,6 +71,8 @@ public class MyBackgroundTask {
                     progressIndicator.setText(failedMessage);
                     UIUtil.fireNotification(NotificationType.ERROR, failedMessage, null);
                 }
+                // refresh the last job state
+                AppStackDashboard.getInstance().populateTableData();
             }
 
             @Override

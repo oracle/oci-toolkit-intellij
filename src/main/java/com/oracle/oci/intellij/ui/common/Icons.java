@@ -8,7 +8,13 @@ package com.oracle.oci.intellij.ui.common;
  * Path of icons used by plugin.
  */
 public enum Icons {
-    BUCKET("icons/bucket.png"),
+    BUCKET("icons/JobStatus/bucket.png"),
+    ACCEPTED("icons/JobStatus/ACCEPTED.svg"),
+    CANCELED("icons/JobStatus/CANCELED.svg"),
+    CANCELING("icons/JobStatus/CANCELING.svg"),
+    FAILED("icons/JobStatus/FAILED.svg"),
+    IN_PROGRESS("icons/JobStatus/IN_PROGRESS.svg"),
+    SUCCEEDED("icons/JobStatus/SUCCEEDED.svg"),
     COPY("/icons/copy.svg"),
     SHOW("/icons/show.svg"),
     HIDE("/icons/hide.svg"),
