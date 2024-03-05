@@ -4,10 +4,8 @@
  */
 package com.oracle.oci.intellij.ui.devops;
 
-import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
@@ -16,12 +14,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.AbstractAction;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -31,18 +26,13 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.devops.model.ProjectSummary;
 import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.DevOpsClientProxy;
 import com.oracle.oci.intellij.account.SystemPreferences;
-import com.oracle.oci.intellij.common.command.CommandStack;
 import com.oracle.oci.intellij.ui.appstack.uimodel.AppStackTableModel;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.common.UIUtil.ModelHolder;
@@ -54,17 +44,17 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
   private JPanel mainPanel;
   // buttons bound in form
   private JButton refreshAppStackButton;
-  private JButton deleteAppStackButton;
-  private JButton createAppStackButton;
+//  private JButton deleteAppStackButton;
+//  private JButton createAppStackButton;
   private JTable devOpsTable;
   private JLabel profileValueLabel;
   private JLabel compartmentValueLabel;
   private JLabel regionValueLabel;
-  private CommandStack commandStack = new CommandStack();
+  //private CommandStack commandStack = new CommandStack();
   private JComboBox<ModelHolder<ProjectSummary>> projectCombo;
   private List<ProjectSummary> listDevOpsProjects;
   private List<RepositorySummary> listRepositories;
-  private AtomicReference<ProjectSummary> currentProject = new AtomicReference<>();
+  //private AtomicReference<ProjectSummary> currentProject = new AtomicReference<>();
 
   private static final DevOpsDashboard INSTANCE =
           new DevOpsDashboard();
@@ -82,13 +72,13 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
       refreshAppStackButton.setAction(new RefreshAction(this, "Refresh"));
     }
     
-    if (createAppStackButton != null) {
-      createAppStackButton.setAction(new CreateAction(this, "Create New AppStack"));
-    }
-    
-    if (deleteAppStackButton != null) {
-      deleteAppStackButton.setAction(new DeleteAction(this, "Delete AppStack"));
-    }
+//    if (createAppStackButton != null) {
+//      createAppStackButton.setAction(new CreateAction(this, "Create New AppStack"));
+//    }
+//    
+//    if (deleteAppStackButton != null) {
+//      deleteAppStackButton.setAction(new DeleteAction(this, "Delete AppStack"));
+//    }
   }
 
   private void initializeProjectCombo() {
@@ -98,6 +88,7 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
     }
    
     projectCombo.addItemListener(new ItemListener() {
+      @SuppressWarnings("unchecked")
       @Override
       public void itemStateChanged(ItemEvent e) {
         final Runnable fetchData = () -> {
@@ -117,15 +108,14 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
         final Runnable updateUI = () -> {
           final DefaultTableModel model = ((DefaultTableModel) devOpsTable.getModel());
           model.setRowCount(0);
-           final Object[] rowData = new Object[AppStackTableModel.APPSTACK_COLUMN_NAMES.length];
+           final Object[] rowData = new Object[DevOpsTableModel.DEVOPS_COLUMN_NAMES.length];
 //          final boolean isFreeTier =
 //                  s.getIsFreeTier() != null && s.getIsFreeTier();
           for (RepositorySummary s : listRepositories) {
             rowData[0] = s.getName();
             rowData[1] = s.getDescription();
-            rowData[2] = "";
-            rowData[3] = s.getLifecycleState();
-            rowData[4] = s.getTimeCreated();
+            rowData[2] = s.getLifecycleState();
+            rowData[3] = s.getTimeCreated();
             model.addRow(rowData);
           }
           refreshAppStackButton.setEnabled(true);
@@ -146,7 +136,7 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
   }
 
   private void initializeTableStructure() {
-    devOpsTable.setModel(new AppStackTableModel(0));
+    devOpsTable.setModel(new DevOpsTableModel(0));
 
 //    appStacksTable.getColumn("State").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
 //      if (column == 2) {
@@ -242,11 +232,11 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
   private static class LoadStackJobsAction extends AbstractAction {
 
     private static final long serialVersionUID = 1463690182909882687L;
-    private StackSummary stack;
+    //private StackSummary stack;
     
     public LoadStackJobsAction(StackSummary stack) {
       super("View Jobs..");
-      this.stack = stack;
+      //this.stack = stack;
     }
 
     @Override
@@ -274,6 +264,8 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
   }
   private static class LoadAppUrlAction extends AbstractAction {
 
+    private static final long serialVersionUID = -5434743269928138930L;
+
     public LoadAppUrlAction(StackSummary stack) {
       super("Launch App Url..");
      // this.stack = stack;
@@ -298,6 +290,7 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
     
   }
 
+  @SuppressWarnings("unused")
   private JPopupMenu getStackSummaryActionMenu(StackSummary selectedSummary) {
     final JPopupMenu popupMenu = new JPopupMenu();
 //
@@ -466,20 +459,20 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
     }
   }
 
-  private static class CreateAction extends AbstractAction {
-    /**
-     *
-     */
-    private static final long serialVersionUID = 1L;
-    private DevOpsDashboard dashboard;
-
-    public CreateAction(DevOpsDashboard dashboard, String actionName) {
-      super(actionName);
-      this.dashboard = dashboard;
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
+//  private static class CreateAction extends AbstractAction {
+//    /**
+//     *
+//     */
+//    private static final long serialVersionUID = 1L;
+//    private DevOpsDashboard dashboard;
+//
+//    public CreateAction(DevOpsDashboard dashboard, String actionName) {
+//      super(actionName);
+//      this.dashboard = dashboard;
+//    }
+//
+//    @Override
+//    public void actionPerformed(ActionEvent e) {
 
 //      AtomicReference<Map<String, String>> variables = new AtomicReference<>(new LinkedHashMap<>());
 //
@@ -513,90 +506,90 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
 //      };
 //      ApplicationManager.getApplication().invokeLater(runnable);
 
-    }
-  }
+//    }
+//  }
   
-  public static class DeleteAction extends AbstractAction {
-
-    private static final long serialVersionUID = 7216149349340773007L;
-    private DevOpsDashboard dashboard;
-    public DeleteAction(DevOpsDashboard dashboard, String title) {
-      super("Delete");
-      this.dashboard = dashboard;
-    }
-    
-    private static class DeleteYesNoDialog extends DialogWrapper {
-
-      protected DeleteYesNoDialog() {
-        super(true);
-        init();
-        setTitle("Confirm Delete");
-        setOKButtonText("Ok");
-      }
-
-      @Override
-      protected @Nullable JComponent createNorthPanel() {
-        JPanel northPanel = new JPanel();
-        JLabel label = new JLabel();
-        label.setText("Delete Stack.  Are you sure?");
-        northPanel.add(label);
-        return northPanel;
-      }
-
-      @Override
-      protected @NotNull JPanel createButtonsPanel(@NotNull List<? extends JButton> buttons) {
-        return new JPanel();
-      }
-
-      @Override
-      protected @Nullable JComponent createCenterPanel() {
-        JPanel messagePanel = new JPanel(new BorderLayout());
-
-        JPanel yesNoButtonPanel = new JPanel();
-        yesNoButtonPanel.setLayout(new BoxLayout(yesNoButtonPanel, BoxLayout.X_AXIS));
-        JButton yesButton = new JButton();
-        yesButton.setText("Yes");
-        yesButton.addActionListener(new ActionListener() { 
-          @Override
-          public void actionPerformed(ActionEvent e) {
-            close(OK_EXIT_CODE);
-          }
-        });
-        yesNoButtonPanel.add(yesButton);
-        JButton noButton = new JButton();
-        noButton.setText("No");
-        noButton.addActionListener(new ActionListener() {
-
-          @Override
-          public void actionPerformed(ActionEvent e) {
-            close(CANCEL_EXIT_CODE);
-          }
-          
-        });
-        yesNoButtonPanel.add(noButton);
-        
-        messagePanel.add(yesNoButtonPanel, BorderLayout.CENTER);
-        
-        JCheckBox myCheckBox = new JCheckBox();
-        myCheckBox.setText("Destroy stack before deleting");
-        myCheckBox.setSelected(true);
-        messagePanel.add(myCheckBox, BorderLayout.SOUTH);
-
-       // pack();
-
-        return messagePanel;
-      }
-      
-    }
-    @Override
-    public void actionPerformed(ActionEvent e) {
-     
-    }
-  }
+//  public static class DeleteAction extends AbstractAction {
+//
+//    private static final long serialVersionUID = 7216149349340773007L;
+//    private DevOpsDashboard dashboard;
+//    public DeleteAction(DevOpsDashboard dashboard, String title) {
+//      super("Delete");
+//      this.dashboard = dashboard;
+//    }
+//    
+//    private static class DeleteYesNoDialog extends DialogWrapper {
+//
+//      protected DeleteYesNoDialog() {
+//        super(true);
+//        init();
+//        setTitle("Confirm Delete");
+//        setOKButtonText("Ok");
+//      }
+//
+//      @Override
+//      protected @Nullable JComponent createNorthPanel() {
+//        JPanel northPanel = new JPanel();
+//        JLabel label = new JLabel();
+//        label.setText("Delete Stack.  Are you sure?");
+//        northPanel.add(label);
+//        return northPanel;
+//      }
+//
+//      @Override
+//      protected @NotNull JPanel createButtonsPanel(@NotNull List<? extends JButton> buttons) {
+//        return new JPanel();
+//      }
+//
+//      @Override
+//      protected @Nullable JComponent createCenterPanel() {
+//        JPanel messagePanel = new JPanel(new BorderLayout());
+//
+//        JPanel yesNoButtonPanel = new JPanel();
+//        yesNoButtonPanel.setLayout(new BoxLayout(yesNoButtonPanel, BoxLayout.X_AXIS));
+//        JButton yesButton = new JButton();
+//        yesButton.setText("Yes");
+//        yesButton.addActionListener(new ActionListener() { 
+//          @Override
+//          public void actionPerformed(ActionEvent e) {
+//            close(OK_EXIT_CODE);
+//          }
+//        });
+//        yesNoButtonPanel.add(yesButton);
+//        JButton noButton = new JButton();
+//        noButton.setText("No");
+//        noButton.addActionListener(new ActionListener() {
+//
+//          @Override
+//          public void actionPerformed(ActionEvent e) {
+//            close(CANCEL_EXIT_CODE);
+//          }
+//          
+//        });
+//        yesNoButtonPanel.add(noButton);
+//        
+//        messagePanel.add(yesNoButtonPanel, BorderLayout.CENTER);
+//        
+//        JCheckBox myCheckBox = new JCheckBox();
+//        myCheckBox.setText("Destroy stack before deleting");
+//        myCheckBox.setSelected(true);
+//        messagePanel.add(myCheckBox, BorderLayout.SOUTH);
+//
+//       // pack();
+//
+//        return messagePanel;
+//      }
+//      
+//    }
+//    @Override
+//    public void actionPerformed(ActionEvent e) {
+//     
+//    }
+//  }
 
   @Override
   public String getTitle() {
-    return "Application Stack";
+    return "DevOps";
   }
 
 

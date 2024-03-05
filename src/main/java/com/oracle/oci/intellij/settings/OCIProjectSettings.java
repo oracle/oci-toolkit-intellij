@@ -20,9 +20,9 @@ public final class OCIProjectSettings
 
   public static class State {
 
-    private String tenancyId;
-    private String compartmentId;
-    private String compartmentName;
+    private String devOpsTenancyId;
+    private String devOpsCompartmentId;
+    private String devOpsCompartmentName;
     
     private String devOpsProjectId;
     private String devOpsProjectName;
@@ -31,44 +31,66 @@ public final class OCIProjectSettings
 
     }
 
-    public String getTenancyId() {
-      return tenancyId;
+
+    public String getDevOpsTenancyId() {
+      return devOpsTenancyId;
     }
 
-    public void setTenancyId(String tenancyId) {
-      this.tenancyId = tenancyId;
+
+    public void setDevOpsTenancyId(String devOpsTenancyId) {
+      this.devOpsTenancyId = devOpsTenancyId;
     }
 
-    public String getCompartmentId() {
-      return compartmentId;
+
+    public String getDevOpsCompartmentId() {
+      return devOpsCompartmentId;
     }
 
-    public void setCompartmentId(String compartmentId) {
-      this.compartmentId = compartmentId;
+
+    public void setDevOpsCompartmentId(String devOpsCompartmentId) {
+      this.devOpsCompartmentId = devOpsCompartmentId;
     }
+
+
+    public String getDevOpsCompartmentName() {
+      return devOpsCompartmentName;
+    }
+
+
+    public void setDevOpsCompartmentName(String devOpsCompartmentName) {
+      this.devOpsCompartmentName = devOpsCompartmentName;
+    }
+
 
     public String getDevOpsProjectId() {
       return devOpsProjectId;
     }
 
+
     public void setDevOpsProjectId(String devOpsProjectId) {
       this.devOpsProjectId = devOpsProjectId;
     }
 
-    public String getCompartmentName() {
-      return compartmentName;
-    }
-
-    public void setCompartmentName(String compartmentName) {
-      this.compartmentName = compartmentName;
-    }
 
     public String getDevOpsProjectName() {
       return devOpsProjectName;
     }
 
+
     public void setDevOpsProjectName(String devOpsProjectName) {
       this.devOpsProjectName = devOpsProjectName;
+    }
+
+
+    public boolean isDevOpsAssociated() {
+      return this.devOpsProjectId != null;
+    }
+    public void clearDevOpsAssociation() {
+      this.devOpsProjectId = null;
+      this.devOpsProjectName = null;
+      this.devOpsCompartmentId = null;
+      this.devOpsCompartmentName = null;
+      this.devOpsTenancyId = null;
     }
   }
 

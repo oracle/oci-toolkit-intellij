@@ -4,11 +4,9 @@ import java.io.IOException;
 import java.util.List;
 
 import com.oracle.bmc.devops.model.ConnectionSummary;
-import com.oracle.bmc.devops.model.ProjectSummary;
-import com.oracle.bmc.devops.model.RepositorySummary;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
-import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.account.OracleCloudAccount.DevOpsClientProxy;
+import com.oracle.oci.intellij.account.SystemPreferences;
 
 public class ListGitRepoConnectionTest {
   private static final String compartmentId;

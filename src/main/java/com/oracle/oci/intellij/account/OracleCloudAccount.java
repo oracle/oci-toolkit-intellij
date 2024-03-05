@@ -11,6 +11,7 @@ import static com.oracle.oci.intellij.account.SystemPreferences.getUserAgent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -103,7 +105,6 @@ import com.oracle.bmc.database.responses.ListAutonomousDatabasesResponse;
 import com.oracle.bmc.database.responses.ListDbVersionsResponse;
 import com.oracle.bmc.devops.DevopsClient;
 import com.oracle.bmc.devops.model.ConnectionSummary;
-import com.oracle.bmc.devops.model.CreateConnectionDetails;
 import com.oracle.bmc.devops.model.CreateGithubAccessTokenConnectionDetails;
 import com.oracle.bmc.devops.model.CreateRepositoryDetails;
 import com.oracle.bmc.devops.model.MirrorRepositoryConfig;
@@ -148,15 +149,22 @@ import com.oracle.bmc.identity.responses.ListAvailabilityDomainsResponse;
 import com.oracle.bmc.identity.responses.ListCompartmentsResponse;
 import com.oracle.bmc.identity.responses.ListRegionSubscriptionsResponse;
 import com.oracle.bmc.keymanagement.KmsManagementClient;
+import com.oracle.bmc.keymanagement.KmsManagementClientBuilder;
 import com.oracle.bmc.keymanagement.KmsVaultClient;
+import com.oracle.bmc.keymanagement.model.CreateKeyDetails;
+import com.oracle.bmc.keymanagement.model.CreateKeyDetails.ProtectionMode;
+import com.oracle.bmc.keymanagement.model.Key;
+import com.oracle.bmc.keymanagement.model.KeyShape;
+import com.oracle.bmc.keymanagement.model.KeyShape.Algorithm;
 import com.oracle.bmc.keymanagement.model.KeySummary;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
+import com.oracle.bmc.keymanagement.requests.CreateKeyRequest;
 import com.oracle.bmc.keymanagement.requests.ListKeysRequest;
 import com.oracle.bmc.keymanagement.requests.ListVaultsRequest;
+import com.oracle.bmc.keymanagement.responses.CreateKeyResponse;
 import com.oracle.bmc.keymanagement.responses.ListKeysResponse;
 import com.oracle.bmc.keymanagement.responses.ListVaultsResponse;
 import com.oracle.bmc.resourcemanager.ResourceManagerClient;
-import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import com.oracle.bmc.resourcemanager.model.AssociatedResourceSummary;
 import com.oracle.bmc.resourcemanager.model.AssociatedResourcesCollection;
 import com.oracle.bmc.resourcemanager.model.CreateDestroyJobOperationDetails;
@@ -165,12 +173,14 @@ import com.oracle.bmc.resourcemanager.model.CreateJobOperationDetails;
 import com.oracle.bmc.resourcemanager.model.CreateStackDetails;
 import com.oracle.bmc.resourcemanager.model.CreateZipUploadConfigSourceDetails;
 import com.oracle.bmc.resourcemanager.model.DestroyJobOperationDetails;
+import com.oracle.bmc.resourcemanager.model.Job;
 import com.oracle.bmc.resourcemanager.model.Stack;
 import com.oracle.bmc.resourcemanager.model.StackSummary;
 import com.oracle.bmc.resourcemanager.requests.CreateJobRequest;
 import com.oracle.bmc.resourcemanager.requests.CreateStackRequest;
 import com.oracle.bmc.resourcemanager.requests.DeleteStackRequest;
 import com.oracle.bmc.resourcemanager.requests.GetJobLogsRequest;
+import com.oracle.bmc.resourcemanager.requests.GetJobRequest;
 import com.oracle.bmc.resourcemanager.requests.GetJobTfStateRequest;
 import com.oracle.bmc.resourcemanager.requests.GetStackRequest;
 import com.oracle.bmc.resourcemanager.requests.ListJobOutputsRequest;
@@ -181,6 +191,7 @@ import com.oracle.bmc.resourcemanager.responses.CreateJobResponse;
 import com.oracle.bmc.resourcemanager.responses.CreateStackResponse;
 import com.oracle.bmc.resourcemanager.responses.DeleteStackResponse;
 import com.oracle.bmc.resourcemanager.responses.GetJobLogsResponse;
+import com.oracle.bmc.resourcemanager.responses.GetJobResponse;
 import com.oracle.bmc.resourcemanager.responses.GetJobTfStateResponse;
 import com.oracle.bmc.resourcemanager.responses.GetStackResponse;
 import com.oracle.bmc.resourcemanager.responses.ListJobOutputsResponse;
@@ -188,8 +199,13 @@ import com.oracle.bmc.resourcemanager.responses.ListJobsResponse;
 import com.oracle.bmc.resourcemanager.responses.ListStackAssociatedResourcesResponse;
 import com.oracle.bmc.resourcemanager.responses.ListStacksResponse;
 import com.oracle.bmc.vault.VaultsClient;
+import com.oracle.bmc.vault.model.Base64SecretContentDetails;
+import com.oracle.bmc.vault.model.CreateSecretDetails;
+import com.oracle.bmc.vault.model.Secret;
 import com.oracle.bmc.vault.model.SecretSummary;
+import com.oracle.bmc.vault.requests.CreateSecretRequest;
 import com.oracle.bmc.vault.requests.ListSecretsRequest;
+import com.oracle.bmc.vault.responses.CreateSecretResponse;
 import com.oracle.bmc.vault.responses.ListSecretsResponse;
 import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
@@ -305,6 +321,11 @@ public class OracleCloudAccount {
   public VaultClientProxy getVaultsClient() {
     validate();
     return vaultClientProxy;
+  }
+
+  public KmsManagementClientProxy getKmsManagementClient(VaultSummary vaultSummary) {
+    validate();
+    return KmsManagementClientProxy.getInstance(vaultSummary);
   }
 
   public VirtualNetworkClientProxy getVirtualNetworkClientProxy() {
@@ -1395,21 +1416,25 @@ public class OracleCloudAccount {
 
     public CreateConnectionResponse createGithubRepositoryConnection(String projectId,
                                                                      String accessTokenVaultId) {
-      CreateConnectionDetails connDetails =
+      com.oracle.bmc.devops.model.CreateGithubAccessTokenConnectionDetails.Builder connDetails =
         CreateGithubAccessTokenConnectionDetails.builder()
-                                                .projectId(projectId)
-                                                .accessToken(accessTokenVaultId)
-                                                .build();
+                                                .projectId(projectId);
+                                               // .accessToken(accessTokenVaultId)
+      if (accessTokenVaultId != null) {
+        connDetails.accessToken(accessTokenVaultId);
+      }
+      //.build();
       CreateConnectionRequest connRequest =
         CreateConnectionRequest.builder()
-                               .createConnectionDetails(connDetails)
+                               .createConnectionDetails(connDetails.build())
                                .build();
       CreateConnectionResponse connReponse =
         devOpsClient.createConnection(connRequest);
       return connReponse;
     }
     
-    public MirrorRepositoryResponse mirrorRepository(String projectId, String repoUrl, String connectorOcid) {
+    public MirrorRepositoryResponse mirrorRepository(String projectId, String repoUrl, String connectorOcid, 
+                                                     String name, String description) {
       TriggerSchedule scheduleType =
         TriggerSchedule.builder().scheduleType(ScheduleType.Default).build();
       MirrorRepositoryConfig mirrorRepositoryConfig =
@@ -1422,7 +1447,8 @@ public class OracleCloudAccount {
         CreateRepositoryDetails.builder()
                                .projectId(projectId)
                                .repositoryType(RepositoryType.Mirrored)
-                               .name("Foo_"+System.currentTimeMillis())
+                               .name(name)
+                               .description(description == null ? name : description)
                                .mirrorRepositoryConfig(mirrorRepositoryConfig)
                                .build();
       CreateRepositoryRequest req =
@@ -1472,6 +1498,7 @@ public class OracleCloudAccount {
       ListVaultsResponse listVaults = kmsVaultClient.listVaults(listRequest);
       return listVaults.getItems();
     } 
+
   }
 
   public class VaultClientProxy {
@@ -1499,6 +1526,86 @@ public class OracleCloudAccount {
       ListSecretsResponse listSecrets = vaultsClient.listSecrets(req);
       return listSecrets.getItems();
     }
+    
+    public Secret createSecret(VaultSummary vaultSummary, String keyId, String secretName, String secretContentBase64) {
+      Base64SecretContentDetails contentDetail = 
+        Base64SecretContentDetails.builder().content(secretContentBase64).build();
+      CreateSecretDetails details = 
+        CreateSecretDetails.builder().compartmentId(vaultSummary.getCompartmentId())
+                                      .vaultId(vaultSummary.getId())
+                                      .secretName(secretName)
+                                      .secretContent(contentDetail)
+                                      .keyId(keyId).build();
+      CreateSecretRequest request = CreateSecretRequest.builder().createSecretDetails(details).build();
+      CreateSecretResponse response = vaultsClient.createSecret(request);
+      return response.getSecret();
+    }
   }
 
+   public static class KmsManagementClientProxy implements Closeable {
+    private KmsManagementClientBuilder kmsManagementClientBuilder;
+    private KmsManagementClient kmsManagementClient;
+    
+    // this proxy works different than most others because it is per-vault
+    // so we have to use it with a closeable try-finally and get new proxy
+    // instances for each request.
+    private KmsManagementClientProxy(KmsManagementClientBuilder builder) {
+      this.kmsManagementClientBuilder = builder;
+    }
+
+     public static KmsManagementClientProxy getInstance(VaultSummary vaultSummary) {
+       KmsManagementClientBuilder builder = KmsManagementClient.builder().vaultSummary(vaultSummary);
+      KmsManagementClientProxy kmsManagementClientProxy = new KmsManagementClientProxy(builder);
+      kmsManagementClientProxy.init(null);
+      return kmsManagementClientProxy;
+     }
+
+    void init(String region) {
+      reset();
+      AuthenticationDetailsProvider authenticationDetailsProvider =
+        OracleCloudAccount.getInstance().authenticationDetailsProvider;
+      kmsManagementClient = this.kmsManagementClientBuilder.build(authenticationDetailsProvider);
+      // No region: kmsManagementClient.setRegion(region);
+    }
+
+    private void reset() {
+      if (kmsManagementClient != null) {
+        kmsManagementClient.close();
+        kmsManagementClient = null;
+      }
+    }
+    @Override
+    public void close() throws IOException {
+      reset();
+    }
+    
+    public List<KeySummary> listKeys(String compartmentId) {
+      ListKeysRequest.Builder builder = ListKeysRequest.builder();
+      ListKeysRequest req = builder.compartmentId(compartmentId).build();
+      ListKeysResponse resp = kmsManagementClient.listKeys(req);
+      return resp.getItems();
+    }
+
+    public Optional<KeySummary> getKey(String compartmentId, String keyId) {
+      return listKeys(compartmentId).stream()
+                                    .filter(ks -> ks.getId().equals(keyId))
+                                    .findFirst();
+    }
+    
+    public Key createKey(String compartmentId, String displayName) {
+      CreateKeyDetails details =
+        CreateKeyDetails.builder()
+                        .compartmentId(compartmentId)
+                        .displayName(displayName)
+                        .protectionMode(ProtectionMode.Software)
+                        .keyShape(KeyShape.builder()
+                         .algorithm(Algorithm.Aes)
+                         .length(32)
+                         .build())
+                      .build();
+      CreateKeyRequest request = CreateKeyRequest.builder().createKeyDetails(details).build();
+      CreateKeyResponse createKey = kmsManagementClient.createKey(request);
+      return createKey.getKey();
+    }
+  }
 }

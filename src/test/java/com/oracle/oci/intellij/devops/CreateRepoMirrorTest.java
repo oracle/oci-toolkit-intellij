@@ -48,7 +48,8 @@ public class CreateRepoMirrorTest {
     
     
     final String ghUrl = "https://github.com/CBatemanOracle/oci-react-samples.git";
-    MirrorRepositoryResponse mirrorRepository = devOpsClientProxy.mirrorRepository(projectId, ghUrl, conn.getConnection().getId());
+    MirrorRepositoryResponse mirrorRepository = 
+      devOpsClientProxy.mirrorRepository(projectId, ghUrl, conn.getConnection().getId(), ("Fleuh"+System.currentTimeMillis()), "Desc");
     System.out.println(mirrorRepository);
 //    List<ProjectSummary> listDevOpsProjects = devOpsClientProxy.listDevOpsProjects(compartmentId);
 //    System.out.println(listDevOpsProjects);

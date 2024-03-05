@@ -7,7 +7,6 @@ package com.oracle.oci.intellij.ui.common;
 import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.MouseAdapter;
@@ -37,6 +36,7 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.util.NlsSafe;
 import com.intellij.openapi.wm.WindowManager;
 import com.oracle.oci.intellij.account.SystemPreferences;
+import com.oracle.oci.intellij.ui.devops.wizard.mirrorgh.CreateSecretWizardModel.SecretWizardContext;
 
 import io.github.resilience4j.core.lang.NonNull;
 

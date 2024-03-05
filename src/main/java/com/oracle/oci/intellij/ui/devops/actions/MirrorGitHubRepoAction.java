@@ -1,27 +1,10 @@
 package com.oracle.oci.intellij.ui.devops.actions;
 
-import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.swing.AbstractAction;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.table.JTableHeader;
-
-import org.bouncycastle.jcajce.provider.util.SecretKeyUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,22 +12,15 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.ui.wizard.WizardDialog;
 import com.oracle.bmc.devops.responses.CreateConnectionResponse;
-import com.oracle.bmc.keymanagement.model.VaultSummary;
-import com.oracle.bmc.resourcemanager.model.JobSummary;
-import com.oracle.bmc.vault.model.SecretSummary;
+import com.oracle.bmc.devops.responses.MirrorRepositoryResponse;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
 import com.oracle.oci.intellij.account.OracleCloudAccount.DevOpsClientProxy;
-import com.oracle.oci.intellij.account.OracleCloudAccount.KmsVaultClientProxy;
-import com.oracle.oci.intellij.account.OracleCloudAccount.VaultClientProxy;
 import com.oracle.oci.intellij.settings.OCIProjectSettings;
 import com.oracle.oci.intellij.settings.OCIProjectSettings.State;
-import com.oracle.oci.intellij.ui.common.BeanRowTableFactory;
-import com.oracle.oci.intellij.ui.common.BeanRowTableFactory.BeanRowTable;
-import com.oracle.oci.intellij.ui.common.BeanRowTableFactory.Builder;
-import com.oracle.oci.intellij.ui.common.UIUtil.GridBagLayoutConstraintBuilder;
-import com.oracle.oci.intellij.ui.common.UIUtil.SimpleDialogWrapper;
+import com.oracle.oci.intellij.ui.devops.wizard.mirrorgh.MirrorGitHubWizardModel;
+import com.oracle.oci.intellij.ui.devops.wizard.mirrorgh.MyWizardContext;
 import com.oracle.oci.intellij.ui.git.config.GitConfig;
 import com.oracle.oci.intellij.ui.git.config.GitConfigManager;
 
@@ -62,39 +38,50 @@ public class MirrorGitHubRepoAction extends AnAction {
         @Override
         public void run() {
           Set<String> githubUrls = findGitHubUrls(gitConfig);
+          @Nullable
+          State state = OCIProjectSettings.getInstance(project).getState();
           if (githubUrls.isEmpty()) {
-            @Nullable
-            State state = OCIProjectSettings.getInstance(project).getState();
             if (state != null) {
-              // String projectCompartmentId = state.getCompartmentId();
-              String projectId = state.getDevOpsProjectId();
-              // OracleCloudAccount.getInstance().getKmsVaultClient().listVaults();
-              // ProjectSummary devOpsProject =
-              // OracleCloudAccount.getInstance().getDevOpsClient().getDevOpsProject(projectCompartmentId,
-              // projectId);
-              // if (devOpsProject)
 
             }
             // JOptionPane.showMessageDialog(null, "Must have a github remote",
             // "Must have github remote",
             // JOptionPane.INFORMATION_MESSAGE);
           } else {
-            MirrorSelectionDialog dialog = new MirrorSelectionDialog(project);
-            dialog.show();
+            MyWizardContext context = new MyWizardContext(project);
+            MirrorGitHubWizardModel model =
+              new MirrorGitHubWizardModel("Mirror Repository Wizard", context);
+            WizardDialog<MirrorGitHubWizardModel> wizardDialog =
+              new WizardDialog<MirrorGitHubWizardModel>(true,
+                                                                               model);
+            wizardDialog.show();
+            if (wizardDialog.isOK()) {
+              createConnection(state.getDevOpsProjectId(), context);
+            }
+
+            // MirrorSelectionDialog dialog = new
+            // MirrorSelectionDialog(project);
+            // dialog.show();
           }
         }
 
-        private void createConnection(String projectId) {
+        private void createConnection(String devOpsProjectId,
+                                      MyWizardContext context) {
           final DevOpsClientProxy devOpsClientProxy =
             OracleCloudAccount.getInstance().getDevOpsClient();
-          // final String projectId =
-          // "ocid1.devopsproject.oc1.phx.amaaaaaadxiv6saadyecvba5jkqkbb2tvsxnc2i3g4xagtlqxqefbaxrgmxa";
-          final String accessToken =
-            "ocid1.vaultsecret.oc1.phx.amaaaaaadxiv6saaxngaorxmh4vekouby5cjx3iry4xv6i4rp6m7n24rzjca";// args[0];
           CreateConnectionResponse conn =
-            devOpsClientProxy.createGithubRepositoryConnection(projectId,
-                                                               accessToken);
+            devOpsClientProxy.createGithubRepositoryConnection(devOpsProjectId,
+                                                               context.getSecretSummary()
+                                                                      .get()
+                                                                      .getId());
           System.out.println(conn.getConnection().getDisplayName());
+          MirrorRepositoryResponse mirrorRepository =
+            devOpsClientProxy.mirrorRepository(devOpsProjectId,
+                                               context.getGithub(),
+                                               conn.getConnection().getId(),
+                                               context.getRepoName(),
+                                               context.getRepoDescription());
+          System.out.println(mirrorRepository.toString());
         }
       });
       return k;
@@ -106,166 +93,32 @@ public class MirrorGitHubRepoAction extends AnAction {
     super.update(e);
   }
 
-  private Set<String> findGitHubUrls(final GitConfig gitConfig) {
+  public static Set<String> findGitHubUrls(final GitConfig gitConfig) {
     Set<String> githubUrls = gitConfig.getUrls()
                                       .stream()
                                       .filter(s -> s.contains("github.com"))
+                                      .map((s) -> {
+                                        if (s.startsWith("http")) {
+                                          return s;
+                                        } else {
+                                          return convertGithubSshToHttps(s);
+                                        }
+                                      })
+                                      .filter(s -> s.startsWith("https"))
                                       .collect(Collectors.toSet());
     return githubUrls;
   }
 
-  public static class MirrorSelectionDialog extends DialogWrapper {
+  private static Pattern pattern =
+    Pattern.compile("git@github.com:(.*)/(.*).git");
 
-    public MirrorSelectionDialog(@Nullable Project project) {
-      super(project);
-      setTitle("DevOps Mirror Selection Dialog");
-      setOKButtonText("OK");
-      init();
+  public static String convertGithubSshToHttps(String url) {
+    Matcher matcher = pattern.matcher(url);
+    if (matcher.matches()) {
+      return String.format("https://github.com/%s/%s.git\n", matcher.group(1),
+                           matcher.group(2));
     }
-
-    @Override
-    protected @Nullable JComponent createCenterPanel() {
-      JPanel centerPanel = new JPanel();
-      centerPanel.setLayout(new GridLayout(0, 2));
-
-      centerPanel.add(new JLabel("DevOps Project"));
-      JTextField projectName = new JTextField();
-      projectName.setEnabled(false);
-      centerPanel.add(projectName);
-
-      centerPanel.add(new JLabel("Token Key for Git"));
-
-      JPanel textButtonBox = new JPanel();
-      textButtonBox.setLayout(new BoxLayout(textButtonBox,
-                                            BoxLayout.LINE_AXIS));
-      centerPanel.add(textButtonBox);
-
-      JTextField secretNameTextField = new JTextField();
-      secretNameTextField.setEnabled(false);
-      textButtonBox.add(secretNameTextField);
-      JButton secretNameSelectAction = new JButton("Token Secret...");
-      secretNameSelectAction.setAction(new OpenTokenSecretAction(centerPanel));
-      textButtonBox.add(secretNameSelectAction);
-
-      return centerPanel;
-    }
-
+    return url;
   }
 
-  public static class OpenTokenSecretAction extends AbstractAction {
-
-    private JComponent parent;
-
-    public OpenTokenSecretAction(JComponent parent) {
-      super();
-      this.parent = parent;
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
-      TokenSecretSelectionDialog dialog =
-        new TokenSecretSelectionDialog(parent, true);
-      dialog.show();
-      dialog.disposeIfNeeded();
-      // VaultClientProxy vaultClient =
-      // OracleCloudAccount.getInstance().getVaultsClient();
-      // vaults.forEach(v -> {
-      // List<SecretSummary> listSecrets =
-      // vaultClient.listSecrets(v.getCompartmentId(), v.getId());
-      // listSecrets.forEach(s -> System.out.println(s));
-      // System.out.println();
-      // listSecrets.stream().filter((s) ->
-      // "camgithubtoken3".equals(s.getSecretName())).forEach(s ->
-      // System.out.println(s.getId()));
-      // });
-      // }
-
-    }
-
-    static class TokenSecretSelectionDialog extends SimpleDialogWrapper {
-
-      protected TokenSecretSelectionDialog(@NotNull Component parent,
-                                           boolean canBeParent) {
-        super(parent, canBeParent);
-        setTitle("Select Repository Secret");
-      }
-
-      @Override
-      protected @Nullable JComponent createCenterPanel() {
-        JPanel centerPanel = new JPanel();
-        GridBagLayout mgr = new GridBagLayout();
-        centerPanel.setLayout(mgr);
-        GridBagConstraints gbConstraints = new GridBagConstraints();
-        gbConstraints.anchor = GridBagConstraints.FIRST_LINE_START;
-
-        
-        JLabel label = new JLabel("Vaults: ");
-        centerPanel.add(label, gbConstraints);
-
-        final KmsVaultClientProxy kmsClient =
-          OracleCloudAccount.getInstance().getKmsVaultClient();
-        // final String projectId =
-        // "ocid1.devopsproject.oc1.phx.amaaaaaadxiv6saadyecvba5jkqkbb2tvsxnc2i3g4xagtlqxqefbaxrgmxa";
-        final String rootCompartmentId =
-          "ocid1.tenancy.oc1..aaaaaaaagojvam7c7hthdm7h2pgshjmiqntcvei4skgysz3galuejn3rioia";
-
-        List<VaultSummary> vaults = kmsClient.listVaults(rootCompartmentId);
-        System.out.println(vaults);
-
-        Builder<VaultSummary> builder = BeanRowTableFactory.create();
-        builder.beanClass(VaultSummary.class)
-               .columns("displayName", "timeCreated", "managementEndpoint", "vaultType",
-                        "cryptoEndpoing", "lifecycleState", "vaultType");
-        BeanRowTable<VaultSummary> vaultsTable = builder.build();
-        vaultsTable.setShowGrid(true);
-        // table.setTableHeader(new JTableHeader());
-        centerPanel.add(vaultsTable,
-                        GridBagLayoutConstraintBuilder.defaults()
-                                                      .anchor(GridBagConstraints.FIRST_LINE_END)
-                                                      .build());
-        centerPanel.add(new JLabel("Secrets:"), GridBagLayoutConstraintBuilder.defaults()
-                        .gridy(1).anchor(GridBagConstraints.LINE_START).build());
-        
-        Builder<SecretSummary> secbuilder = BeanRowTableFactory.create();
-        secbuilder.beanClass(SecretSummary.class)
-                  .columns("secretName", "description", "keyId",
-                           "lifecycleDetails", "lifecycleState", "timeCreated",
-                           "timeOfCurrentVersionExpiry", "timeOfDeletion")
-                  .build();
-        BeanRowTable<SecretSummary> secretTable = secbuilder.build();
-        secretTable.setShowGrid(true);
-        centerPanel.add(secretTable,
-                        GridBagLayoutConstraintBuilder.defaults()
-                        .anchor(GridBagConstraints.LINE_END)
-                        .gridy(1)
-                        .build());
-
-        vaultsTable.setRows(vaults);
-        
-        
-        vaultsTable.addMouseListener(new MouseAdapter() {
-
-          @Override
-          public void mouseClicked(MouseEvent e) {
-            if (e.getButton() == MouseEvent.BUTTON1) {
-              if (vaultsTable.getSelectedRowCount() == 1) {
-                int selectedRow = vaultsTable.getSelectedRow();
-                VaultSummary vaultSummary = vaults.get(selectedRow);
-                String id = vaultSummary.getId();
-                if (id != null) {
-                  VaultClientProxy vaultClient = OracleCloudAccount.getInstance().getVaultsClient();
-                  List<SecretSummary> listSecrets = 
-                    vaultClient.listSecrets(vaultSummary.getCompartmentId(), id); 
-                    secretTable.setRows(listSecrets);
-                }
-              }
-            }
-          }
-          });
-        return centerPanel;
-      }
-
-    }
-    }
 }

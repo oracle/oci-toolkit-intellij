@@ -34,7 +34,7 @@ public class CompartmentSelection extends DialogWrapper {
   private Compartment selectedCompartment = null;
   private DefaultMutableTreeNode rootTreeNode = null;
   private static final CompartmentCache compartmentCache = CompartmentCache.getInstance() ;
-  static Map<String,List<Compartment> > cachedCompartments = new LinkedHashMap<>();
+  //static Map<String,List<Compartment> > cachedCompartments = new LinkedHashMap<>();
   private final List<Thread> liveThreadsList = Collections.synchronizedList(new LinkedList<>());
   private final AtomicInteger liveTasksCount = new AtomicInteger();
 

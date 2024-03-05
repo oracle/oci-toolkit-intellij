@@ -46,15 +46,16 @@ public class AssociateDevOpsProjectAction extends AnAction {
       SelectProjectDialog dialog = new SelectProjectDialog(true, state);
       boolean wasOk = dialog.showAndGet();
       if (wasOk) {
-        state.setCompartmentId(dialog.getCompartmentId());
+        state.setDevOpsCompartmentId(dialog.getCompartmentId());
         state.setDevOpsProjectId(dialog.getDevOpsProjectId());
 
-        state.setTenancyId(OracleCloudAccount.getInstance().getCurrentTenancy());
+        state.setDevOpsTenancyId(OracleCloudAccount.getInstance().getCurrentTenancy());
         project.save();
       }
       dialog.disposeIfNeeded();
     } catch (Exception e) {
       JOptionPane.showMessageDialog(null, "Error: " + e.getLocalizedMessage());
+      e.printStackTrace();
     }
   }
 
@@ -104,7 +105,7 @@ public class AssociateDevOpsProjectAction extends AnAction {
       
     }
 
-    public void populateComboList(String compartmentId) {
+    private void populateComboList(String compartmentId) {
       UIUtil.showInfoInStatusBar("Refreshing DevOps Projects.");
 
       // final Runnable fetchData = () -> {
@@ -152,7 +153,7 @@ public class AssociateDevOpsProjectAction extends AnAction {
                                                BoxLayout.LINE_AXIS));
       centerPanel.add(compartmentPanel);
 
-      this.compartmentText = new JTextField();
+      this.compartmentText = new JTextField(16);
       compartmentText.setEnabled(false);
       compartmentPanel.add(compartmentText);
       this.compartmentButton = new JButton(new AbstractAction() {
@@ -184,12 +185,14 @@ public class AssociateDevOpsProjectAction extends AnAction {
     }
 
     private void initFromState(State state) {
-      Compartment compartment = 
-        OracleCloudAccount.getInstance().getIdentityClient().getCompartment(state.getCompartmentId());
-      if (compartment != null) {
-        this.selectedCompartment = compartment;
-        compartmentText.setText(this.selectedCompartment.getName());
-        populateComboList(selectedCompartment.getId());
+      if (state.getDevOpsCompartmentId() != null) {
+        Compartment compartment = 
+          OracleCloudAccount.getInstance().getIdentityClient().getCompartment(state.getDevOpsCompartmentId());
+        if (compartment != null) {
+          this.selectedCompartment = compartment;
+          compartmentText.setText(this.selectedCompartment.getName());
+          populateComboList(selectedCompartment.getId());
+        }
       }
     }
   }
