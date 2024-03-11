@@ -24,6 +24,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import com.intellij.notification.NotificationType;
@@ -157,15 +158,18 @@ public final class AutonomousDatabasesDashboard implements PropertyChangeListene
       }
     });
 
-    adbInstancesTable.getColumn("State").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
-      if (column == 2) {
-        final AutonomousDatabaseSummary s = (AutonomousDatabaseSummary) value;
-        final JLabel statusLbl = new JLabel(
-                s.getLifecycleState().getValue());
-        statusLbl.setIcon(getStatusImage(s.getLifecycleState()));
-        return statusLbl;
+    adbInstancesTable.getColumn("State").setCellRenderer(new DefaultTableCellRenderer(){
+      @Override
+      public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+        if (column == 2) {
+          super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+          final AutonomousDatabaseSummary s = (AutonomousDatabaseSummary) value;
+          this.setText(s.getLifecycleState().getValue());
+          this.setIcon(getStatusImage(s.getLifecycleState()));
+          return this;
+        }
+        return (Component) value;
       }
-      return (Component) value;
     });
 
     adbInstancesTable.addMouseListener(new MouseAdapter() {

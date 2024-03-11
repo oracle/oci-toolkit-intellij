@@ -5,7 +5,10 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import com.oracle.bmc.model.BmcException;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.common.command.BasicCommand;
+import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
@@ -15,18 +18,22 @@ public class MyBackgroundTask {
     private static final Function<String,Boolean> isJobFinished=(jobId)->{
         try {
             while (true) {
-                String status = getJobStatus(jobId); // Implement this method to use OCI SDK/API
+                String status = getJobStatus(jobId);
                 if ("SUCCEEDED".equals(status)) {
                     return true;
                 } else if ("FAILED".equals(status)) {
                     return false;
                 }
+                AppStackDashboard.getInstance().populateTableData();
 
                 // Wait a bit before checking again
                 Thread.sleep(5000); // Sleep for 5 seconds
             }
-        } catch (InterruptedException e) {
+        } catch (BmcException e){
+            UIUtil.fireNotification(NotificationType.ERROR,e.getMessage(),null);
+        }catch (InterruptedException e) {
             // Handle exceptions
+            throw new RuntimeException();
         }
 
         return null;
@@ -43,7 +50,7 @@ public class MyBackgroundTask {
         this.project = project;
     }
 
-    public static void startBackgroundTask(Project project, String title, String processingMessage, String failedMessage , String succeededMessage ,String id ) {
+    public static void startBackgroundTask(Project project, String title, String processingMessage, String failedMessage , String succeededMessage ,String jobId, BasicCommand<?> runLater) {
         Task.Backgroundable task = new Task.Backgroundable(project, title, false) {
 
             @Override
@@ -57,30 +64,38 @@ public class MyBackgroundTask {
                     return;
                 }
 
-                if (isJobFinished.apply(id)){
+                if (isJobFinished.apply(jobId)){
                     progressIndicator.setText(succeededMessage);
                     UIUtil.fireNotification(NotificationType.INFORMATION, succeededMessage, null);
                 }else {
                     progressIndicator.setText(failedMessage);
                     UIUtil.fireNotification(NotificationType.ERROR, failedMessage, null);
                 }
-            }
-
-            // This method is called on the EDT after the background activity has finished
-            @Override
-            public void onSuccess() {
-                super.onSuccess();
-                // Perform any actions you need after the task is completed successfully
+                // refresh the last job state
+                AppStackDashboard.getInstance().populateTableData();
             }
 
             @Override
-            public void onCancel() {
-                super.onCancel();
-                // Handle task cancellation, if needed
+            public void onFinished() {
+                if (runLater != null){
+                    try {
+                        runLater.execute();
+                    } catch (Exception e) {
+                        String errorMessage = e.getMessage()==null?"Something went wrong ":e.getMessage();
+                        UIUtil.fireNotification(NotificationType.ERROR, errorMessage, null);
+                    }
+                }
+
             }
         };
 
         // Run the task with a progress indicator
         ProgressManager.getInstance().run(task);
     }
-}
+    public static void startBackgroundTask(Project project, String title, String processingMessage, String failedMessage , String succeededMessage , String jobId) {
+        startBackgroundTask(project,title,processingMessage,failedMessage,succeededMessage,jobId,null);
+    }
+
+
+
+    }

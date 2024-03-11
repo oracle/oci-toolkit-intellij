@@ -21,7 +21,6 @@ import com.oracle.oci.intellij.common.Utils;
 import com.oracle.oci.intellij.common.command.AbstractBasicCommand;
 import com.oracle.oci.intellij.ui.common.MyBackgroundTask;
 import com.oracle.oci.intellij.ui.common.UIUtil;
-import java.util.function.Function;
 
 public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
     private ResourceManagerClientProxy resourceManagerClient;
@@ -64,12 +63,13 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
         UIUtil.fireNotification(NotificationType.INFORMATION," Stack instance created successfully.", null);
 
         final String stackId = createStackResponse.getStack().getId();
+        final String stackName = createStackResponse.getStack().getDisplayName();
 
         System.out.println(stackId);
         if (apply){
-            CreateJobResponse createApplyJobResponse = createApplyJob(resourceManagerClient, stackId);
+            CreateJobResponse createApplyJobResponse = createApplyJob(resourceManagerClient, stackId,stackName);
             String applyJobId = createApplyJobResponse.getJob().getId();
-            MyBackgroundTask.startBackgroundTask(ProjectManager.getInstance().getDefaultProject(),"Apply Job","Job Applying ...","Apply Job Failed please check logs","Apply job successfully applied ",applyJobId);
+//            MyBackgroundTask.startBackgroundTask(ProjectManager.getInstance().getDefaultProject(),"Apply Job","Job Applying ...","Apply Job Failed please check logs","Apply job successfully applied ",applyJobId);
 
             System.out.println(applyJobId);
 
@@ -90,7 +90,7 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
 //	  }
 
     public static CreateJobResponse createApplyJob(ResourceManagerClientProxy resourceManagerClient,
-                                                    String stackId) {
+                                                   String stackId, String stackName) {
       
       CreateJobDetails createJobDetails = CreateJobDetails.builder()
         .stackId(stackId)
@@ -111,6 +111,7 @@ public class CreateStackCommand extends AbstractBasicCommand<CreateResult> {
     /* Send request to the Client */
         CreateJobResponse createJobResponse =  resourceManagerClient.submitJob(createJobRequest);
         UIUtil.fireNotification(NotificationType.INFORMATION," The Apply Job  submitted successfully.", null);
+        MyBackgroundTask.startBackgroundTask(ProjectManager.getInstance().getDefaultProject(),"Creating Resources of \""+stackName+"\" (stack)","Creating Resources... ","Apply Job Failed please check logs","Apply job successfully applied ",createJobResponse.getJob().getId());
 
         return createJobResponse;
 //      CreateJobOperationDetails operationDetails =

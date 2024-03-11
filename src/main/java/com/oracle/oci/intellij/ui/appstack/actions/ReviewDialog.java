@@ -1,7 +1,9 @@
 package com.oracle.oci.intellij.ui.appstack.actions;
 
 
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
@@ -9,6 +11,7 @@ import com.intellij.util.ui.JBDimension;
 import com.oracle.oci.intellij.ui.appstack.models.Controller;
 import com.oracle.oci.intellij.ui.appstack.models.VariableGroup;
 import com.oracle.oci.intellij.ui.common.Icons;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
@@ -30,14 +33,16 @@ public class ReviewDialog extends DialogWrapper {
     JBScrollPane mainScrollPane;
     Controller controller = Controller.getInstance();
     JBCheckBox isApplyCheckBox ;
+    private boolean isShowStackVariables ;
 
 
 
 
-    public ReviewDialog(Map<String, String> variables, List<VariableGroup> varGroups) {
+    public ReviewDialog(Map<String, String> variables, List<VariableGroup> varGroups,boolean isShowStackVariables ) {
         super(false);
+        this.isShowStackVariables = isShowStackVariables;
         setTitle("Oracle Cloud Infrastructure Configuration");
-        setOKButtonText("Apply");
+        setOKButtonText("Create");
         mainPanel = new JPanel();
 //        mainPanel.setPreferredSize(new JBDimension(800,800));
 
@@ -77,35 +82,42 @@ public class ReviewDialog extends DialogWrapper {
 
 
         // todo create the panel of  the check if user wants to immediately
-        JPanel isApplyPanel = new JPanel();
+        if (!isShowStackVariables){
+            addRunApplyCheckbox();
+        }
+        init();
+
+    }
+
+    private void addRunApplyCheckbox() {
+        JPanel isApplyPanel = new JPanel(new BorderLayout());
         JBLabel isApplyLable = new JBLabel("Run apply on the created stack?\n");
         isApplyLable.setToolTipText("Immediately provision the resources defined in the Terraform configuration by running the apply action on the new stack.\n" +
                 "\n");
         isApplyCheckBox = new JBCheckBox("Run Apply");
-        isApplyPanel.add(isApplyLable);
-        isApplyPanel.add(isApplyCheckBox);
+        isApplyCheckBox.setSelected(true);
+        isApplyPanel.add(isApplyLable,BorderLayout.WEST);
+        isApplyPanel.add(isApplyCheckBox,BorderLayout.CENTER);
 
 
         mainPanel.add(isApplyPanel);
-        init();
-
     }
 
     public boolean isApply() {
         return isApplyCheckBox.isSelected();
     }
 
-//    private void createVariablePanel() {
-//
-//    }
-
-//    private ReviewVarPanel createVarPanel(String key , String value ) {
-////        return new ReviewVarPanel(key, value);
-//    }
+    @Override
+    protected Action @NotNull [] createActions() {
+        if (isShowStackVariables){
+            getCancelAction().putValue("Name","Close");
+            return new Action[]{getCancelAction()};
+        }
+        return super.createActions();
+    }
 
     @Override
     protected @Nullable JComponent createCenterPanel() {
-
         return mainScrollPane;
     }
 
@@ -115,13 +127,12 @@ public class ReviewDialog extends DialogWrapper {
 
         ReviewVarPanel(PropertyDescriptor pd, String value){
             setLayout(new BorderLayout());
-//            setPreferredSize(new JBDimension(760, 40));
 
             if (pd.getValue("type").equals("password")){
                 value = "****";
             }
 
-            this.keyLabel = new JLabel(pd.getDisplayName()+" : ");
+            this.keyLabel = new JBLabel(pd.getDisplayName()+" : ");
             keyLabel.setToolTipText(pd.getShortDescription());
             this.valueLabel = new JLabel(value);
             this.keyLabel.setPreferredSize(new JBDimension(300,20));
@@ -137,17 +148,19 @@ public class ReviewDialog extends DialogWrapper {
             if (fullText.length()>=30 && ((String)pd.getValue("type")).contains("oci")){
                 String showIconPath = Icons.SHOW.getPath();
                 String hideIconPath = Icons.HIDE.getPath();
-                ImageIcon showIcon = new ImageIcon(ReviewDialog.class.getResource(showIconPath));
-                ImageIcon hideIcon = new ImageIcon(ReviewDialog.class.getResource(hideIconPath));
 
 
                 int start = fullText.length() - 9;
                 String truncatedText = "..."+ fullText.substring(start,fullText.length()) ;
                 valueLabel.setText(truncatedText);
 
-                JButton toggleButton = new JButton(showIcon);
+                JButton toggleButton = new JButton(IconLoader.getIcon(showIconPath));
+                toggleButton.setToolTipText("Show");
+
                 toggleButton.setBackground(null);
                 toggleButton.setBorder(null);
+                toggleButton.setOpaque(false);
+                toggleButton.setContentAreaFilled(false); //
                 toggleButton.setPreferredSize(new JBDimension(20,20));
 
                 toggleButton.addActionListener(new ActionListener() {
@@ -157,11 +170,15 @@ public class ReviewDialog extends DialogWrapper {
                     public void actionPerformed(ActionEvent e) {
                         if (isFullTextShown) {
                             valueLabel.setText(truncatedText);
-                            toggleButton.setIcon(showIcon);
+                            toggleButton.setIcon(IconLoader.getIcon(showIconPath));
+                            toggleButton.setToolTipText("Show");
+
                             isFullTextShown = false;
                         } else {
                             valueLabel.setText(fullText);
-                            toggleButton.setIcon(hideIcon);
+                            toggleButton.setIcon(IconLoader.getIcon(hideIconPath));
+                            toggleButton.setToolTipText("Hide");
+
                             isFullTextShown = true;
                         }
 
@@ -172,15 +189,13 @@ public class ReviewDialog extends DialogWrapper {
 
 
             if (pd.getValue("type").toString().contains("oci")){
-                String icon = Icons.COPY.getPath();
-                ImageIcon copyIcon = new ImageIcon(ReviewDialog.class.getResource(icon));
+                String copyPath = Icons.COPY.getPath();
 
                 // Create the button and set the icon
-                JButton copyButton = new JButton(copyIcon);
+                JButton copyButton = new JButton(IconLoader.getIcon(copyPath));
                 copyButton.setBackground(null);
                 copyButton.setPreferredSize(new JBDimension(20,20));
                 copyButton.setBorder(null);
-//                JButton copyButton = new JButton("copy");
                 String finalValue = value;
                 copyButton.addActionListener(new ActionListener() {
                     @Override
@@ -190,11 +205,13 @@ public class ReviewDialog extends DialogWrapper {
                         StringSelection selection = new StringSelection(textToCopy);
                         clipboard.setContents(selection, selection);
                         copyButton.setIcon(null);
+                        copyButton.setToolTipText("Copy");
+                        copyButton.setOpaque(false);
+                        copyButton.setContentAreaFilled(false); //
 //                        copyButton.setText("copied");
                         // notify
                         new Timer(500,ev->{
-//                            copyButton.setText("");
-                            copyButton.setIcon(copyIcon);
+                            copyButton.setIcon(IconLoader.getIcon(copyPath));
                         }).start();
                     }
                 });

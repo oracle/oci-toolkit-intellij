@@ -13,10 +13,10 @@ import com.oracle.oci.intellij.ui.common.UIUtil;
 
 public class DestroyStackCommand extends AbstractBasicCommand<Result> {
 
-  private ResourceManagerClientProxy resManagerClientProxy;
+  protected ResourceManagerClientProxy resManagerClientProxy;
   private final String SUCCESSFUL_MESSAGE = "Stack has been successfully destroyed" ;
-  private String stackName ;
-  private String stackId;
+  protected String stackName ;
+  protected String stackId;
   public DestroyStackCommand(ResourceManagerClientProxy resourceManagerClientProxy, String stackId,String stackName) {
     super();
     this.resManagerClientProxy = resourceManagerClientProxy;
@@ -25,12 +25,19 @@ public class DestroyStackCommand extends AbstractBasicCommand<Result> {
   }
   @Override
   protected Result doExecute() throws Exception {
+    canExecute();
     CreateJobResponse response = this.resManagerClientProxy.destroyStack(stackId);
     String applyJobId = response.getJob().getId();
+    UIUtil.fireNotification(NotificationType.INFORMATION, "Destroy Job was submitted of \""+stackName+"\" (stack)", null);
+
     MyBackgroundTask.startBackgroundTask(ProjectManager.getInstance().getDefaultProject(),"Destroying Resources of \""+stackName+"\" (stack)","Destroying resources...","Destroy Job Failed please check logs of \""+stackName+"\" (stack)","Destroy job successfully applied on \""+stackName+"\" (stack)",applyJobId);
 
-    UIUtil.fireNotification(NotificationType.INFORMATION, "Destroy Job was submitted of \""+stackName+"\" (stack)", null);
     return new Result(Severity.NONE,Status.OK);
   }
 
+  @Override
+  public boolean canExecute() {
+
+    return super.canExecute();
+  }
 }

@@ -153,7 +153,7 @@
             <properties/>
             <border type="none"/>
             <children>
-              <component id="75d30" class="javax.swing.JTable" binding="appStacksTable">
+              <component id="75d30" class="com.intellij.ui.table.JBTable" binding="appStacksTable">
                 <constraints/>
                 <properties>
                   <fillsViewportHeight value="true"/>

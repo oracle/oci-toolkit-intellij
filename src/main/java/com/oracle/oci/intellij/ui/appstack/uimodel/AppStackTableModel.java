@@ -4,7 +4,7 @@ import javax.swing.table.DefaultTableModel;
 
 public class AppStackTableModel extends DefaultTableModel {
   public static final String[] APPSTACK_COLUMN_NAMES =
-    new String[] { "Display Name", "Description", "Terraform Version", "State", "Created" };
+    new String[] { "Display Name", "Description", "Terraform Version", "State", "Created","Last Job State" };
   /**
      * 
      */
