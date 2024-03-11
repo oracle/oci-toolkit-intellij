@@ -1527,11 +1527,11 @@ public class OracleCloudAccount {
       return listSecrets.getItems();
     }
     
-    public Secret createSecret(VaultSummary vaultSummary, String keyId, String secretName, String secretContentBase64) {
+    public Secret createSecret(String secretCompartmentId, VaultSummary vaultSummary, String keyId, String secretName, String secretContentBase64) {
       Base64SecretContentDetails contentDetail = 
         Base64SecretContentDetails.builder().content(secretContentBase64).build();
       CreateSecretDetails details = 
-        CreateSecretDetails.builder().compartmentId(vaultSummary.getCompartmentId())
+        CreateSecretDetails.builder().compartmentId(secretCompartmentId)
                                       .vaultId(vaultSummary.getId())
                                       .secretName(secretName)
                                       .secretContent(contentDetail)

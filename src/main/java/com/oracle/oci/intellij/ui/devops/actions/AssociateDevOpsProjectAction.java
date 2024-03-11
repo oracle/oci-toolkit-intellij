@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.oracle.bmc.devops.model.ProjectSummary;
@@ -66,7 +67,7 @@ public class AssociateDevOpsProjectAction extends AnAction {
     private List<ProjectSummary> listDevOpsProjects;
     private JTextField compartmentText;
     private JButton compartmentButton;
-    protected Compartment selectedCompartment;
+    protected Optional<Compartment> selectedCompartment = Optional.empty();
     protected ProjectSummary selectedProjectSummary;
 
     protected SelectProjectDialog(boolean canBeParent, State state) {
@@ -77,16 +78,20 @@ public class AssociateDevOpsProjectAction extends AnAction {
       init();
     }
 
+
+    @Override
+    public void show() {
+      selectedCompartment.ifPresent(s -> populateComboList(s.getId(), ModalityState.any()));
+      super.show();
+    }
+
+
     public String getCompartmentName() {
-      Optional<Compartment> compartment =
-        Optional.ofNullable(selectedCompartment);
-      return compartment.orElseThrow().getName();
+      return selectedCompartment.orElseThrow().getName();
     }
 
     public String getCompartmentId() {
-      Optional<Compartment> compartment =
-        Optional.ofNullable(selectedCompartment);
-      return compartment.orElseThrow().getId();
+      return selectedCompartment.orElseThrow().getId();
     }
 
     public String getDevOpsProjectName() {
@@ -105,24 +110,24 @@ public class AssociateDevOpsProjectAction extends AnAction {
       
     }
 
-    private void populateComboList(String compartmentId) {
+    private void populateComboList(final String compartmentId, ModalityState modalityState) {
       UIUtil.showInfoInStatusBar("Refreshing DevOps Projects.");
 
-      // final Runnable fetchData = () -> {
-      try {
-        DevOpsClientProxy devOpsClient =
-          OracleCloudAccount.getInstance().getDevOpsClient();
-        this.listDevOpsProjects =
-          devOpsClient.listDevOpsProjects(compartmentId);
-      } catch (Exception exception) {
-        listDevOpsProjects = null;
-        UIUtil.fireNotification(NotificationType.ERROR, exception.getMessage(),
-                                null);
-        LogHandler.error(exception.getMessage(), exception);
-      }
-      // };
+      final Runnable fetchData = () -> {
+        try {
+          DevOpsClientProxy devOpsClient =
+            OracleCloudAccount.getInstance().getDevOpsClient();
+          this.listDevOpsProjects =
+            devOpsClient.listDevOpsProjects(compartmentId);
+        } catch (Exception exception) {
+          listDevOpsProjects = null;
+          UIUtil.fireNotification(NotificationType.ERROR, exception.getMessage(),
+                                  null);
+          LogHandler.error(exception.getMessage(), exception);
+        }
+      };
 
-      // final Runnable updateUI = () -> {
+    final Runnable updateUI = () -> {
       if (this.listDevOpsProjects != null) {
         UIUtil.showInfoInStatusBar((listDevOpsProjects.size())
                                    + " DevOps Projects found.");
@@ -134,9 +139,9 @@ public class AssociateDevOpsProjectAction extends AnAction {
           }));
         }
       }
-      // };
-      //
-      // UIUtil.executeAndUpdateUIAsync(fetchData, updateUI);
+      };
+
+      UIUtil.executeAndUpdateUIAsync(fetchData, updateUI, modalityState);
     }
 
     @SuppressWarnings("serial")
@@ -162,11 +167,11 @@ public class AssociateDevOpsProjectAction extends AnAction {
           CompartmentSelection cselect = CompartmentSelection.newInstance();
           boolean showAndGet = cselect.showAndGet();
           if (showAndGet) {
-            selectedCompartment = cselect.getSelectedCompartment();
-            if (selectedCompartment != null) {
-              compartmentText.setText(selectedCompartment.getName());
-              populateComboList(selectedCompartment.getId());
-            }
+            selectedCompartment = Optional.ofNullable(cselect.getSelectedCompartment());
+            selectedCompartment.ifPresent(s -> {
+              compartmentText.setText(s.getName());
+              populateComboList(s.getId(), ModalityState.defaultModalityState());
+            });
           }
         }
       });
@@ -188,11 +193,8 @@ public class AssociateDevOpsProjectAction extends AnAction {
       if (state.getDevOpsCompartmentId() != null) {
         Compartment compartment = 
           OracleCloudAccount.getInstance().getIdentityClient().getCompartment(state.getDevOpsCompartmentId());
-        if (compartment != null) {
-          this.selectedCompartment = compartment;
-          compartmentText.setText(this.selectedCompartment.getName());
-          populateComboList(selectedCompartment.getId());
-        }
+          this.selectedCompartment = Optional.ofNullable(compartment);
+          selectedCompartment.ifPresent(s -> compartmentText.setText(s.getName()));
       }
     }
   }

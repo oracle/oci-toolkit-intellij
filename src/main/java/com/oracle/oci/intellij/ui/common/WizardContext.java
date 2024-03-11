@@ -11,17 +11,17 @@ public abstract class WizardContext {
     pcs = new PropertyChangeSupport(this);
   }
   
-  public void addPropertyListener(PropertyChangeListener listener) {
+  public void addPropertyChangeListener(PropertyChangeListener listener) {
     pcs.addPropertyChangeListener(listener);
   }
-  public void addPropertyListener(String propName, PropertyChangeListener propListener) {
+  public void addPropertyChangeListener(String propName, PropertyChangeListener propListener) {
     pcs.addPropertyChangeListener(propName, propListener);
   }
   
-  public void removePropertyListener(PropertyChangeListener listener) {
+  public void removePropertyChangeListener(PropertyChangeListener listener) {
     pcs.removePropertyChangeListener(listener);
   }
-  public void removePropertyListener(String propertyName, PropertyChangeListener listener) {
+  public void removePropertyChangeListener(String propertyName, PropertyChangeListener listener) {
     pcs.removePropertyChangeListener(propertyName, listener);
   }
 

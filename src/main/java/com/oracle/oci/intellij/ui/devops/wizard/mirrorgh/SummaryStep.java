@@ -31,7 +31,7 @@ public class SummaryStep extends WizardStep<MirrorGitHubWizardModel> {
 
     this.summaryTextArea = new JTextArea();
     this.summaryTextArea.setEditable(false);
-    this.context.addPropertyListener(new PropertyChangeListener() {
+    this.context.addPropertyChangeListener(new PropertyChangeListener() {
       @Override
       public void propertyChange(PropertyChangeEvent evt) {
         summaryTextArea.setText(createSummaryString());

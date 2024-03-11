@@ -61,6 +61,7 @@ public class GitConfigManager {
           Reader reader = new InputStreamReader(inputStream);
           GitParser parser = new GitParser();
           GitConfig gitConfig = parser.parse(reader);
+          gitConfig.setConfigFile(gitConfigFile);
           GitConfig prevConfig = cachedConfigs.put(project.getProjectFilePath(), gitConfig);
           Optional.ofNullable(prevConfig).ifPresent(p -> p.dispose());
           return onComplete.apply(gitConfig);

@@ -61,7 +61,8 @@ public class CreateSecretTest {
       VaultClientProxy vaultsClient = OracleCloudAccount.getInstance().getVaultsClient();
       
       String encodeToString = Base64.getEncoder().encodeToString("ghp_token1234567".getBytes());
-      Secret createSecret = vaultsClient.createSecret(findFirst.get(), keyId, 
+      Secret createSecret = vaultsClient.createSecret(findFirst.get().getCompartmentId(),
+                                findFirst.get(), keyId, 
                                 ("secretNameFoo_"+System.currentTimeMillis()), 
                                 encodeToString);
       System.out.println(createSecret);

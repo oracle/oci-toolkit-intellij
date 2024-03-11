@@ -90,6 +90,7 @@ tasks {
         jvmArgs = listOf(
             "-Xms512m",
             "-Xmx2048m",
+            "-ea",
             "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1044",
         )
     }

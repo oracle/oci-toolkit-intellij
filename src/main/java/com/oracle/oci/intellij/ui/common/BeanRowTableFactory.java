@@ -6,6 +6,8 @@ import java.util.List;
 
 import javax.swing.JTable;
 
+import com.oracle.oci.intellij.ui.common.JComponentBuilder.JTableBuilder;
+
 
 public class BeanRowTableFactory
 {
@@ -13,18 +15,23 @@ public class BeanRowTableFactory
     private BeanRowTableModel<BEANTYPE> model;
     private List<String> columns;
     private Class<BEANTYPE> beanClass;
+    private JTableBuilder tableFactory;
     
-    public Builder model(BeanRowTableModel<BEANTYPE> model) {
+    public Builder<BEANTYPE> tableFactory(JTableBuilder tableFactory) {
+      this.tableFactory = tableFactory;
+      return this;
+    }
+    public Builder<BEANTYPE> model(BeanRowTableModel<BEANTYPE> model) {
       this.model = model;
       return this;
     }
     
-    public Builder columns(String...columns) {
+    public Builder<BEANTYPE> columns(String...columns) {
       this.columns = Arrays.asList(columns);
       return this;
     }
     
-    public Builder beanClass(Class<BEANTYPE> beanClass) {
+    public Builder<BEANTYPE> beanClass(Class<BEANTYPE> beanClass) {
       this.beanClass = beanClass;
       return this;
     }
@@ -33,7 +40,13 @@ public class BeanRowTableFactory
       if (this.model == null) {
         this.model = new BeanRowTableModel<>(beanClass, columns);
       }
-      BeanRowTable<BEANTYPE> table = new BeanRowTable<>(model);
+      BeanRowTable<BEANTYPE> table = null;
+      if (this.tableFactory != null) {
+        table = this.tableFactory.build(() -> new BeanRowTable<>(model));
+      }
+      else {
+        table = new BeanRowTable<>(model);
+      }
       return table;
     }
   }
@@ -46,10 +59,8 @@ public class BeanRowTableFactory
     public BeanRowTable(BeanRowTableModel<BEANTYPE> model) {
       super(model);
       this.model = model;
-//      int rowHeight = getRowHeight();
-//      setPreferredSize(new Dimension(-1, rowHeight*6));
     }
-    
+
     public void setRows(List<BEANTYPE> rows) {
       int oldSize = model.beans.size();
       int newSize = rows.size();

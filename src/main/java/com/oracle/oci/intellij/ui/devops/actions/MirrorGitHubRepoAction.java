@@ -115,7 +115,7 @@ public class MirrorGitHubRepoAction extends AnAction {
   public static String convertGithubSshToHttps(String url) {
     Matcher matcher = pattern.matcher(url);
     if (matcher.matches()) {
-      return String.format("https://github.com/%s/%s.git\n", matcher.group(1),
+      return String.format("https://github.com/%s/%s.git", matcher.group(1),
                            matcher.group(2));
     }
     return url;

@@ -5,14 +5,17 @@ import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.project.Project;
+import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.bmc.keymanagement.model.VaultSummary;
 import com.oracle.bmc.vault.model.SecretSummary;
 import com.oracle.oci.intellij.ui.common.WizardContext;
+import com.oracle.oci.intellij.util.OptionalUtil.AlternateOptional;
 
 public class MyWizardContext extends WizardContext {
   private final Project project;
   private Optional<VaultSummary> vaultSummary = Optional.empty();
   private Optional<SecretSummary> secretSummary = Optional.empty();
+  private AlternateOptional<Compartment, String> secretCompartment;
   private String github;
   private String repoName;
   private String repoDescription;
@@ -69,6 +72,16 @@ public class MyWizardContext extends WizardContext {
     String oldValue = this.github;
     this.github = github;
     pcs.firePropertyChange("github", oldValue, this.github);
+  }
+
+  public AlternateOptional<Compartment, String> getSecretCompartmentId() {
+    return secretCompartment;
+  }
+
+  public void setSecretCompartmentId(AlternateOptional<Compartment, String> secretCompartmentId) {
+    AlternateOptional<Compartment, String> oldValue = this.secretCompartment;
+    this.secretCompartment = secretCompartmentId;
+    pcs.firePropertyChange("secretCompartmentId", oldValue, this.secretCompartment);
   }
 
 }

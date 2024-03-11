@@ -30,6 +30,7 @@ import com.intellij.notification.NotificationGroupManager;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.impl.ApplicationImpl;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
@@ -78,14 +79,28 @@ public class UIUtil {
 
   public static void executeAndUpdateUIAsync(@NotNull Runnable action,
                                              @Nullable Runnable update) {
+    executeAndUpdateUIAsync(action, update, null);
+  }
+
+  public static void executeAndUpdateUIAsync(@NotNull Runnable action,
+                                             @Nullable Runnable update,
+                                             @Nullable ModalityState state) {
     ApplicationManager.getApplication().executeOnPooledThread(() -> {
       action.run();
       if (update != null) {
-        invokeLater(update);
+        invokeLater(update, state);
       }
     });
   }
-
+  
+  public static void invokeLater(Runnable runnable, ModalityState modalityState) {
+    if (modalityState == null) {
+      invokeLater(runnable);
+    }
+    else {
+      ApplicationManager.getApplication().invokeLater(runnable, modalityState);
+    }
+  }
   public static void invokeLater(Runnable runnable) {
     ApplicationManager.getApplication().invokeLater(runnable);
   }
@@ -246,6 +261,7 @@ public class UIUtil {
 
     public static <T> Optional<T> getComboItem(@NonNull JComboBox<ModelHolder<T>> comboBox) {
       Object selectedItem = comboBox.getSelectedItem();
+      @SuppressWarnings("unchecked")
       ModelHolder<T> selected = (ModelHolder<T>) selectedItem;
       return Optional.ofNullable(selected.get());
     }

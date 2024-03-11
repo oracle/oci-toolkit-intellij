@@ -6,6 +6,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,21 +15,24 @@ import java.util.Map;
 
 import javax.swing.table.AbstractTableModel;
 
-import com.intellij.notification.NotificationType;
-
 public class BeanRowTableModel<BeanType> extends AbstractTableModel {
 
   private static final long serialVersionUID = -9119870013663268492L;
-  private final List<String> columnNames;
+  private final List<String> propertyNames;
   private final Class<BeanType> beanClass;
   List<BeanType> beans = Collections.emptyList();
   Map<String, PropertyDescriptor> nameToProperty = new HashMap<>();
+  private List<String> columnNames;
 
-  public BeanRowTableModel(Class<BeanType> beanClass, List<String> columnNames) {
+  public BeanRowTableModel(Class<BeanType> beanClass, List<String> propertyNames) {
     this.beanClass = beanClass;
-    this.columnNames = columnNames;
+    this.propertyNames = propertyNames;
 //    this.columnsInLower = columnNames.stream().map((s) -> s.toLowerCase()).collect(Collectors.toList());
-    initBeanDescriptor(this.beanClass, this.columnNames);
+    initBeanDescriptor(this.beanClass, this.propertyNames);
+    this.columnNames = new ArrayList<>(propertyNames);
+    for (int i = 0; i < columnNames.size(); i++) {
+      columnNames.set(i, beanPropertyToDisplayName(columnNames.get(i)));
+    }
   }
 
   private void initBeanDescriptor(Class<BeanType> beanClass,
@@ -65,15 +69,15 @@ public class BeanRowTableModel<BeanType> extends AbstractTableModel {
 
   @Override
   public int getColumnCount() {
-    return columnNames.size();
+    return propertyNames.size();
   }
 
   @Override
   public Object getValueAt(int rowIndex, int columnIndex) {
     if (rowIndex < this.beans.size()) {
       BeanType beanType = this.beans.get(rowIndex);
-      if (columnIndex < this.columnNames.size()) {
-        String colName = this.columnNames.get(columnIndex);
+      if (columnIndex < this.propertyNames.size()) {
+        String colName = this.propertyNames.get(columnIndex);
         PropertyDescriptor pd = nameToProperty.get(colName);
           if (pd != null) {
             return readProperty(beanType, pd);
@@ -108,12 +112,29 @@ public class BeanRowTableModel<BeanType> extends AbstractTableModel {
   }
 
   public List<String> getColumnNames() {
-    return Collections.unmodifiableList(this.columnNames);
+    return Collections.unmodifiableList(columnNames);
   }
 
   public Class<BeanType> getBeanClass() {
     return beanClass;
   }
   
-  
+  public static String beanPropertyToDisplayName(String propName) {
+    char[] propNameAsChars = propName.toCharArray();
+    StringBuilder displayStr = new StringBuilder();
+    for (int i = 0; i < propNameAsChars.length; i++) {
+      char nextChar = propNameAsChars[i];
+      if (i == 0) {
+        displayStr.append(Character.toUpperCase(nextChar));
+      }
+      else {
+        if (Character.isUpperCase(nextChar)) {
+          displayStr.append(' ');
+        }
+        displayStr.append(nextChar);
+      }
+    }
+    
+    return displayStr.toString();
+  }
 }
