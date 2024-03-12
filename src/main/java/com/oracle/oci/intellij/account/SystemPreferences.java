@@ -7,6 +7,7 @@ package com.oracle.oci.intellij.account;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -17,7 +18,8 @@ import com.oracle.oci.intellij.util.LogHandler;
  * Container of system and live preferences.
  */
 public class SystemPreferences {
-
+  public static final AtomicBoolean changeEventEnabled = new AtomicBoolean(true);
+  
   private final static String VERSION = "0.1.0";
   private static final Preferences preferences =
           Preferences.userRoot().node("oci-intellij-preferences");
@@ -49,7 +51,9 @@ public class SystemPreferences {
     currentRegionName = regionName;
     currentCompartment = compartment;
 
-    propertyChangeSupport.firePropertyChange(EVENT_SETTINGS_UPDATE, "", configFilePath);
+    if (changeEventEnabled.get()) {
+      propertyChangeSupport.firePropertyChange(EVENT_SETTINGS_UPDATE, "", configFilePath);
+    }
   }
 
   public static void setCompartment(Compartment compartment) {

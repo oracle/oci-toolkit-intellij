@@ -10,6 +10,7 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.components.JBScrollPane;
 import com.oracle.bmc.identity.model.Compartment;
 import com.oracle.oci.intellij.account.OracleCloudAccount;
+import com.oracle.oci.intellij.ui.appstack.actions.CompartmentCache;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,9 +19,7 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.tree.*;
 import java.awt.*;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,6 +33,8 @@ public class CompartmentSelection extends DialogWrapper {
   // The user selected compartment.
   private Compartment selectedCompartment = null;
   private DefaultMutableTreeNode rootTreeNode = null;
+  private static final CompartmentCache compartmentCache = CompartmentCache.getInstance() ;
+  //static Map<String,List<Compartment> > cachedCompartments = new LinkedHashMap<>();
   private final List<Thread> liveThreadsList = Collections.synchronizedList(new LinkedList<>());
   private final AtomicInteger liveTasksCount = new AtomicInteger();
 
@@ -119,8 +120,14 @@ public class CompartmentSelection extends DialogWrapper {
           }
         });
       } else {
-        final List<Compartment> childCompartments =
-                OracleCloudAccount.getInstance().getIdentityClient().getCompartmentList(givenCompartment);
+        // this call is expensive
+//        if ()
+        long currentTime = System.nanoTime();
+        final List<Compartment> childCompartments = compartmentCache.getCompartmentList(givenCompartment);
+
+
+        long howLong = System.nanoTime() - currentTime ;
+        System.out.println(howLong);
 
         for(Compartment childCompartment: childCompartments) {
           final DefaultMutableTreeNode childTreeNode = new DefaultMutableTreeNode(childCompartment);
@@ -210,6 +217,10 @@ public class CompartmentSelection extends DialogWrapper {
               .getIdentityClient().getRootCompartment();
     }
     return selectedCompartment;
+  }
+
+  public void setSelectedCompartment(Compartment selectedCompartment) {
+    this.selectedCompartment = selectedCompartment;
   }
 
   @Override
