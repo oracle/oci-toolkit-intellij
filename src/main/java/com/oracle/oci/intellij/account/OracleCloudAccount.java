@@ -210,6 +210,7 @@ import com.oracle.bmc.vault.responses.ListSecretsResponse;
 import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import com.oracle.oci.intellij.ui.common.AutonomousDatabaseConstants;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
+import com.oracle.oci.intellij.ui.devops.DevOpsDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
 import com.oracle.oci.intellij.util.LogHandler;
 import com.oracle.oci.intellij.util.SafeRunnerUtil;
@@ -236,6 +237,7 @@ public class OracleCloudAccount {
     SystemPreferences.addPropertyChangeListener(databaseClientProxy);
     SystemPreferences.addPropertyChangeListener(AutonomousDatabasesDashboard.getInstance());
     SystemPreferences.addPropertyChangeListener(AppStackDashboard.getInstance());
+    SystemPreferences.addPropertyChangeListener(DevOpsDashboard.getInstance());
     // TODO: property change listener for resource manager
   }
 
