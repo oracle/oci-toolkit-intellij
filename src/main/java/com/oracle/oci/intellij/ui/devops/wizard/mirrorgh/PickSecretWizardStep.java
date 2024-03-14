@@ -3,8 +3,6 @@ package com.oracle.oci.intellij.ui.devops.wizard.mirrorgh;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
@@ -105,6 +103,10 @@ public class PickSecretWizardStep
         @Override
         public void valueChanged(ListSelectionEvent e) {
           int selectedRow = e.getFirstIndex();
+          if (selectedRow < 0) {
+            // if nothing is selected, bail.
+            return;
+          }
           assert selectedRow == e.getLastIndex();
           SecretSummary secretSummary = listSecrets.get(selectedRow);
           context.setSecretSummary(Optional.ofNullable(secretSummary));
@@ -148,7 +150,7 @@ public class PickSecretWizardStep
           VaultClientProxy client =
             OracleCloudAccount.getInstance()
                               .getVaultsClient();
-          Optional<String> comp = newValue.map(c -> c.getCompartmentId(), c->c);
+          Optional<String> comp = newValue.map(c -> c.getId(), c->c);
           comp.ifPresent(cId -> {
             PickSecretWizardStep.this.listSecrets = 
               client.listSecrets(cId, context.getVaultSummary().get().getId());
