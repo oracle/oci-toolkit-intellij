@@ -136,98 +136,11 @@ public final class DevOpsDashboard implements PropertyChangeListener, ITabbedExp
   }
 
   private void initializeTableStructure() {
-    devOpsTable.setModel(new DevOpsTableModel(0));
-
-//    appStacksTable.getColumn("State").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
-//      if (column == 2) {
-//        final AutonomousDatabaseSummary s = (AutonomousDatabaseSummary) value;
-//        final JLabel statusLbl = new JLabel(
-//                s.getLifecycleState().getValue());
-//        statusLbl.setIcon(getStatusImage(s.getLifecycleState()));
-//        return statusLbl;
-//      }
-//      return (Component) value;
-//    });
-
+    if (devOpsTable != null) {
+      devOpsTable.setModel(new DevOpsTableModel(0));
+    }
    
   }
-
-//  private static class StackJobDialog extends DialogWrapper {
-//
-//    private final List<JobSummary> jobs;
-//
-//    protected StackJobDialog(List<JobSummary> jobs) {
-//      super(true);
-//      this.jobs = new ArrayList<>(jobs);
-//      init();
-//      setTitle("Stack Job");
-//      setOKButtonText("Ok");
-//    }
-//
-//    @Override
-//    protected @Nullable JComponent createCenterPanel() {
-//      JPanel centerPanel = new JPanel();
-//      centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-//
-//      DefaultTableModel jobsModel = new DefaultTableModel();
-//      jobsModel.addColumn("Name");
-//      jobsModel.addColumn("Operation");
-//      jobsModel.addColumn("Status");
-//      jobsModel.addColumn("Time Created");
-//      List<Object> row = new ArrayList<>();
-//      this.jobs.forEach(j -> {
-//        row.add(j.getDisplayName());
-//        row.add(j.getOperation());
-//        row.add(j.getLifecycleState());
-//        row.add(j.getTimeCreated());
-//        jobsModel.addRow(row.toArray());
-//        row.clear();
-//      });
-//
-//      JTable jobsTable = new JTable();
-//      jobsTable.setModel(jobsModel);
-//      centerPanel.add(jobsTable);
-//
-//      JTextArea textArea = new JTextArea();
-////      textArea.setText("Hello!");
-//      textArea.setLineWrap(true);
-//      textArea.setEditable(false);
-//      textArea.setVisible(true);
-//
-//      JScrollPane scroll = new JScrollPane (textArea);
-//      scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-//            scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-//
-//      centerPanel.add(scroll);
-//  //    centerPanel.add(textArea);
-//
-//      jobsTable.addMouseListener(new  MouseAdapter() {
-//
-//        @Override
-//        public void mouseClicked(MouseEvent e) {
-//          if (e.getButton() == MouseEvent.BUTTON1) {
-//            if (jobsTable.getSelectedRowCount() == 1) {
-//              int selectedRow = jobsTable.getSelectedRow();
-//              JobSummary jobSummary = jobs.get(selectedRow);
-//              String id = jobSummary.getId();
-//              GetJobLogsResponse jobLogs =
-//                OracleCloudAccount.getInstance().getResourceManagerClientProxy().getJobLogs(id);
-//              List<LogEntry> items = jobLogs.getItems();
-//              textArea.setText(null);
-//              StringBuilder builder = new StringBuilder();
-//              for (LogEntry logEntry : items) {
-//                builder.append(logEntry.getMessage());
-//                builder.append("\n");
-//              }
-//              textArea.setText(builder.toString());
-//            }
-//          }
-//        }
-//      });
-//
-//      return centerPanel;
-//    }
-//  }
 
   private static class LoadStackJobsAction extends AbstractAction {
 
