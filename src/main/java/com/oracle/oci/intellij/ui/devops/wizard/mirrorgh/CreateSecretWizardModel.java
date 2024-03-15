@@ -207,6 +207,8 @@ public class CreateSecretWizardModel extends WizardModel {
                                       keysTable.setRows(listKeys);
                                     }
                                   });
+      Optional<Compartment> optionalCompartmentText = Optional.ofNullable(context.getKeyCompartment());
+      optionalCompartmentText.ifPresent(comp -> compartmentText.setText(comp.getName()));
 
       this.createNewSecretButton = new JButton("Create...");
       this.createNewSecretButton.addActionListener(new ActionListener() {
