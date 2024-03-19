@@ -10,11 +10,7 @@ import static com.oracle.oci.intellij.account.SystemPreferences.getUserAgent;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.BufferedOutputStream;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1291,11 +1287,11 @@ public class OracleCloudAccount {
     public CreateStackResponse createStack(String compartmentId, Map<String, String> variables) throws IOException {
       CreateZipUploadConfigSourceDetails zipUploadConfigSourceDetails =
         CreateZipUploadConfigSourceDetails.builder()
-        .zipFileBase64Encoded(getBase64EncodingForAFile("/Users/aallali/Downloads/appstackforjava.zip"))
+        .zipFileBase64Encoded(getBase64EncodingForAFile("appstackforjava.zip"))
         .build();
       String uuid = UUID.randomUUID().toString();
-      String displayName = variables.get("appstack_name") == null ? "New App Stack "+uuid:variables.get("appstack_name");
-      String description = variables.get("appstack_description") == null ? "New App Stack "+uuid:variables.get("appstack_description");
+      String displayName = variables.get("appstack_name") == null ? "New App Stack "+uuid : variables.get("appstack_name");
+      String description = variables.get("appstack_description") == null ? "New App Stack "+uuid : variables.get("appstack_description");
       CreateStackDetails stackDetails =
         CreateStackDetails.builder()
                           .compartmentId(compartmentId)
@@ -1320,7 +1316,13 @@ public class OracleCloudAccount {
       return createStackResponse;
     }
     private String getBase64EncodingForAFile(String filePath) throws IOException {
-      byte[] fileData = Files.readAllBytes(Paths.get(filePath));
+      InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filePath);
+      if (inputStream == null)
+          throw new FileNotFoundException("Resource not found " + filePath);
+      byte[] fileData ;
+      try(inputStream){
+        fileData = inputStream.readAllBytes();
+      }
       byte[] fileDataBase64Encoded = Base64.getEncoder().encode(fileData);
       return new String(fileDataBase64Encoded, StandardCharsets.UTF_8);
     }
