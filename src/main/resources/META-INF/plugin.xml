@@ -10,8 +10,44 @@
     <idea-version since-build="211" />
     <description><![CDATA[
         <h2>Oracle Cloud Infrastructure Toolkit for IntelliJ</h2>
-        <p><b>The Oracle Cloud Infrastructure Toolkit for IntelliJ is an open source plugin maintained by Oracle for the
-            IntelliJ IDEA Integrated Development Environment (IDE).</b></p>
+        <h3>Overview</h3>
+        <p>The Oracle Cloud Infrastructure Toolkit for IntelliJ is an open source plugin maintained by Oracle for the
+            IntelliJ IDEA Integrated Development Environment (IDE).</p>
+
+        <h3>For More Information</h3>
+        <p>Please visit our <a href="https://github.com/oracle/oci-toolkit-intellij">GitHub</a> project. 
+           If you encounter problems or have questions
+           that you need answered, please open an issue.  You can also browse the full source for the plugin and find
+           the most up-to-date release notes.</p>
+
+        <p>The toolkit plugin supports the following OCI technologies:</p>
+        <ul>
+            <li>App Stack for Java</li>
+            <li>DevOps Projects</li>
+            <li>Autonomous Databases</li>
+        </ul>
+
+        <h3>AppStack for Java</h3>
+
+        <p>The <a href="https://cloudmarketplace.oracle.com/marketplace/en_US/listing/149023331">App Stack for Java</a> on OCI allows you to deploy existing Java applications using serverless resources. It is perfect
+            for database-backed Spring Boot applications.  See our example <a href="https://github.com/oracle/oci-react-samples/tree/spring-appstack">app</a>.
+         <p>With the toolkit you can control the lifecycle of your App Stack for Java:</p>
+         <ul>
+            <li>Create, Apply and Delete your Stack</li>
+            <li>View the related Jobs</li>
+            <li>Browse the Terraform logs after Apply and Re-apply</li>
+         </ul>
+        <h3>DevOps Projects</h3>
+
+        <p>DevOps Projects are the basis for accessing OCI's CI/CD resources including source repositories, build pipelines and deployments.</p>
+        <p>With the toolkit you can access some basic DevOps features:</p>
+        <ul>
+            <li>Mirror a github repository into an OCI DevOps project</li>
+            <li>View the status of your existing code repositories</li>
+            <li>Associate your IntelliJ project with an OCI Project </li>
+        </ul>
+        
+        <h3>Autonomous Database</h3>
 
         <p>The toolkit for IntelliJ IDEA features support for creating the Autonomous Database with the following
             workload types:</p>
@@ -32,8 +68,31 @@
             <li>Terminate Database Instance</li>
             <li>Update License Type</li>
             <li>Display Autonomous Database Instance Information</li>
-        </ul>]]>
+        </ul><]]>
     </description>
+    <change-notes>
+        <![CDATA[
+          <h2>Added</h3>
+
+          <h3>New App Stack Dashboard</h3>
+            <ul>
+             <li>Create, Delete, Apply your App Stack for Java instances</li>
+             <li>View Jobs for Apply and Re-apply</li>
+             <li>View Terraform Logs for AppStack Creation and Apply</li>
+
+          <h3>New DevOps Dashboard</h3>
+           <ul>
+              <li>View existing code repositories in a DevOps Project</li>
+           </ul>
+           <h3>Project-based features</h3>
+           
+           <ul>
+            <li>Associate your IntelliJ project with a DevOps Project</li>
+            <li>Mirror an existing remote in your project to a DevOps source repository
+          </ul>
+        ]]>
+
+    </change-notes>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
     
