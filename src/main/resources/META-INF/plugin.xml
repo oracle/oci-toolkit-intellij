@@ -14,12 +14,6 @@
         <p>The Oracle Cloud Infrastructure Toolkit for IntelliJ is an open source plugin maintained by Oracle for the
             IntelliJ IDEA Integrated Development Environment (IDE).</p>
 
-        <h3>For More Information</h3>
-        <p>Please visit our <a href="https://github.com/oracle/oci-toolkit-intellij">GitHub</a> project. 
-           If you encounter problems or have questions
-           that you need answered, please open an issue.  You can also browse the full source for the plugin and find
-           the most up-to-date release notes.</p>
-
         <p>The toolkit plugin supports the following OCI technologies:</p>
         <ul>
             <li>App Stack for Java</li>
@@ -29,18 +23,18 @@
 
         <h3>AppStack for Java</h3>
 
-        <p>The <a href="https://cloudmarketplace.oracle.com/marketplace/en_US/listing/149023331">App Stack for Java</a> on OCI allows you to deploy existing Java applications using serverless resources. It is perfect
-            for database-backed Spring Boot applications.  See our example <a href="https://github.com/oracle/oci-react-samples/tree/spring-appstack">app</a>.
+        <p>The <a href="https://cloudmarketplace.oracle.com/marketplace/en_US/listing/149023331">App Stack for Java</a> on OCI deploys existing Java applications using Serverless Resources, perfect
+            for Spring Boot applications.  See our example <a href="https://github.com/oracle/oci-react-samples/tree/spring-appstack">app</a>.
          <p>With the toolkit you can control the lifecycle of your App Stack for Java:</p>
          <ul>
             <li>Create, Apply and Delete your Stack</li>
             <li>View the related Jobs</li>
             <li>Browse the Terraform logs after Apply and Re-apply</li>
          </ul>
-        <h3>DevOps Projects</h3>
+        <h3>DevOps</h3>
 
-        <p>DevOps Projects are the basis for accessing OCI's CI/CD resources including source repositories, build pipelines and deployments.</p>
-        <p>With the toolkit you can access some basic DevOps features:</p>
+        <p>An OCI service for your CI/CD source repositories, build pipelines and deployments.</p>
+        <p>Supports DevOps features that include:</p>
         <ul>
             <li>Mirror a github repository into an OCI DevOps project</li>
             <li>View the status of your existing code repositories</li>
@@ -68,7 +62,13 @@
             <li>Terminate Database Instance</li>
             <li>Update License Type</li>
             <li>Display Autonomous Database Instance Information</li>
-        </ul><]]>
+        </ul>
+
+       <h3>For More Information</h3>
+        <p>Please visit our <a href="https://github.com/oracle/oci-toolkit-intellij">GitHub</a> project. 
+           If you encounter problems or have questions
+           that you need answered, please open an issue.  You can also browse the full source for the plugin and find
+           the most up-to-date release notes.</p>]]>
     </description>
     <change-notes>
         <![CDATA[
