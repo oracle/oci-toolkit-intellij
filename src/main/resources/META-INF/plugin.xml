@@ -10,8 +10,38 @@
     <idea-version since-build="211" />
     <description><![CDATA[
         <h2>Oracle Cloud Infrastructure Toolkit for IntelliJ</h2>
-        <p><b>The Oracle Cloud Infrastructure Toolkit for IntelliJ is an open source plugin maintained by Oracle for the
-            IntelliJ IDEA Integrated Development Environment (IDE).</b></p>
+        <h3>Overview</h3>
+        <p>The Oracle Cloud Infrastructure Toolkit for IntelliJ is an open source plugin maintained by Oracle for the
+            IntelliJ IDEA Integrated Development Environment (IDE).</p>
+
+        <p>The toolkit plugin supports the following OCI technologies:</p>
+        <ul>
+            <li>App Stack for Java</li>
+            <li>DevOps Projects</li>
+            <li>Autonomous Databases</li>
+        </ul>
+
+        <h3>AppStack for Java</h3>
+
+        <p>The <a href="https://cloudmarketplace.oracle.com/marketplace/en_US/listing/149023331">App Stack for Java</a> on OCI deploys existing Java applications using Serverless Resources, perfect
+            for Spring Boot applications.  See our example <a href="https://github.com/oracle/oci-react-samples/tree/spring-appstack">app</a>.
+         <p>With the toolkit you can control the lifecycle of your App Stack for Java:</p>
+         <ul>
+            <li>Create, Apply and Delete your Stack</li>
+            <li>View the related Jobs</li>
+            <li>Browse the Terraform logs after Apply and Re-apply</li>
+         </ul>
+        <h3>DevOps</h3>
+
+        <p>An OCI service for your CI/CD source repositories, build pipelines and deployments.</p>
+        <p>Supports DevOps features that include:</p>
+        <ul>
+            <li>Mirror a github repository into an OCI DevOps project</li>
+            <li>View the status of your existing code repositories</li>
+            <li>Associate your IntelliJ project with an OCI Project </li>
+        </ul>
+        
+        <h3>Autonomous Database</h3>
 
         <p>The toolkit for IntelliJ IDEA features support for creating the Autonomous Database with the following
             workload types:</p>
@@ -32,8 +62,37 @@
             <li>Terminate Database Instance</li>
             <li>Update License Type</li>
             <li>Display Autonomous Database Instance Information</li>
-        </ul>]]>
+        </ul>
+
+       <h3>For More Information</h3>
+        <p>Please visit our <a href="https://github.com/oracle/oci-toolkit-intellij">GitHub</a> project. 
+           If you encounter problems or have questions
+           that you need answered, please open an issue.  You can also browse the full source for the plugin and find
+           the most up-to-date release notes.</p>]]>
     </description>
+    <change-notes>
+        <![CDATA[
+          <h2>Added</h3>
+
+          <h3>New App Stack Dashboard</h3>
+            <ul>
+             <li>Create, Delete, Apply your App Stack for Java instances</li>
+             <li>View Jobs for Apply and Re-apply</li>
+             <li>View Terraform Logs for AppStack Creation and Apply</li>
+
+          <h3>New DevOps Dashboard</h3>
+           <ul>
+              <li>View existing code repositories in a DevOps Project</li>
+           </ul>
+           <h3>Project-based features</h3>
+           
+           <ul>
+            <li>Associate your IntelliJ project with a DevOps Project</li>
+            <li>Mirror an existing remote in your project to a DevOps source repository
+          </ul>
+        ]]>
+
+    </change-notes>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
     
@@ -44,6 +103,15 @@
         <notificationGroup id="Oracle Cloud Infrastructure" displayType="BALLOON"/>
     </extensions>
     
+    <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable
+        parentId="tools"
+        instance="com..oracle.oci.intellij.settings.ProjectSettingsConfigurable"
+        id="com.oracle.oci.intellij.ProjectSettingsConfigurable"
+        displayName="OCI Project Settings"
+        nonDefaultProject="true"/>
+    </extensions>
+
     <actions>
         <group id="com.oracle.oci.intellij.ui.account.OCIExplorerActionGroup" class="com.intellij.openapi.actionSystem.DefaultActionGroup"
                text="Oracle Cloud Infrastructure" description="Oracle Cloud Infrastructure Settings">
@@ -51,6 +119,17 @@
                     id="com.oracle.oci.intellij.ui.account.ConfigureAction" text="OCISettings" description="Configure OCI Settings"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <add-to-group group-id="MainToolBarSettings" anchor="last"/>
+        </group>
+        <group id="com.oracle.oci.intellij.ui.ActionGroup.ProjectViewContext">
+            <group id="com.oracle.oci.intellij.ui.ActionGroup.ProjectViewPopup" text="OCI" popup="true" keep-content="true">
+                <group id="com.oracle.oci.intellij.ui.ActionGroup.DevOps" text="DevOps" keep-content="true">
+                    <action id="com.oracle.oci.intellij.ui.Action.AssociateDevOpsProject" class="com.oracle.oci.intellij.ui.devops.actions.AssociateDevOpsProjectAction" text="Associate to DevOps Project..." />
+                    <action id="com.oracle.oci.intellij.ui.Action.DisassociateDevOpsProject" class="com.oracle.oci.intellij.ui.devops.actions.DisassociateDevOpsProjectAction" text="Remove Association to DevOps Project..." />
+                    <action id="com.oracle.oci.intellij.ui.Action.MirrorRepository" class="com.oracle.oci.intellij.ui.devops.actions.MirrorGitHubRepoAction" text="Mirror DevOps Repository..." />
+                   <action id="com.oracle.oci.intellij.ui.Action.LaunchProjectToAppStack" class="com.oracle.oci.intellij.ui.devops.actions.LaunchProjectToAppStack" text="Launch as Java AppStack..."/>
+                </group>
+            </group>
+            <add-to-group group-id="ProjectViewPopupMenu" relative-to-action="WeighingNewGroup" anchor="after"/>
         </group>
     </actions>
 </idea-plugin>
