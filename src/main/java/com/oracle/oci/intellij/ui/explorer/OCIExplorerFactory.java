@@ -20,10 +20,13 @@ import com.oracle.oci.intellij.account.SystemPreferences;
 import com.oracle.oci.intellij.ui.account.CompartmentAction;
 import com.oracle.oci.intellij.ui.account.ConfigureAction;
 import com.oracle.oci.intellij.ui.account.RegionAction;
+import com.oracle.oci.intellij.ui.appstack.AppStackDashboard;
 import com.oracle.oci.intellij.ui.common.UIUtil;
 import com.oracle.oci.intellij.ui.database.AutonomousDatabasesDashboard;
+import com.oracle.oci.intellij.ui.devops.DevOpsDashboard;
 import com.oracle.oci.intellij.util.BundleUtil;
 import com.oracle.oci.intellij.util.LogHandler;
+import com.oracle.oci.intellij.util.SafeRunnerUtil;
 
 public class OCIExplorerFactory implements ToolWindowFactory {
 
@@ -36,7 +39,9 @@ public class OCIExplorerFactory implements ToolWindowFactory {
           try {
             OracleCloudAccount.getInstance().configure(SystemPreferences.getConfigFilePath(),
                                                        SystemPreferences.getProfileName());
-            AutonomousDatabasesDashboard.getInstance().populateTableData();
+            SafeRunnerUtil.run((Void) -> { AutonomousDatabasesDashboard.getInstance().populateTableData();},null);
+            SafeRunnerUtil.run((Void) -> { AppStackDashboard.getInstance(); }, null);
+            SafeRunnerUtil.run((Void) -> { DevOpsDashboard.getInstance(); }, null);// populate();
           } catch (Exception ex) {
            final String message = "Oracle Cloud account configuration failed: " + ex.getMessage();
            LogHandler.warn(message);
@@ -57,14 +62,19 @@ public class OCIExplorerFactory implements ToolWindowFactory {
     actionGroup.add(new RegionAction());
     actionGroup.add(new CompartmentAction());
     toolWindow.setTitleActions(Arrays.asList(actionGroup));
+    
+    SafeRunnerUtil.run((Void) -> createTab(toolWindow, AutonomousDatabasesDashboard.getInstance(), "Autonomous Database"), null);
+    SafeRunnerUtil.run((Void) -> createTab(toolWindow, AppStackDashboard.getInstance(), "Application Stack"), null);
+    SafeRunnerUtil.run((Void) -> createTab(toolWindow, DevOpsDashboard.getInstance(), "DevOps"), null);
+  }
 
-    final TabbedExplorer ociTabbedToolBar =
-      new TabbedExplorer(toolWindow,
-                         AutonomousDatabasesDashboard.getInstance());
+  private void createTab(ToolWindow toolWindow, ITabbedExplorerContent tabbedContent, String title) {
+    final TabbedExplorer ociTabbedToolBar = new TabbedExplorer(toolWindow, tabbedContent);
     final ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
     final Content ociTabbedToolBarContent =
-      contentFactory.createContent(ociTabbedToolBar.getContent(), "", false);
+      contentFactory.createContent(ociTabbedToolBar.getContent(), title, false);
     toolWindow.getContentManager().addContent(ociTabbedToolBarContent);
   }
+  
 
 }
