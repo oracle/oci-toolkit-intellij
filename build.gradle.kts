@@ -8,7 +8,6 @@ plugins {
     id("org.jetbrains.intellij") version "1.13.1"
     id("maven-publish")
     id("distribution")
-
 }
 
 group = properties("pluginGroup")
