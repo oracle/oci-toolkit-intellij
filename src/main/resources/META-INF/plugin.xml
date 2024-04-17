@@ -44,6 +44,15 @@
         <notificationGroup id="Oracle Cloud Infrastructure" displayType="BALLOON"/>
     </extensions>
     
+    <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable
+        parentId="tools"
+        instance="com..oracle.oci.intellij.settings.ProjectSettingsConfigurable"
+        id="com.oracle.oci.intellij.ProjectSettingsConfigurable"
+        displayName="OCI Project Settings"
+        nonDefaultProject="true"/>
+    </extensions>
+
     <actions>
         <group id="com.oracle.oci.intellij.ui.account.OCIExplorerActionGroup" class="com.intellij.openapi.actionSystem.DefaultActionGroup"
                text="Oracle Cloud Infrastructure" description="Oracle Cloud Infrastructure Settings">
@@ -51,6 +60,17 @@
                     id="com.oracle.oci.intellij.ui.account.ConfigureAction" text="OCISettings" description="Configure OCI Settings"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <add-to-group group-id="MainToolBarSettings" anchor="last"/>
+        </group>
+        <group id="com.oracle.oci.intellij.ui.ActionGroup.ProjectViewContext">
+            <group id="com.oracle.oci.intellij.ui.ActionGroup.ProjectViewPopup" text="OCI" popup="true" keep-content="true">
+                <group id="com.oracle.oci.intellij.ui.ActionGroup.DevOps" text="DevOps" keep-content="true">
+                    <action id="com.oracle.oci.intellij.ui.Action.AssociateDevOpsProject" class="com.oracle.oci.intellij.ui.devops.actions.AssociateDevOpsProjectAction" text="Associate to DevOps Project..." />
+                    <action id="com.oracle.oci.intellij.ui.Action.DisassociateDevOpsProject" class="com.oracle.oci.intellij.ui.devops.actions.DisassociateDevOpsProjectAction" text="Remove Association to DevOps Project..." />
+                    <action id="com.oracle.oci.intellij.ui.Action.MirrorRepository" class="com.oracle.oci.intellij.ui.devops.actions.MirrorGitHubRepoAction" text="Mirror DevOps Repository..." />
+                   <action id="com.oracle.oci.intellij.ui.Action.LaunchProjectToAppStack" class="com.oracle.oci.intellij.ui.devops.actions.LaunchProjectToAppStack" text="Launch as Java AppStack..."/>
+                </group>
+            </group>
+            <add-to-group group-id="ProjectViewPopupMenu" relative-to-action="WeighingNewGroup" anchor="after"/>
         </group>
     </actions>
 </idea-plugin>

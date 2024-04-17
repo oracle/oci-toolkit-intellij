@@ -38,12 +38,34 @@ dependencies {
     implementation("com.oracle.oci.sdk:oci-java-sdk-identitydataplane:3.24.0") {
         exclude(group="org.slf4j", module="slf4j-api")
     }
-    //implementation(files("lib/sdk/oci-java-sdk-full-3.24.0.jar"))
- //   implementation(fileTree("lib/thirdparty/lib") { include("*.jar") })
- //   implementation(fileTree("lib/thirdparty/jersey/lib") { include("*.jar") })
+    implementation("com.oracle.oci.sdk:oci-java-sdk-resourcemanager:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-vault:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-keymanagement:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-devops:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-certificatesmanagement:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-dns:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+    implementation("com.oracle.oci.sdk:oci-java-sdk-artifacts:3.24.0") {
+        exclude(group="org.slf4j", module="slf4j-api")
+    }
+
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0") // Use the latest version
     
     testImplementation(platform("org.junit:junit-bom:5.7.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("jakarta.json:jakarta.json-api:2.1.2")
+    testImplementation("org.eclipse.parsson:parsson:1.1.5")
 }
 
 intellij {
@@ -67,6 +89,7 @@ tasks {
         jvmArgs = listOf(
             "-Xms512m",
             "-Xmx2048m",
+            "-ea",
             "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1044",
         )
     }
