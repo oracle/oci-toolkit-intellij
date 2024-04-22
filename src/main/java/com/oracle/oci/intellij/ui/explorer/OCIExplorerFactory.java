@@ -63,7 +63,6 @@ public class OCIExplorerFactory implements ToolWindowFactory {
     actionGroup.add(new CompartmentAction());
     toolWindow.setTitleActions(Arrays.asList(actionGroup));
     
-    
     SafeRunnerUtil.run((Void) -> createTab(toolWindow, AutonomousDatabasesDashboard.getInstance(), "Autonomous Database"), null);
     SafeRunnerUtil.run((Void) -> createTab(toolWindow, AppStackDashboard.getInstance(), "Application Stack"), null);
     SafeRunnerUtil.run((Void) -> createTab(toolWindow, DevOpsDashboard.getInstance(), "DevOps"), null);
