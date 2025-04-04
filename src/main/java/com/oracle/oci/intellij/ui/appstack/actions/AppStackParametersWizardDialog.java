@@ -218,7 +218,7 @@ public class AppStackParametersWizardDialog extends WizardDialog {
         }
 
         LinkedHashMap<String,String> variables = appStackModel.collectVariables();
-        // add cuurent user id , tenency id , region name
+        // add current user id , tenency id , region name
         addNeededParameters(variables);
 
 

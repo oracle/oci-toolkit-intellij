@@ -1201,7 +1201,7 @@ public class OracleCloudAccount {
 
       /* Send request to the Client */
       client.deleteRepository(deleteRepositoryRequest);
-      return "SUCCEDED";
+      return "SUCCEEDED";
     }
 
     public List<StackSummary> listStacks(String compartmentId) {

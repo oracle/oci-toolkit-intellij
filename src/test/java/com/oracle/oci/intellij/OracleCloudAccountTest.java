@@ -214,11 +214,11 @@ public class OracleCloudAccountTest {
     String[] expectedIconPath = {
             "south-korea-flag.png","australia-flag.png","india-flag.png","india-flag.png","japan-flag.png","south-korea-flag.png","australia-flag.png","japan-flag.png","canada-flag.png","canada-flag.png","netherlands.png","germany-orb.png","switzerland-flag.png","saudi_arabia.png","united_arab_emirates.png","brazil-flag.png","uk-orb.png","us-orb.png","us-orb.png","us-orb.png","wales.png","chile.png","brazil-flag.png","israel.png","france.png","singapore.png","united_arab_emirates.png","italy.png","sweden.png","south_africa.png","france.png","mexico.png","spain.png","us-orb.png","canada-flag.png","brazil-flag.png","us-orb.png","us-orb.png","us-orb.png","uk-orb.png","wales.png","japan-flag.png","japan-flag.png","oman.png","australia-flag.png","italy.png","italy.png","ireland.png","germany-orb.png","germany-orb.png","ireland.png", "mexico.png"
     };
-    String preffix = "/icons/regions/";
+    String prefix = "/icons/regions/";
     int index =0;
     for (Region region: regions) {
       ImageIcon actualIcon = RegionAction.getCurrentRegionIcon(region.getRegionId());
-      ImageIcon expectedIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource(preffix+expectedIconPath[index])));
+      ImageIcon expectedIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource(prefix+expectedIconPath[index])));
 
 
       byte [] expectedImgBytes = ImageUtils.imageToBytes(expectedIcon.getImage());

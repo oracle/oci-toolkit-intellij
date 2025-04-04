@@ -16,7 +16,7 @@ public class DisassociateDevOpsProjectAction extends AnAction {
   public void actionPerformed(@NotNull AnActionEvent e) {
     if (isEnabled(e)) {
       int confirmed = JOptionPane.showConfirmDialog(
-                               null, "Are you sure you want to delete assocation between this project and OCI?", 
+                               null, "Are you sure you want to delete association between this project and OCI?",
                                "Are you sure", JOptionPane.YES_NO_OPTION);
       if (confirmed == JOptionPane.OK_OPTION) {
         OCIProjectSettings settings = OCIProjectSettings.getInstance(e.getProject());

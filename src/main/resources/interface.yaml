@@ -831,7 +831,7 @@ variables:
     type: string
     required: true
     title: Cookie name
-    discription: Specify '*' to match any cookie name.
+    description: Specify '*' to match any cookie name.
     default: X-Oracle-BMC-LBS-Route
     visible: enable_session_affinity
 
