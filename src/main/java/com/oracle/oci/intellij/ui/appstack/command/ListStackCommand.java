@@ -53,7 +53,7 @@ public class ListStackCommand extends AbstractBasicCommand<ListStackResult> {
 	  }
 	  catch (com.oracle.bmc.model.BmcException bmcExcep) {
 	    if (bmcExcep.getStatusCode() == 404) {
-	      // not found or empty; pretend emtpy
+	      // not found or empty; pretend empty
 	      return new ListStackResult(AbstractBasicCommand.Result.Severity.WARNING,
 	           Result.Status.FAILED, Collections.EMPTY_LIST);
 	    }
